@@ -13,4 +13,11 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
 
+module.exports = {
+  // ... your other ESLint config
+  rules: {
+    "@next/next/no-img-element": "off",
+  },
+};
+
 export default eslintConfig;

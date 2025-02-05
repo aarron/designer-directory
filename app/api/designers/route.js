@@ -9,7 +9,7 @@ function normalizeKey(key) {
   return key.replace(/[^a-zA-Z0-9]/g, "");
 }
 
-export async function GET(request) {
+export async function GET(_request) {
   // Use your actual published Google Sheet CSV URL
   const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm5QX6y8ovabl3pF7B49Tv3ByA-HoLjb3d90xV0lP9WEFmjSZSkSyCColxPk1o4IbszU17oJL9126R/pub?gid=930295771&single=true&output=csv";
 
