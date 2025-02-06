@@ -184,7 +184,7 @@ export default function Home() {
 
   return (
 	<div className="container mx-auto p-4">
-	  <h1 className="text-3xl font-bold mb-4">Talent Directory</h1>
+	  <h1 className="text-3xl font-bold mb-4 text-gray-600">Talent Directory</h1>
 	
 	  {/* Filters Section */}
 	  <div className="mb-4 space-y-4">
