@@ -171,7 +171,7 @@ export default function Home() {
   return (
 	<div className="container mx-auto p-4">
 	  <h1 className="text-3xl font-bold mb-4 text-gray-600">Talent Directory</h1>
-	  <p className="text-sm text-gray-600 mb-8 pb-8 border-b">Helping great people find great jobs.</p>
+	  <p className="text-sm text-gray-600 mb-8 pb-8 border-b">Helping great people find great jobs. <strong>{designers.length} designers</strong> are ready rock &#128640;.</p>
 
 	  <div className="mb-4 space-y-4 mb-8 pb-8 border-b">
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
