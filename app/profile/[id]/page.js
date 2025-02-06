@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import md5 from "blueimp-md5";
 import { ArrowTopRightOnSquareIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import React from 'react';
 
 // Helper function to generate Gravatar URL from an email address.
 function getGravatarUrl(email, size = 150) {
@@ -50,9 +51,14 @@ export default function Profile() {
 	? convertGoogleDriveUrl(uploadedPhoto)
 	: getGravatarUrl(designer.EmailAddress, 150);
 
+	// Ensure designer.Location is a string before splitting
+	const formattedLocation = designer.Location
+	  ? designer.Location.toString().split(',').join(', ')
+	  : 'Location not specified';
+
+
   return (
 	<div className="container mx-auto p-4">
-	  
 	  <div className="flex flex-col md:flex-row gap-6">
 		{/* Left Column */}
 		<div className="w-full md:w-64 shrink-0 flex flex-col items-start space-y-4">
@@ -92,18 +98,16 @@ export default function Profile() {
 			  <span>Get in Touch</span>
 			</a>
 		  )}
-		  
-		  <div className="text-xs text-gray-700  py-8 mt-8">
-			  Is this your profile? <a className="highlight" href="https://forms.gle/MyArHLPThBEnjBo57" target="_blank">Edit</a>
+		  <div className="text-xs text-gray-700 border-t py-8 mt-8">
+			Is this your profile? <a className="highlight" href="https://forms.gle/MyArHLPThBEnjBo57" target="_blank">Edit</a>
 		  </div>
 		</div>
 
 		{/* Right Column */}
 		<div className="flex-1 space-y-4">
-		<button onClick={() => router.back()} className="mb-4">
+		  <button onClick={() => router.back()} className="mb-4">
 			&larr; Back
 		  </button>
-		
 		  <h1 className="text-3xl font-bold highlight capitalize">
 			{designer.FirstName} {designer.LastName}
 		  </h1>
@@ -123,7 +127,7 @@ export default function Profile() {
 			<strong>Ideal company size:</strong> {designer.Companysize}
 		  </p>
 		  <p className="pb-6">
-			<strong>Location:</strong> {designer.Location}
+			<strong>Location:</strong> {formattedLocation}
 		  </p>
 		  <div className="mt-4 max-w-prose leading-7 border-t pt-9">
 			<h3 className="font-bold text-xl capitalize pb-2">
