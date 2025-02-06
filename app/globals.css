@@ -44,8 +44,13 @@ footer {
 /* Fix button layout in menu on mobile */
 @media screen and (max-width: 767px) {
   .mobile-button {
-    display: block;
-    width: 100%;
-    margin-bottom: 1em; /* Adjust the value as needed */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Adjust spacing between icon and text as needed */
+    flex-wrap: nowrap;
+    margin-bottom: 1em;
   }
 }
+
+
+
