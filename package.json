@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "blueimp-md5": "^2.19.0",
     "next": "15.1.6",
     "papaparse": "^5.5.2",

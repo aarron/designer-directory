@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { PlusIcon } from '@heroicons/react/24/solid';
 
 export default function HeaderNav() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,15 +55,17 @@ export default function HeaderNav() {
 			</li>
 			<li>
 			  <Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
-				<a target="_blank" className="block py-2 px-3 text-white">
-				  Submit a profile
+				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline">
+				  <PlusIcon className="h-5 w-5" />
+				  <span>Submit a profile</span>
 				</a>
 			  </Link>
 			</li>
 			<li>
 			  <Link href="https://forms.gle/Cs3ZbyDd3rkW7rDp6" legacyBehavior>
-				<a target="_blank" className="block py-2 px-3 text-white">
-				  Submit a job
+				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline">
+				  <PlusIcon className="h-5 w-5" />
+				  <span>Submit a job</span>
 				</a>
 			  </Link>
 			</li>
