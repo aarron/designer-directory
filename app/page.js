@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import md5 from "blueimp-md5";
+import { ArrowLongRightIcon, SpeakerWaveIcon } from "@heroicons/react/24/outline";
 
 // Helper functions
 function convertGoogleDriveUrl(url) {
@@ -26,60 +27,53 @@ function getGravatarUrl(email, size = 40) {
   return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=identicon`;
 }
 
-const locationOptions = [
-  "All locations",
-  "Atlanta GA",
-  "Austin TX",
-  "Bay Area - East Bay",
-  "Bay Area - Peninsula/South Bay",
-  "Bay Area - San Francisco",
-  "Boston MA",
-  "Canada",
-  "Chicago IL",
-  "Dallas TX",
-  "Denver CO",
-  "International",
-  "Los Angeles CA",
-  "New York Metro Area",
-  "Other US",
-  "Philadelphia PA",
-  "Portland OR",
-  "Remote",
-  "San Diego CA",
-  "Seattle WA",
-  "Washington DC"
-];
+// Podcast Episode Component
+function LatestPodcastEpisode() {
+  const [episode, setEpisode] = useState(null);
 
-const roleOptions = [
-  "All roles",
-  "UX/UI Design",
-  "Mobile design",
-  "DesignOps",
-  "Chief of Staff",
-  "Design systems",
-  "Service Design",
-  "Marketing",
-  "Branding",
-  "Product",
-  "Project/Program Management",
-  "Software Engineering",
-  "Hardware Engineering",
-  "Data Science",
-  "Administration",
-  "Business Development",
-  "Business Operations",
-  "Sales",
-  "QA",
-  "Customer Success/Customer Support",
-  "Other"
-];
+  useEffect(() => {
+	const fetchLatestEpisode = async () => {
+	  try {
+		const response = await fetch("/api/podcast");
+		const data = await response.json();
+		console.log("Podcast API Response:", data); // Debugging log
 
-const experienceOptions = [
-  "All experience levels",
-  "Early Career (0-2 years)",
-  "Mid Career (3-8 years)",
-  "Late Career (9+ years)"
-];
+		if (data.latestEpisode) {
+		  setEpisode(data.latestEpisode);
+		} else {
+		  console.error("No latest episode found in response");
+		}
+	  } catch (error) {
+		console.error("Error fetching the latest podcast episode:", error);
+	  }
+	};
+
+	fetchLatestEpisode();
+  }, []);
+
+  if (!episode) {
+	return <div className="text-gray-500">Loading latest episode...</div>;
+  }
+
+  return (
+	<div className="mt-8 mb-8 text-center">
+	  <h3 className="text-xs text-gray-600">New on the Design Better Podcast</h3>
+	  <div className="flex justify-center mt-2">
+		<a
+		  href={episode.link}
+		  target="_blank"
+		  rel="noopener noreferrer"
+		  className="flex items-center highlight"
+		>
+		  <SpeakerWaveIcon className="mr-2 flex-shrink-0 h-6 w-6 text-gray-600" />
+		  {episode.title}
+		</a>
+	  </div>
+	</div>
+
+  );
+}
+
 
 export default function Home() {
   const [designers, setDesigners] = useState([]);
@@ -89,7 +83,7 @@ export default function Home() {
 	location: "",
 	primaryRole: "",
 	roleType: "",
-	experienceLevel: ""
+	experienceLevel: "",
   });
 
   useEffect(() => {
@@ -132,10 +126,7 @@ export default function Home() {
 		return false;
 	  }
 
-	  if (
-		filters.roleType &&
-		(!designer.Typeofrole || !designer.Typeofrole.includes(filters.roleType))
-	  ) {
+	  if (filters.roleType && (!designer.Typeofrole || !designer.Typeofrole.includes(filters.roleType))) {
 		return false;
 	  }
 
@@ -152,112 +143,34 @@ export default function Home() {
 	setFilteredDesigners(filtered);
   }, [search, filters, designers]);
 
-  const handleLocationChange = (e) => {
-	setFilters((prev) => ({ ...prev, location: e.target.value }));
-  };
-
-  const handleRoleChange = (e) => {
-	setFilters((prev) => ({ ...prev, primaryRole: e.target.value }));
-  };
-
-  const handleRoleTypeChange = (e) => {
-	setFilters((prev) => ({ ...prev, roleType: e.target.value }));
-  };
-
-  const handleExperienceChange = (e) => {
-	setFilters((prev) => ({ ...prev, experienceLevel: e.target.value }));
-  };
-
   return (
 	<div className="container mx-auto p-4">
 	  <h1 className="text-3xl font-bold mb-4 text-gray-600">Talent Directory</h1>
-	  <p className="text-sm text-gray-600 mb-8 pb-8 border-b">Helping great people find great jobs. <strong>{designers.length} designers</strong> are ready rock &#128640;.</p>
+	  <p className="text-sm text-gray-600 mb-8 pb-8 border-b">
+		Helping great people find great jobs. <strong>{designers.length} designers</strong> are ready to rock 🚀.
+	  </p>
 
-	  <div className="mb-4 space-y-4 mb-8 pb-8 border-b">
-		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-		  <input
-			type="text"
-			placeholder="Search by name..."
-			className="border p-2 w-full"
-			value={search}
-			onChange={(e) => setSearch(e.target.value)}
-		  />
-
-		  <select
-			className="border p-2 w-full"
-			value={filters.location || "All Locations"}
-			onChange={handleLocationChange}
-		  >
-			{locationOptions.map((loc, idx) => (
-			  <option key={idx} value={loc}>
-				{loc}
-			  </option>
-			))}
-		  </select>
-
-		  <select
-			className="border p-2 w-full capitalize"
-			value={filters.primaryRole || "All Roles"}
-			onChange={handleRoleChange}
-		  >
-			{roleOptions.map((role, idx) => (
-			  <option key={idx} value={role}>
-				{role}
-			  </option>
-			))}
-		  </select>
-
-		  <select
-			className="border p-2 w-full"
-			value={filters.roleType}
-			onChange={handleRoleTypeChange}
-		  >
-			<option value="">All work types</option>
-			<option value="Full-time">Full-time</option>
-			<option value="Contract">Contract</option>
-			<option value="Part-time">Part-time</option>
-		  </select>
-			  
-			  
-		  {/* Experience Level Filter */}
-		  <select
-			className="border p-2 w-full"
-			value={filters.experienceLevel || "All experience levels"}
-			onChange={handleExperienceChange}
-		  >
-			{experienceOptions.map((level, idx) => (
-			  <option key={idx} value={level}>
-				{level}
-			  </option>
-			))}
-		  </select>
-		</div>
+	  {/* Podcast promo block */}
+	  <div className="mb-8">
+		<LatestPodcastEpisode />
 	  </div>
-
+	  {/* Close podcast promo block */}
 
 	  {/* Designers Grid */}
 	  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 		{filteredDesigners.map((designer) => {
-		  // Use the uploaded photo if available; otherwise, use Gravatar.
 		  const profileImage = designer.Photooravatar
 			? convertGoogleDriveUrl(designer.Photooravatar)
 			: getGravatarUrl(designer.EmailAddress, 40);
 
-	  
 		  return (
 			<Link
 			  key={designer.id}
 			  href={`/profile/${designer.id}`}
 			  className="bg-white border p-4 rounded hover:shadow-lg transition text-[#FF4725] no-underline hover:text-[#000000] hover:underline flex flex-col items-center text-center"
 			>
-			  <img
-				src={profileImage}
-				alt={`${designer.FirstName} ${designer.LastName}`}
-				className="w-10 h-10 rounded-full mb-2"
-			  />
-			  <h2 className="text-xl font-semibold text-black">
-				{designer.FirstName} {designer.LastName}
-			  </h2>
+			  <img src={profileImage} alt={`${designer.FirstName} ${designer.LastName}`} className="w-10 h-10 rounded-full mb-2" />
+			  <h2 className="text-xl font-semibold text-black">{designer.FirstName} {designer.LastName}</h2>
 			  <p className="text-sm text-gray-600">{designer.Primaryrole}</p>
 			</Link>
 		  );

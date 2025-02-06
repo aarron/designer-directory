@@ -8,7 +8,7 @@ export default function RootLayout({ children }) {
   return (
 	<html lang="en">
 	  <head>
-		<title>Design Better | Talent Directory</title>
+		<title>Design Better Directory</title>
 		<script src="https://unpkg.com/preline@1.5.0/dist/preline.js" defer></script>
 	  </head>
 	  <body className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
