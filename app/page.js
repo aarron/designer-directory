@@ -188,19 +188,20 @@ export default function Home() {
 	
 	  {/* Filters Section */}
 	  <div className="mb-4 space-y-4">
-		{/* Row for search and single-select filters */}
-		<div className="flex flex-col md:flex-row md:space-x-4 space-y-2 md:space-y-0">
+		{/* Container for filters */}
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+		  {/* Search Input */}
 		  <input
 			type="text"
 			placeholder="Search by name..."
-			className="border p-2 flex-1"
+			className="border p-2 w-full"
 			value={search}
 			onChange={(e) => setSearch(e.target.value)}
 		  />
-	
-		  {/* Location Filter (single select) */}
+	  
+		  {/* Location Filter */}
 		  <select
-			className="border p-2"
+			className="border p-2 w-full"
 			value={filters.location || "All Locations"}
 			onChange={handleLocationChange}
 		  >
@@ -210,10 +211,10 @@ export default function Home() {
 			  </option>
 			))}
 		  </select>
-	
+	  
 		  {/* Primary Role Filter */}
 		  <select
-			className="border p-2"
+			className="border p-2 w-full"
 			value={filters.primaryRole || "All Roles"}
 			onChange={handleRoleChange}
 		  >
@@ -223,10 +224,10 @@ export default function Home() {
 			  </option>
 			))}
 		  </select>
-	
+	  
 		  {/* Role Type Filter */}
 		  <select
-			className="border p-2"
+			className="border p-2 w-full"
 			value={filters.roleType}
 			onChange={handleRoleTypeChange}
 		  >
@@ -235,10 +236,10 @@ export default function Home() {
 			<option value="Contract">Contract</option>
 			<option value="Part-time">Part-time</option>
 		  </select>
-	
+	  
 		  {/* Experience Level Filter */}
 		  <select
-			className="border p-2"
+			className="border p-2 w-full"
 			value={filters.experienceLevel || "All experience levels"}
 			onChange={handleExperienceChange}
 		  >
@@ -250,6 +251,7 @@ export default function Home() {
 		  </select>
 		</div>
 	  </div>
+
 
 	  {/* Designers Grid */}
 	  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
