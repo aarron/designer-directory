@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import md5 from "blueimp-md5";
 
+// Helper functions
+// Turn Google Drive images into something we can display
 function convertGoogleDriveUrl(url) {
   if (!url) return url;
   // If the URL already includes "thumbnail", assume it's correct.
@@ -21,7 +23,6 @@ function convertGoogleDriveUrl(url) {
   }
   return url;
 }
-
 
 // Helper function to get Gravatar URL from an email address.
 function getGravatarUrl(email, size = 40) {

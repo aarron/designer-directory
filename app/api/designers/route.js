@@ -9,20 +9,25 @@ function normalizeKey(key) {
   return key.replace(/[^a-zA-Z0-9]/g, "");
 }
 
+// Helper function to shuffle an array using the Fisher-Yates algorithm
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+	const j = Math.floor(Math.random() * (i + 1));
+	[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export async function GET(_request) {
-  // Use your actual published Google Sheet CSV URL
   const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm5QX6y8ovabl3pF7B49Tv3ByA-HoLjb3d90xV0lP9WEFmjSZSkSyCColxPk1o4IbszU17oJL9126R/pub?gid=930295771&single=true&output=csv";
 
   try {
 	const response = await fetch(csvUrl);
 	const csvData = await response.text();
 
-	// Log the raw CSV data to inspect it in your terminal
-	// console.log("CSV Data:", csvData);
-
 	// Parse the CSV with headers
 	const parsed = Papa.parse(csvData, { header: true });
-	console.log("Parsed Data:", parsed.data);
 
 	// Normalize keys for each row
 	const designers = parsed.data.map((row, index) => {
@@ -34,9 +39,10 @@ export async function GET(_request) {
 	  return { id: index, ...normalizedRow };
 	});
 
-	console.log("Normalized Designers:", designers);
+	// Shuffle the array of designers
+	const shuffledDesigners = shuffleArray(designers);
 
-	return new Response(JSON.stringify(designers), {
+	return new Response(JSON.stringify(shuffledDesigners), {
 	  status: 200,
 	  headers: { "Content-Type": "application/json" },
 	});
