@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { PlusIcon, PlusCircleIcon } from '@heroicons/react/24/solid';
+import { usePathname } from "next/navigation"; // Import Next.js pathname hook
 
 export default function HeaderNav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname(); // Get current page pathname
 
   return (
 	<nav className="bg-gray-800 fixed top-0 left-0 w-full z-20 border-b">
@@ -47,20 +48,30 @@ export default function HeaderNav() {
 		  className={`w-full md:block md:w-auto ${menuOpen ? "" : "hidden"}`}
 		  id="navbar-default"
 		>
-		  <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0">
+		<ul className="font-medium flex flex-col space-y-4 p-4 md:p-0 mt-4 md:flex-row space-y-4 md:space-y-0">
 			<li>
-			  <Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
-				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
-				  <PlusCircleIcon className="h-5 w-5" />
-				  <span>Submit a profile</span>
+			  <Link href="/" legacyBehavior>
+				<a
+				  className={`px-3 py-2 rounded ${
+					pathname === "/"
+					  ? "bg-gray-50 text-black pointer-events-none" // Disable hover & clicks
+					  : "text-white mr-4"
+				  }`}
+				>
+				  Talent
 				</a>
 			  </Link>
 			</li>
 			<li>
-			  <Link href="https://forms.gle/Cs3ZbyDd3rkW7rDp6" legacyBehavior>
-				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
-				  <PlusCircleIcon className="h-5 w-5" />
-				  <span>Submit a job</span>
+			  <Link href="/jobs" legacyBehavior>
+				<a
+				  className={`px-3 py-2 rounded ${
+					pathname === "/jobs"
+					  ? "bg-gray-50 text-black pointer-events-none" // Disable hover & clicks
+					  : "text-white ml-4"
+				  }`}
+				>
+				  Jobs
 				</a>
 			  </Link>
 			</li>
