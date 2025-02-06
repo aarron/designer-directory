@@ -196,7 +196,7 @@ export default function Home() {
 		  </select>
 
 		  <select
-			className="border p-2 w-full"
+			className="border p-2 w-full capitalize"
 			value={filters.primaryRole || "All Roles"}
 			onChange={handleRoleChange}
 		  >

@@ -2,6 +2,7 @@
 import "./globals.css";
 import Link from "next/link";
 import HeaderNav from "../components/HeaderNav";  // Adjust the path if needed
+import { Analytics } from "@vercel/analytics/react";
 
 export default function RootLayout({ children }) {
   return (
