@@ -52,5 +52,8 @@ footer {
   }
 }
 
-
+/* Fix profile bio formatting */
+.preserve-formatting {
+  white-space: pre-line;
+}
 

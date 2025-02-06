@@ -133,7 +133,7 @@ export default function Profile() {
 			<h3 className="font-bold text-xl capitalize pb-2">
 			  About {designer.FirstName}
 			</h3>
-			<p>{designer.Shortbio}</p>
+			<p className="preserve-formatting">{designer.Shortbio}</p>
 		  </div>
 		</div>
 	  </div>

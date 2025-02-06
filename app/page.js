@@ -27,7 +27,7 @@ function getGravatarUrl(email, size = 40) {
 }
 
 const locationOptions = [
-  "All Locations",
+  "All locations",
   "Atlanta GA",
   "Austin TX",
   "Bay Area - East Bay",
@@ -51,7 +51,7 @@ const locationOptions = [
 ];
 
 const roleOptions = [
-  "All Roles",
+  "All roles",
   "UX/UI Design",
   "Mobile design",
   "DesignOps",
@@ -212,10 +212,9 @@ export default function Home() {
 			value={filters.roleType}
 			onChange={handleRoleTypeChange}
 		  >
-			<option value="">All Work Types</option>
+			<option value="">All work types</option>
 			<option value="Full-time">Full-time</option>
 			<option value="Contract">Contract</option>
-			<option value="Part-time">Part-time</option>
 			<option value="Part-time">Part-time</option>
 		  </select>
 			  
