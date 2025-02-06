@@ -92,6 +92,10 @@ export default function Profile() {
 			  <span>Get in Touch</span>
 			</a>
 		  )}
+		  
+		  <div className="text-xs text-gray-700  py-8 mt-8">
+			  Is this your profile? <a className="highlight" href="https://forms.gle/MyArHLPThBEnjBo57" target="_blank">Edit</a>
+		  </div>
 		</div>
 
 		{/* Right Column */}
