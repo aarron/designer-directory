@@ -1,12 +1,14 @@
 // app/api/designers/route.js
-// https://docs.google.com/spreadsheets/d/e/2PACX-1vQm5QX6y8ovabl3pF7B49Tv3ByA-HoLjb3d90xV0lP9WEFmjSZSkSyCColxPk1o4IbszU17oJL9126R/pub?gid=930295771&single=true&output=csv
-
-// app/api/designers/route.js
 import Papa from "papaparse";
 
 // Helper function to normalize keys (remove spaces, punctuation)
 function normalizeKey(key) {
   return key.replace(/[^a-zA-Z0-9]/g, "");
+}
+
+// Helper function to split comma-separated strings into arrays
+function splitToArray(value) {
+  return value ? value.split(',').map(item => item.trim()) : [];
 }
 
 // Helper function to shuffle an array using the Fisher-Yates algorithm
@@ -29,12 +31,17 @@ export async function GET(_request) {
 	// Parse the CSV with headers
 	const parsed = Papa.parse(csvData, { header: true });
 
-	// Normalize keys for each row
+	// Normalize keys and process specific fields for each row
 	const designers = parsed.data.map((row, index) => {
 	  const normalizedRow = {};
 	  for (const key in row) {
 		const normalizedKey = normalizeKey(key);
-		normalizedRow[normalizedKey] = row[key];
+		let value = row[key];
+		// Convert 'Location' and 'Typeofrole' fields to arrays
+		if (normalizedKey === 'Location' || normalizedKey === 'Typeofrole') {
+		  value = splitToArray(value);
+		}
+		normalizedRow[normalizedKey] = value;
 	  }
 	  return { id: index, ...normalizedRow };
 	});
