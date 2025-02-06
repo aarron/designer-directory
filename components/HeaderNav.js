@@ -10,7 +10,7 @@ export default function HeaderNav() {
 	<nav className="bg-gray-800 fixed top-0 left-0 w-full z-20 border-b">
 	  <div className="container mx-auto p-4 flex flex-wrap items-center justify-between">
 		{/* External link for Design Better */}
-		<Link href="http://designbetter.com" legacyBehavior>
+		<Link href="/" legacyBehavior>
 		  <a className="flex items-center space-x-3 rtl:space-x-reverse">
 			<img
 			  className="w-20"
@@ -48,11 +48,6 @@ export default function HeaderNav() {
 		  id="navbar-default"
 		>
 		  <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0">
-			<li>
-			  <Link href="/" className="block py-2 px-3 rounded-sm md:bg-transparent text-white">
-				Home
-			  </Link>
-			</li>
 			<li>
 			  <Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
 				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline">
