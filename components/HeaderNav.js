@@ -50,7 +50,7 @@ export default function HeaderNav() {
 		  <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0">
 			<li>
 			  <Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
-				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline">
+				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
 				  <PlusIcon className="h-5 w-5" />
 				  <span>Submit a profile</span>
 				</a>
@@ -58,7 +58,7 @@ export default function HeaderNav() {
 			</li>
 			<li>
 			  <Link href="https://forms.gle/Cs3ZbyDd3rkW7rDp6" legacyBehavior>
-				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline">
+				<a target="_blank" className="flex items-center space-x-2 bg-white text-black py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
 				  <PlusIcon className="h-5 w-5" />
 				  <span>Submit a job</span>
 				</a>
