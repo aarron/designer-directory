@@ -39,6 +39,7 @@ footer {
 
 .highlight {
   color: #FF4725;
+  text-decoration: none;
 }
 
 /* Fix button layout in menu on mobile */

@@ -4,6 +4,8 @@ import Link from "next/link";
 import md5 from "blueimp-md5";
 import { SpeakerWaveIcon } from "@heroicons/react/24/outline";
 import { PlusIcon, PlusCircleIcon } from '@heroicons/react/24/solid';
+import LatestPodcastEpisode from "../components/LatestPodcastEpisode";
+
 
 // Helper functions
 function convertGoogleDriveUrl(url) {
@@ -26,53 +28,6 @@ function getGravatarUrl(email, size = 40) {
   if (!email) return "";
   const hash = md5(email.trim().toLowerCase());
   return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=identicon`;
-}
-
-// Podcast Episode Component
-function LatestPodcastEpisode() {
-  const [episode, setEpisode] = useState(null);
-
-  useEffect(() => {
-	const fetchLatestEpisode = async () => {
-	  try {
-		const response = await fetch("/api/podcast");
-		const data = await response.json();
-		console.log("Podcast API Response:", data); // Debugging log
-
-		if (data.latestEpisode) {
-		  setEpisode(data.latestEpisode);
-		} else {
-		  console.error("No latest episode found in response");
-		}
-	  } catch (error) {
-		console.error("Error fetching the latest podcast episode:", error);
-	  }
-	};
-
-	fetchLatestEpisode();
-  }, []);
-
-  if (!episode) {
-	return <div className="text-gray-500">Loading latest of Design Better...</div>;
-  }
-
-  return (
-	<div className="mt-8 mb-8 text-center">
-	  <h3 className="text-xs text-gray-600">New on the Design Better Podcast</h3>
-	  <div className="flex justify-center mt-2">
-		<a
-		  href={episode.link}
-		  target="_blank"
-		  rel="noopener noreferrer"
-		  className="flex items-center highlight"
-		>
-		  <SpeakerWaveIcon className="mr-1 flex-shrink-0 h-4 w-4 text-gray-600" />
-		  {episode.title}
-		</a>
-	  </div>
-	</div>
-
-  );
 }
 
 const locationOptions = [
@@ -231,22 +186,18 @@ export default function Home() {
 		<Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
 			<a target="_blank" className="flex items-center space-x-2 bg-black text-white py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
 			  <PlusCircleIcon className="h-5 w-5" />
-			  <span>Submit a profile</span>
+			  <span>Add profile</span>
 			</a>
 		  </Link>
 	  </div>
 	  
 	{/* Profile Count */}
 	  <div className="text-sm text-gray-600">
-		<p className="text-sm text-gray-600 mb-8 pb-8 border-b"><strong>{designers.length} designers</strong> are ready rock &#128640;.</p>
+		<p className="text-sm text-gray-600 mb-8 pb-4 border-b"><strong>{designers.length} designers</strong> are ready rock &#128640;.</p>
 	  </div>
-	
-	
-	
-
 	  
 
-	  <div className="mb-4 space-y-4 mb-8 pb-8 border-b">	  
+	  <div className="mb-4 space-y-4 mb-8">	  
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 		  <input
 			type="text"
@@ -308,9 +259,9 @@ export default function Home() {
 	  </div>
 	  
 	  {/* Podcast promo block */}
-		<div className="mb-8">
-		  <LatestPodcastEpisode />
-		</div>
+	  <div className="mb-4 bg-white rounded">
+		<LatestPodcastEpisode />
+	  </div>
 	  {/* Close podcast promo block */}
 
 	  {/* Designers Grid */}
@@ -326,7 +277,7 @@ export default function Home() {
 			<Link
 			  key={designer.id}
 			  href={`/profile/${designer.id}`}
-			  className="bg-white border p-4 rounded hover:shadow-lg transition text-[#FF4725] no-underline hover:text-[#000000] hover:underline flex flex-col items-center text-center"
+			  className="bg-white p-4 rounded hover:shadow-lg transition text-[#FF4725] no-underline hover:text-[#000000] hover:no-underline flex flex-col items-center text-center"
 			>
 			  <img
 				src={profileImage}

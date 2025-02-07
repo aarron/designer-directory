@@ -8,8 +8,8 @@ export default function HeaderNav() {
   const pathname = usePathname(); // Get current page pathname
 
   return (
-	<nav className="bg-gray-800 fixed top-0 left-0 w-full z-20 border-b">
-	  <div className="container mx-auto p-4 flex flex-wrap items-center justify-between">
+	<nav className="bg-gray-800 fixed pb-4 top-0 left-0 w-full z-20 border-b">
+	  <div className="container mx-auto mt-4 p-4 flex flex-wrap items-center justify-between">
 		{/* External link for Design Better */}
 		<Link href="/" legacyBehavior>
 		  <a className="flex items-center space-x-3 rtl:space-x-reverse">
@@ -20,6 +20,8 @@ export default function HeaderNav() {
 			/>
 		  </a>
 		</Link>
+		
+		{/* Mobile Menu Button */}
 		<button
 		  onClick={() => setMenuOpen(!menuOpen)}
 		  type="button"
@@ -44,18 +46,17 @@ export default function HeaderNav() {
 			/>
 		  </svg>
 		</button>
-		<div
-		  className={`w-full md:block md:w-auto ${menuOpen ? "" : "hidden"}`}
-		  id="navbar-default"
-		>
-		<ul className="font-medium flex flex-col space-y-4 p-4 md:p-0 mt-4 md:flex-row space-y-4 md:space-y-0">
+	
+		{/* Navigation Menu */}
+		<div className={`w-full md:block md:w-auto ${menuOpen ? "" : "hidden"}`} id="navbar-default">
+		  <ul className="font-medium flex flex-col space-y-4 md:flex-row md:space-x-6 md:space-y-0 p-4 md:p-0 mt-4 md:mt-0">
 			<li>
 			  <Link href="/" legacyBehavior>
 				<a
-				  className={`px-3 py-2 rounded ${
+				  className={`px-4 py-2 rounded hover:no-underline ${
 					pathname === "/"
-					  ? "bg-gray-50 text-black pointer-events-none" // Disable hover & clicks
-					  : "text-white mr-4"
+					  ? "bg-black text-white pointer-events-none" // Disable hover & clicks
+					  : "text-white"
 				  }`}
 				>
 				  Talent
@@ -65,10 +66,10 @@ export default function HeaderNav() {
 			<li>
 			  <Link href="/jobs" legacyBehavior>
 				<a
-				  className={`px-3 py-2 rounded ${
+				  className={`px-4 py-2 rounded hover:no-underline ${
 					pathname === "/jobs"
-					  ? "bg-gray-50 text-black pointer-events-none" // Disable hover & clicks
-					  : "text-white ml-4"
+					  ? "bg-black text-white pointer-events-none" // Disable hover & clicks
+					  : "text-white"
 				  }`}
 				>
 				  Jobs
