@@ -122,7 +122,7 @@ export default function Home() {
 
 	  if (
 		filters.location &&
-		filters.location !== "All Locations" &&
+		filters.location !== "All locations" &&
 		(!designer.Location || !designer.Location.includes(filters.location))
 	  ) {
 		return false;
@@ -130,7 +130,7 @@ export default function Home() {
 
 	  if (
 		filters.primaryRole &&
-		filters.primaryRole !== "All Roles" &&
+		filters.primaryRole !== "All roles" &&
 		(!designer.Primaryrole || !designer.Primaryrole.includes(filters.primaryRole))
 	  ) {
 		return false;
@@ -209,7 +209,7 @@ export default function Home() {
 
 		  <select
 			className="border p-2 w-full"
-			value={filters.location || "All Locations"}
+			value={filters.location || "All locations"}
 			onChange={handleLocationChange}
 		  >
 			{locationOptions.map((loc, idx) => (
@@ -220,8 +220,8 @@ export default function Home() {
 		  </select>
 
 		  <select
-			className="border p-2 w-full capitalize"
-			value={filters.primaryRole || "All Roles"}
+			className="border p-2 w-full"
+			value={filters.primaryRole || "All roles"}
 			onChange={handleRoleChange}
 		  >
 			{roleOptions.map((role, idx) => (
