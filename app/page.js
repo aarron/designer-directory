@@ -180,11 +180,11 @@ export default function Home() {
 	{/* Header with title and button */}
 	  <div className="flex justify-between items-center mb-4">
 		{/* Page Heading */}
-		<h1 className="text-3xl font-bold text-gray-600 mb-1">Design Talent</h1>
+		<h1 className="text-3xl font-bold mb-1 text-black">Design Talent</h1>
 	  
 		{/* Submit profile Button */}
 		<Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
-			<a target="_blank" className="flex items-center space-x-2 bg-black text-white py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
+			<a target="_blank" className="cta flex items-center space-x-2 text-white py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
 			  <PlusCircleIcon className="h-5 w-5" />
 			  <span>Add profile</span>
 			</a>

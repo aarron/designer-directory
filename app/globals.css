@@ -42,6 +42,9 @@ footer {
   text-decoration: none;
 }
 
+.cta {background-color:#ff4725; color:#fff;}
+.cta:hover {background-color:#000; color:#fff;}
+
 /* Fix button layout in menu on mobile */
 @media screen and (max-width: 767px) {
   .mobile-button {
