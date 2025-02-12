@@ -55,7 +55,7 @@ export default function LatestPodcastEpisode() {
 		  >
 			{episode.title}
 		  </a>
-		  <p className="text-xs">Subscribe on <a href="podcast://api.substack.com/feed/podcast/1512498/private/5963657b-fca4-4514-bb9d-38cfe10812c3.rss" target="_blank" className="font-bold">Apple Podcasts</a> or <a href="https://open.spotify.com/show/2jz60yoegrobXowBZ8ZxYb" className="font-bold" target="_blank">Spotify</a></p>
+		  <p className="text-xs">Subscribe on <a href="https://podcasts.apple.com/us/podcast/design-better/id1266839739" target="_blank" className="font-bold">Apple Podcasts</a> or <a href="https://open.spotify.com/show/2jz60yoegrobXowBZ8ZxYb" className="font-bold" target="_blank">Spotify</a></p>
 		</div>
 	  </div>
 	</div>
