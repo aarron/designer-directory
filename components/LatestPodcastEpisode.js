@@ -27,7 +27,7 @@ export default function LatestPodcastEpisode() {
   }
 
   return (
-	<div className="mt-8 mb-4 max-w-sm mx-auto">
+	<div className="mt-8 mb-4 max-w-md mx-auto pt-4 pb-4">
 	  <div className="flex items-center space-x-4">
 		{/* Episode Artwork - Ensures image does not get distorted */}
 		{episode.artwork && (
@@ -55,6 +55,7 @@ export default function LatestPodcastEpisode() {
 		  >
 			{episode.title}
 		  </a>
+		  <p className="text-xs">Subscribe on <a href="podcast://api.substack.com/feed/podcast/1512498/private/5963657b-fca4-4514-bb9d-38cfe10812c3.rss" target="_blank" className="font-bold">Apple Podcasts</a> or <a href="https://open.spotify.com/show/2jz60yoegrobXowBZ8ZxYb" className="font-bold" target="_blank">Spotify</a></p>
 		</div>
 	  </div>
 	</div>

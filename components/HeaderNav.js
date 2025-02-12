@@ -48,14 +48,14 @@ export default function HeaderNav() {
 		</button>
 	
 		{/* Navigation Menu */}
-		<div className={`w-full md:block md:w-auto ${menuOpen ? "" : "hidden"}`} id="navbar-default">
-		  <ul className="font-medium flex flex-col space-y-4 md:flex-row md:space-x-6 md:space-y-0 p-4 md:p-0 mt-4 md:mt-0">
+		<div className={`w-full md:block md:w-auto ${menuOpen ? "block" : "hidden"}`} id="navbar-default">
+		  <ul className="font-medium flex flex-col items-end space-y-4 md:flex-row md:space-x-6 md:space-y-0 p-4 md:p-0 mt-4 md:mt-0 bg-gray-800 md:bg-transparent">
 			<li>
 			  <Link href="/" legacyBehavior>
 				<a
 				  className={`px-4 py-2 rounded hover:no-underline ${
 					pathname === "/"
-					  ? "bg-black text-white pointer-events-none" // Disable hover & clicks
+					  ? "bg-black text-white pointer-events-none"
 					  : "text-white"
 				  }`}
 				>
@@ -68,7 +68,7 @@ export default function HeaderNav() {
 				<a
 				  className={`px-4 py-2 rounded hover:no-underline ${
 					pathname === "/jobs"
-					  ? "bg-black text-white pointer-events-none" // Disable hover & clicks
+					  ? "bg-black text-white pointer-events-none"
 					  : "text-white"
 				  }`}
 				>
