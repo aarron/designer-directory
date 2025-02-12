@@ -95,7 +95,7 @@ export default function Profile() {
 			<p><strong>Experience level:</strong> {designer.Yourexperiencelevel}</p>
 			<p><strong>Availability:</strong> {designer.Timing}</p>
 			<p><strong>Ideal company size:</strong> {designer.Companysize}</p>
-			<p className="pb-6"><strong>Location:</strong> {designer.Location}</p>
+			<p><strong>Preferred work location:</strong> {Array.isArray(designer.Location) ? designer.Location.join(", ") : designer.Location}</p>
 		  </div>
 
 		  {/* Bio Section */}
