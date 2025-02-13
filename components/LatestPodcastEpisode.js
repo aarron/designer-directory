@@ -33,7 +33,7 @@ export default function LatestPodcastEpisode() {
   }
 
   return (
-	<div className="mt-8 mb-4 max-w-md mx-auto pt-4 pb-4">
+	<div className="mt-8 mb-4 max-w-md mx-auto pt-2 pb-2">
 	  <div className="flex items-center space-x-4">
 		{/* Episode Artwork - Ensures image does not get distorted */}
 		{episode.artwork && (
@@ -45,7 +45,7 @@ export default function LatestPodcastEpisode() {
 		  		<img
 					src={episode.artwork}
 					alt="Episode artwork"
-					className="w-24 h-24 rounded-lg object-contain"
+					className="w-40 h-40 rounded-lg object-contain"
 		  		/>
 			</a>
 		)}
@@ -61,7 +61,7 @@ export default function LatestPodcastEpisode() {
 		  >
 			{episode.title}
 		  </a>
-		  <p className="text-xs">Subscribe on <a href="https://podcasts.apple.com/us/podcast/design-better/id1266839739" target="_blank" className="font-bold">Apple Podcasts</a> or <a href="https://open.spotify.com/show/2jz60yoegrobXowBZ8ZxYb" className="font-bold" target="_blank">Spotify</a></p>
+		  <p className="text-xs mt-1">Subscribe: <a href="https://podcasts.apple.com/us/podcast/design-better/id1266839739" target="_blank" className="font-bold">Apple Podcasts</a>,  <a href="https://open.spotify.com/show/2jz60yoegrobXowBZ8ZxYb" className="font-bold" target="_blank">Spotify</a></p>
 		</div>
 	  </div>
 	</div>
