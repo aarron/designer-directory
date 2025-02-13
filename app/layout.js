@@ -10,14 +10,13 @@ export default function RootLayout({ children }) {
 	  <Head>
 		<title>Design Better Directory | Connecting design talent to great jobs</title>
 		<script src="https://unpkg.com/preline@1.5.0/dist/preline.js" defer></script>
-		<Analytics/>
 	  </Head>
 
 	  <body className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
 		<header className="mb-32">
 		  <HeaderNav />
 		</header>
-		<main className="flex-grow container mx-auto mt-8">{children}</main>
+		<main className="flex-grow container mx-auto mt-8">{children}<Analytics/></main>
 		<footer className="mt-12 p-4 text-sm text-gray-600 container mx-auto flex flex-col md:flex-row md:justify-between">
 		  <ul className="flex space-x-4">
 			<li>
