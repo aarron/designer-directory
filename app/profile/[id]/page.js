@@ -81,11 +81,17 @@ export default function Profile() {
 			  </a>
 			)}
 			{designer.Websiteportfolio && (
-			  <a href={designer.Websiteportfolio} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
+			  <a
+				href={designer.Websiteportfolio.startsWith("http") ? designer.Websiteportfolio : `http://${designer.Websiteportfolio}`}
+				target="_blank"
+				rel="noopener noreferrer"
+				className="flex items-center space-x-2"
+			  >
 				<ArrowTopRightOnSquareIcon className="h-5 w-5" />
 				<span>Portfolio Website</span>
 			  </a>
 			)}
+
 			{designer.EmailAddress && (
 			  <a href={`mailto:${designer.EmailAddress}`} className="flex items-center space-x-2">
 				<EnvelopeIcon className="h-5 w-5" />
