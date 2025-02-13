@@ -10,6 +10,7 @@ export default function RootLayout({ children }) {
 	  <Head>
 		<title>Design Better Directory | Connecting design talent to great jobs</title>
 		<script src="https://unpkg.com/preline@1.5.0/dist/preline.js" defer></script>
+		<Analytics/>
 	  </Head>
 
 	  <body className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
