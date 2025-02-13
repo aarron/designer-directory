@@ -23,20 +23,20 @@ export default function JobsPage() {
 	  {/* Header with "Jobs" title and "Submit Job" button */}
 	  <div className="flex justify-between items-center mb-4">
 		{/* Page Heading */}
-		<h1 className="text-3xl font-bold text-black">Design Jobs</h1>
+		<h1 className="text-4xl font-bold text-black">Design Jobs</h1>
 	  
 		{/* Submit Job Button */}
 		<Link href="https://forms.gle/Cs3ZbyDd3rkW7rDp6" legacyBehavior>
 		  <a target="_blank" className="cta flex items-center space-x-2 bg-black text-white py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
 			<PlusCircleIcon className="h-5 w-5" />
-			<span>Add job</span>
+			<span>Post job</span>
 		  </a>
 		</Link>
 	  </div>
 	  
 	{/* Job Count */}
 	  <p className="text-sm text-gray-600 mb-4 pb-4 border-b">
-		<strong>{jobs.length}</strong> sweet jobs posted.
+		<strong>{jobs.length}</strong> sweet job openings.
 	  </p>
 
 

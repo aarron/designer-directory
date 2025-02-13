@@ -180,7 +180,7 @@ export default function Home() {
 	{/* Header with title and button */}
 	  <div className="flex justify-between items-center mb-4">
 		{/* Page Heading */}
-		<h1 className="text-3xl font-bold mb-1 text-black">Design Talent</h1>
+		<h1 className="text-4xl font-bold mb-1 text-black">Design Talent</h1>
 	  
 		{/* Submit profile Button */}
 		<Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
@@ -282,7 +282,7 @@ export default function Home() {
 			  <img
 				src={profileImage}
 				alt={`${designer.FirstName} ${designer.LastName}`}
-				className="w-10 h-10 rounded-full mb-2"
+				className="w-10 h-10 rounded-full mb-2 object-cover"
 			  />
 			  <h2 className="text-xl font-semibold text-black">
 				{designer.FirstName} {designer.LastName}
