@@ -2,6 +2,7 @@ import "./globals.css";
 import Link from "next/link";
 import HeaderNav from "../components/HeaderNav"; // Adjust path if needed
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Head from "next/head";
 
 export default function RootLayout({ children }) {
@@ -16,7 +17,7 @@ export default function RootLayout({ children }) {
 		<header className="mb-32">
 		  <HeaderNav />
 		</header>
-		<main className="flex-grow container mx-auto mt-8">{children}<Analytics/></main>
+		<main className="flex-grow container mx-auto mt-8">{children}<Analytics/><SpeedInsights /></main>
 		<footer className="mt-12 p-4 text-sm text-gray-600 container mx-auto flex flex-col md:flex-row md:justify-between">
 		  <ul className="flex space-x-4">
 			<li>
