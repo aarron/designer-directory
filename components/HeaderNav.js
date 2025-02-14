@@ -11,7 +11,7 @@ export default function HeaderNav() {
 	<nav className="bg-gray-800 fixed pb-4 top-0 left-0 w-full z-20 border-b">
 	  <div className="container mx-auto mt-4 p-4 flex flex-wrap items-center justify-between">
 		{/* External link for Design Better */}
-		<Link href="/" legacyBehavior>
+		<Link href="https://designbetterpodcast.com/" legacyBehavior>
 		  <a className="flex items-center space-x-3 rtl:space-x-reverse">
 			<img
 			  className="w-20"
@@ -73,6 +73,15 @@ export default function HeaderNav() {
 				  }`}
 				>
 				  Jobs
+				</a>
+			  </Link>
+			</li>
+			<li>
+			  <Link href="https://designbetterpodcast.com/" legacyBehavior>
+				<a
+				  className={"px-4 py-2 rounded hover:no-underline text-white"}
+				>
+				  Design Better Home
 				</a>
 			  </Link>
 			</li>
