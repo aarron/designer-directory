@@ -110,7 +110,7 @@ export default function JobDetailPage() {
 		<div className="flex-1 space-y-4">
 		  <div className="mb-4 border-b pb-4">
 		  	<h1 className="text-3xl font-bold highlight capitalize mb-2">{job.Company}</h1>
-		  	<h2 className="text-xl text-gray-700">{job.Title ? job.Title : job.Role}</h2>
+		  	<h2 className="text-xl text-gray-700">{job.Title1 ? job.Title1 : job.Role}</h2>
 		  </div>
 
 		  {/* Core job details */}
