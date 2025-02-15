@@ -53,7 +53,7 @@ export default function JobsPage() {
 				<h2 className="text-lg font-bold text-gray-800 highlight">
 				  {job.Company}
 				</h2>
-				<p className="border-b pb-3 mb-3">{job.Title}</p>
+				<p className="border-b pb-3 mb-3">{job.Title1}</p>
 				<p className="text-xs text-gray-500">{job.Location}</p>
 
 				<p className="mt-2 block text-sm">View details →</p>

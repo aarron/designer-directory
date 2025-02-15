@@ -35,6 +35,11 @@ export default function RootLayout({ children }) {
 				Design Better for Teams
 			  </Link>
 			</li>
+			<li>
+				<Link href="https://github.com/aarron/designer-directory/issues" target="_blank">
+					Report a bug on Github
+				</Link>
+			</li>
 		  </ul>
 		  <p className="mt-4 md:mt-0 text-right">
 			© {new Date().getFullYear()} The Curiosity Department LLC.
