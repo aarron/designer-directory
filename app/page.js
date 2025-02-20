@@ -184,11 +184,15 @@ export default function Home() {
 	  
 		{/* Submit profile Button */}
 		<Link href="https://forms.gle/MyArHLPThBEnjBo57" legacyBehavior>
-			<a target="_blank" className="cta flex items-center space-x-2 text-white py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button">
-			  <PlusCircleIcon className="h-5 w-5" />
-			  <span>Add profile</span>
-			</a>
-		  </Link>
+		  <a
+			target="_blank"
+			className="cta flex items-center space-x-2 text-white py-2 px-4 rounded hover:bg-accent-gray-50 hover:no-underline mobile-button 
+					  whitespace-nowrap min-w-[120px] justify-center"
+		  >
+			<PlusCircleIcon className="h-5 w-5" />
+			<span>Add profile</span>
+		  </a>
+		</Link>
 	  </div>
 	  
 	{/* Profile Count */}
