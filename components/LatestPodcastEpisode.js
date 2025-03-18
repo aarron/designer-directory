@@ -54,7 +54,7 @@ export default function LatestPodcastEpisode() {
 		<div className="flex flex-col">
 		  <h3 className="text-xs text-gray-600 mb-1">New on the Design Better Podcast</h3>
 		  <a
-			href={episode.link}
+			href="{episode.link}"
 			target="_blank"
 			rel="noopener noreferrer"
 			className="text-black font-semibold hover:no-underline"
