@@ -8,8 +8,11 @@ export default function LatestPodcastEpisode() {
 	  try {
 		const response = await fetch("/api/podcast");
 		const data = await response.json();
-
+  
+		console.log("Podcast API response:", data); // Debugging log
+  
 		if (data.latestEpisode) {
+		  console.log("Latest episode data:", data.latestEpisode); // Log specific episode data
 		  setEpisode(data.latestEpisode);
 		} else {
 		  console.error("No latest episode found in response");
@@ -18,7 +21,7 @@ export default function LatestPodcastEpisode() {
 		console.error("Error fetching the latest podcast episode:", error);
 	  }
 	};
-
+  
 	fetchLatestEpisode();
   }, []);
 
@@ -54,7 +57,7 @@ export default function LatestPodcastEpisode() {
 		<div className="flex flex-col">
 		  <h3 className="text-xs text-gray-600 mb-1">New on the Design Better Podcast</h3>
 		  <a
-			href="{episode.link}"
+			href={episode.link}
 			target="_blank"
 			rel="noopener noreferrer"
 			className="text-black font-semibold hover:no-underline"
