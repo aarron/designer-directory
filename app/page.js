@@ -197,7 +197,7 @@ export default function Home() {
 	  
 	{/* Profile Count */}
 	  <div className="text-sm text-gray-600">
-		<p className="text-sm text-gray-600 mb-8 pb-4 border-b"><strong>{designers.length} talented designers</strong> are ready rock &#128640;.</p>
+		<p className="text-sm text-gray-600 mb-8 pb-4 border-b"><strong>{designers.length} talented designers</strong> are ready to rock &#128640;.</p>
 	  </div>
 	  
 
