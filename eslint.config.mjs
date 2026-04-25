@@ -5,19 +5,15 @@ import { FlatCompat } from "@eslint/eslintrc";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+const compat = new FlatCompat({ baseDirectory: __dirname });
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-];
-
-module.exports = {
-  // ... your other ESLint config
-  rules: {
-    "@next/next/no-img-element": "off",
+  {
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
   },
-};
+];
 
 export default eslintConfig;

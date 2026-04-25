@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Designer {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  firstName String
+  lastName  String
+  email     String  @unique
+  bio       String? @db.Text
+  photoUrl  String?
+
+  title      String?
+  company    String?
+  linkedinUrl String?
+  websiteUrl  String?
+
+  primaryRole     String
+  otherRoles      String[]
+  location        String
+  experienceLevel String
+  typeOfRole      String[]
+  companySize     String?
+  compensation    String?
+  requiresVisa    Boolean  @default(false)
+
+  openToWork WorkStatus @default(OPEN)
+  timing     String?
+
+  publicProfile       Boolean @default(true)
+  shareConfidentially Boolean @default(false)
+
+  editToken        String    @unique @default(cuid())
+  magicToken       String?   @unique
+  magicTokenExpiry DateTime?
+
+  @@map("designers")
+}
+
+enum WorkStatus {
+  OPEN
+  OPEN_SOON
+  NOT_LOOKING
+}
+
+model Job {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posterFirstName String
+  posterLastName  String
+  posterEmail     String
+
+  company        String
+  companyLogoUrl String?
+
+  title           String
+  role            String
+  description     String?  @db.Text
+  jobUrl          String?
+  location        String
+  remote          Boolean  @default(false)
+  experienceLevel String
+  compensation    String?
+  visaSponsorship Boolean  @default(false)
+  typeOfRole      String
+  companySize     String?
+
+  active    Boolean   @default(false)
+  featured  Boolean   @default(false)
+  expiresAt DateTime?
+
+  stripeSessionId     String? @unique
+  stripePaymentStatus String?
+
+  viewCount Int @default(0)
+
+  @@map("jobs")
+}
