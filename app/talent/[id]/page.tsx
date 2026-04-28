@@ -335,32 +335,21 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
             <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 mb-6">
               Preferred Company Size
             </p>
-            {/* Top rule + bottom rule only — no cell borders or fills */}
+            {/* Top rule + bottom rule only — show only selected sizes */}
             <div className="border-t border-b border-brand-gray-200">
-              <div className="grid grid-cols-3 md:grid-cols-6 py-5">
-                {STAGE_MAP.map(({ label, range, value }) => {
-                  // Support both stored formats: label ("Founding") and range-value ("1-10")
-                  const selected = allSizes || sizes.includes(value) || sizes.includes(label);
-                  return selected ? (
-                    <div key={value} className="px-4 py-1">
-                      <p className="font-display font-bold text-lg leading-tight text-brand-black">
-                        {label}
-                      </p>
-                      <p className="text-xs mt-1 text-brand-gray-500">
-                        {range} employees
-                      </p>
-                    </div>
-                  ) : (
-                    <div key={value} className="px-4 py-1">
-                      <p className="font-display font-bold text-lg leading-tight text-brand-gray-200">
-                        {label}
-                      </p>
-                      <p className="text-xs mt-1 text-brand-gray-200">
-                        {range} employees
-                      </p>
-                    </div>
-                  );
-                })}
+              <div className="flex flex-wrap gap-x-10 gap-y-4 py-5">
+                {STAGE_MAP.filter(({ label, value }) =>
+                  allSizes || sizes.includes(value) || sizes.includes(label)
+                ).map(({ label, range, value }) => (
+                  <div key={value} className="px-4 py-1">
+                    <p className="font-display font-bold text-lg leading-tight text-brand-black">
+                      {label}
+                    </p>
+                    <p className="text-xs mt-1 text-brand-gray-500">
+                      {range} employees
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
