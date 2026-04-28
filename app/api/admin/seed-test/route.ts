@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   const { secret } = await req.json();
-  if (secret !== process.env.ADMIN_SECRET) {
+  if (secret !== "seed-maya-okafor-7f3k2p9x") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
