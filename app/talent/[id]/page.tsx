@@ -102,6 +102,17 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
     .flatMap((s) => s.split(",").map((v) => v.trim()))
     .filter(Boolean);
   const allSizes = sizes.length === COMPANY_SIZES.length;
+  // For each stored value, try to find a STAGE_MAP match; fall back to the raw value
+  const resolvedSizes = sizes.map((s) => {
+    const match = STAGE_MAP.find(
+      ({ value, label }) =>
+        s === value ||
+        s === label ||
+        s.toLowerCase().includes(label.toLowerCase()) ||
+        s.replace(/\s+employees?$/i, "") === value
+    );
+    return match ? { label: match.label, range: match.range, key: match.value } : { label: s, range: null, key: s };
+  });
 
   const locations = designer.location
     ? designer.location.split(/[,/]/).map((s) => s.trim()).filter(Boolean)
@@ -338,16 +349,16 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
             {/* Top rule + bottom rule only — show only selected sizes */}
             <div className="border-t border-b border-brand-gray-200">
               <div className="flex flex-wrap gap-x-10 gap-y-4 py-5">
-                {STAGE_MAP.filter(({ label, value }) =>
-                  allSizes || sizes.includes(value) || sizes.includes(label)
-                ).map(({ label, range, value }) => (
-                  <div key={value} className="px-4 py-1">
+                {resolvedSizes.map(({ label, range, key }) => (
+                  <div key={key} className="px-4 py-1">
                     <p className="font-display font-bold text-lg leading-tight text-brand-black">
                       {label}
                     </p>
-                    <p className="text-xs mt-1 text-brand-gray-500">
-                      {range} employees
-                    </p>
+                    {range && (
+                      <p className="text-xs mt-1 text-brand-gray-500">
+                        {range} employees
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
