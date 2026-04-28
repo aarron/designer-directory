@@ -1,10 +1,14 @@
 import Link from "next/link";
-import Image from "next/image";
+import { HeroCollage } from "@/components/HeroCollage";
+import { DesignerCard } from "@/components/DesignerCard";
+import { JobCard } from "@/components/JobCard";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { WORK_STATUS_LABELS } from "@/lib/utils";
-import { ArrowRight, Users, Briefcase, Mail } from "lucide-react";
+import { ROLE_SEO } from "@/lib/seo";
+import { ArrowRight, Users, Briefcase, Mail, Zap } from "lucide-react";
+import type { Designer } from "@prisma/client";
+
+export const dynamic = "force-dynamic";
 
 async function getStats() {
   const [designerCount, jobCount] = await Promise.all([
@@ -22,45 +26,64 @@ async function getRecentJobs() {
   });
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 async function getFeaturedDesigners() {
-  return db.designer.findMany({
-    where: { publicProfile: true, openToWork: "OPEN" },
-    orderBy: { createdAt: "desc" },
-    take: 6,
+  const all = await db.designer.findMany({
+    where: { publicProfile: true, hidden: false, openToWork: "OPEN", photoUrl: { not: null } },
+    select: {
+      id: true, firstName: true, lastName: true, title: true, company: true,
+      primaryRole: true, photoUrl: true, openToWork: true,
+      experienceLevel: true, skills: true, location: true,
+    },
   });
+  return shuffle(all).slice(0, 18) as unknown as Designer[];
+}
+
+async function getHeroDesigners() {
+  const all = await db.designer.findMany({
+    where: { publicProfile: true, hidden: false, photoUrl: { not: null } },
+    select: { id: true, firstName: true, lastName: true, photoUrl: true },
+  });
+  return shuffle(all).slice(0, 64) as { id: string; firstName: string; lastName: string; photoUrl: string }[];
 }
 
 export default async function HomePage() {
-  const [stats, recentJobs, featuredDesigners] = await Promise.all([
+  const [stats, recentJobs, featuredDesigners, heroDesigners] = await Promise.all([
     getStats(),
     getRecentJobs(),
     getFeaturedDesigners(),
+    getHeroDesigners(),
   ]);
 
   return (
     <div>
       {/* Hero */}
-      <section className="bg-brand-black text-white py-24 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section className="bg-brand-black text-white py-24 px-6 relative overflow-hidden">
+        <HeroCollage designers={heroDesigners} />
+        <div className="max-w-6xl mx-auto relative z-20">
           <div className="max-w-3xl">
-            <p className="text-brand-red font-medium text-sm tracking-wide uppercase mb-6">
-              Design Better Careers
-            </p>
             <h1 className="font-display text-display-lg font-bold text-white mb-6 text-balance">
-              Where design talent meets great teams.
+              Where creative people and great companies connect.
             </h1>
             <p className="text-brand-gray-300 text-lg leading-relaxed mb-10 max-w-2xl">
-              230,000+ design and tech professionals read Design Better every week.
-              This is their career hub — senior designers actively looking, and employers who want to reach them.
+              Design Better reaches 230,000+ designers and leaders every week. We built this to connect the best of them — senior talent ready for their next move, and the teams who deserve them.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/talent">
-                <Button size="lg" variant="primary" className="gap-2">
+                <Button size="lg" variant="primary" className="gap-2 hover:bg-brand-red/80">
                   Browse Talent <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <Link href="/post-a-job">
-                <Button size="lg" variant="secondary" className="text-white border-brand-gray-600 hover:border-white hover:bg-brand-gray-900">
+                <Button size="lg" className="gap-2 bg-transparent text-white border border-brand-gray-500 hover:border-white hover:bg-brand-gray-900">
                   Post a Job — $249
                 </Button>
               </Link>
@@ -102,48 +125,10 @@ export default async function HomePage() {
                 View all <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {featuredDesigners.map((designer) => {
-                const status = WORK_STATUS_LABELS[designer.openToWork];
-                return (
-                  <Link
-                    key={designer.id}
-                    href={`/talent/${designer.id}`}
-                    className="bg-white rounded-lg p-5 border border-brand-gray-100 hover:border-brand-gray-300 hover:shadow-sm transition-all group"
-                  >
-                    <div className="flex items-start gap-4">
-                      {designer.photoUrl ? (
-                        <Image
-                          src={designer.photoUrl}
-                          alt={`${designer.firstName} ${designer.lastName}`}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-brand-gray-100 flex items-center justify-center flex-shrink-0">
-                          <span className="font-display font-bold text-brand-gray-400 text-lg">
-                            {designer.firstName[0]}
-                          </span>
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-semibold text-brand-black group-hover:text-brand-red transition-colors truncate">
-                          {designer.firstName} {designer.lastName}
-                        </p>
-                        <p className="text-sm text-brand-gray-500 truncate">
-                          {designer.title || designer.primaryRole}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          <Badge variant={status.color as "green" | "yellow" | "gray"}>
-                            {status.label}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {featuredDesigners.map((designer) => (
+                <DesignerCard key={designer.id} designer={designer} />
+              ))}
             </div>
           </div>
         </section>
@@ -166,26 +151,9 @@ export default async function HomePage() {
                 View all <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {recentJobs.map((job) => (
-                <Link
-                  key={job.id}
-                  href={`/jobs/${job.id}`}
-                  className="flex items-center justify-between bg-white border border-brand-gray-100 hover:border-brand-gray-300 rounded-lg px-5 py-4 hover:shadow-sm transition-all group"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-brand-black group-hover:text-brand-red transition-colors">
-                      {job.title}
-                    </p>
-                    <p className="text-sm text-brand-gray-500 mt-0.5">
-                      {job.company} · {job.location}{job.remote ? " · Remote" : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                    <span className="text-xs text-brand-gray-400 hidden sm:block">{job.typeOfRole}</span>
-                    <ArrowRight className="w-4 h-4 text-brand-gray-300 group-hover:text-brand-red transition-colors" />
-                  </div>
-                </Link>
+                <JobCard key={job.id} job={job} />
               ))}
             </div>
           </div>
@@ -199,12 +167,16 @@ export default async function HomePage() {
             <div>
               <p className="text-brand-red font-medium text-sm tracking-wide uppercase mb-4">For employers</p>
               <h2 className="font-display text-display-sm font-bold mb-6 text-balance">
-                Reach the designers you can&apos;t find anywhere else.
+                The right designers, delivered to your inbox.
               </h2>
-              <p className="text-brand-gray-300 leading-relaxed mb-8">
-                Your posting reaches 230,000+ design and tech professionals through our newsletter,
-                the talent directory, and The Roundup — our curated weekly digest of what&apos;s happening in design.
+              <p className="text-brand-gray-300 leading-relaxed mb-6">
+                Post your role and our matching engine automatically scores every designer in the directory against your criteria — role, experience level, availability, location, and more. Top matches land in your inbox on a schedule you choose.
               </p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {["Once on go-live", "Weekly", "Bi-weekly"].map((freq) => (
+                  <span key={freq} className="text-xs font-medium text-brand-gray-300 border border-brand-gray-700 rounded-full px-3 py-1">{freq}</span>
+                ))}
+              </div>
               <Link href="/post-a-job">
                 <Button size="lg" className="gap-2">
                   Post a Job — $249 <ArrowRight className="w-4 h-4" />
@@ -213,9 +185,10 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 gap-4">
               {[
-                { icon: Users, title: "Senior talent pool", desc: "Over 60% of our designers have 9+ years of experience." },
+                { icon: Zap, title: "Automated matching", desc: "Our algorithm scores designers on role, experience, type of work, location, and availability — no manual searching." },
+                { icon: Users, title: "Senior talent pool", desc: "Over 60% of our designers have 9+ years of experience. Every profile is real and self-submitted." },
                 { icon: Mail, title: "Newsletter reach", desc: "New roles featured in The Roundup, sent every Friday to 230k+ subscribers." },
-                { icon: Briefcase, title: "Matched candidates", desc: "We send you a curated shortlist of matched profiles after you post." },
+                { icon: Briefcase, title: "60-day listing", desc: "Active for 60 days. Update your match frequency anytime by replying to any digest email." },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex gap-4 bg-brand-gray-900 rounded-lg p-5">
                   <div className="w-9 h-9 rounded bg-brand-red/20 flex items-center justify-center flex-shrink-0">
@@ -228,6 +201,43 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Browse by role */}
+      <section className="py-16 px-6 bg-brand-gray-50 border-t border-brand-gray-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+            <div>
+              <h2 className="font-display text-display-sm font-bold text-brand-black">
+                Browse by role
+              </h2>
+              <p className="text-brand-gray-500 text-sm mt-1">
+                Find designers and jobs by discipline
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(ROLE_SEO).map(([roleKey, { slug, singular, plural }]) => (
+              <div key={slug} className="bg-white border border-brand-gray-100 rounded-xl p-5 flex flex-col gap-3">
+                <p className="font-semibold text-brand-black">{roleKey}</p>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/hire/${slug}`}
+                    className="flex-1 text-center text-xs font-medium py-2 px-3 border border-brand-gray-200 rounded-lg text-brand-gray-600 hover:border-brand-black hover:text-brand-black transition-colors"
+                  >
+                    Hire a {singular}
+                  </Link>
+                  <Link
+                    href={`/design-jobs/${slug}`}
+                    className="flex-1 text-center text-xs font-medium py-2 px-3 border border-brand-gray-200 rounded-lg text-brand-gray-600 hover:border-brand-black hover:text-brand-black transition-colors"
+                  >
+                    {plural} Jobs
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

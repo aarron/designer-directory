@@ -1,10 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resend, FROM } from "@/lib/resend";
+import { getResend, getFrom } from "@/lib/resend";
+
+// Simple in-memory rate limiter: max 3 requests per IP per 15 minutes.
+// Works per serverless instance — good enough to stop scripted abuse.
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_REQUESTS = 3;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return false;
+  }
+  if (entry.count >= MAX_REQUESTS) return true;
+  entry.count++;
+  return false;
+}
 
 export async function POST(req: NextRequest) {
-  const { email } = await req.json();
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
 
+  if (isRateLimited(ip)) {
+    // Return 200 so we don't reveal whether the email exists
+    return NextResponse.json({ sent: true });
+  }
+
+  const { email } = await req.json();
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
   const designer = await db.designer.findUnique({ where: { email } });
@@ -16,8 +43,8 @@ export async function POST(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const editUrl = `${appUrl}/profile/edit?token=${designer.editToken}`;
 
-  await resend.emails.send({
-    from: FROM,
+  await getResend().emails.send({
+    from: getFrom(),
     to: email,
     subject: "Edit your Design Better Careers profile",
     html: `

@@ -11,8 +11,15 @@ import {
   EXPERIENCE_LEVELS,
   COMPANY_SIZES,
   ROLE_TYPES,
+  DESIGN_SKILLS,
+  INDUSTRIES,
+  START_AVAILABILITY,
+  REMOTE_PREFERENCES,
+  LOCATIONS,
+  LANGUAGES,
+  validateUrl,
 } from "@/lib/utils";
-import { ArrowRight, CheckCircle, Upload } from "lucide-react";
+import { ArrowRight, CheckCircle, Upload, Plus, X } from "lucide-react";
 import Image from "next/image";
 
 const workStatusOptions = [
@@ -23,11 +30,20 @@ const workStatusOptions = [
 
 export default function JoinPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [newDesignerId, setNewDesignerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [selectedRoleTypes, setSelectedRoleTypes] = useState<string[]>([]);
+  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [locationOption, setLocationOption] = useState("");
+  const [locationCustom, setLocationCustom] = useState("");
+  const [stealthMode, setStealthMode] = useState(false);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [projects, setProjects] = useState<Array<{ url: string; description: string }>>([]);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -54,6 +70,22 @@ export default function JoinPage() {
     const form = e.currentTarget;
     const data = new FormData(form);
 
+    // URL validation
+    const urlErrors: string[] = [];
+    const linkedinErr = validateUrl(data.get("linkedinUrl") as string);
+    const websiteErr  = validateUrl(data.get("websiteUrl") as string);
+    if (linkedinErr) urlErrors.push(`LinkedIn URL — ${linkedinErr}`);
+    if (websiteErr)  urlErrors.push(`Portfolio URL — ${websiteErr}`);
+    projects.forEach((p, i) => {
+      const err = validateUrl(p.url);
+      if (err) urlErrors.push(`Project ${i + 1} URL — ${err}`);
+    });
+    if (urlErrors.length > 0) {
+      setError(urlErrors.join("\n"));
+      setLoading(false);
+      return;
+    }
+
     let photoUrl: string | null = null;
 
     if (photoFile) {
@@ -79,15 +111,27 @@ export default function JoinPage() {
       linkedinUrl: data.get("linkedinUrl"),
       websiteUrl: data.get("websiteUrl"),
       primaryRole: data.get("primaryRole"),
-      location: data.get("location"),
+      location: locationOption === "Other" ? locationCustom : locationOption,
       experienceLevel: data.get("experienceLevel"),
       typeOfRole: selectedRoleTypes,
-      companySize: data.get("companySize"),
+      companySize: selectedCompanySizes,
+      skills: selectedSkills,
+      industries: selectedIndustries,
+      languagesSpoken: selectedLanguages,
+      projects,
+      funFacts: data.get("funFacts") || undefined,
+      mostProudOf: data.get("mostProudOf") || undefined,
+      pets: data.get("pets") || undefined,
+      recentlyRead: data.get("recentlyRead") || undefined,
+      instruments: data.get("instruments") || undefined,
+      hobbies: data.get("hobbies") || undefined,
+      startAvailability: data.get("startAvailability") || undefined,
+      remotePreference: data.get("remotePreference") || undefined,
       compensation: data.get("compensation"),
       requiresVisa: data.get("requiresVisa") === "on",
       openToWork: data.get("openToWork"),
-      publicProfile: data.get("publicProfile") === "on",
-      shareConfidentially: data.get("shareConfidentially") === "on",
+      publicProfile: !stealthMode,
+      shareConfidentially: stealthMode,
       photoUrl,
     };
 
@@ -102,6 +146,7 @@ export default function JoinPage() {
         setError(json.error || "Something went wrong. Please try again.");
         return;
       }
+      setNewDesignerId(json.id);
       setSubmitted(true);
     } catch {
       setError("Network error. Please try again.");
@@ -123,9 +168,16 @@ export default function JoinPage() {
           Your profile is live. We&apos;ve sent a magic link to your email so you can edit your profile anytime —
           no account needed. Employers browsing the directory can now find you.
         </p>
-        <Link href="/talent">
-          <Button>Browse the directory</Button>
-        </Link>
+        <div className="flex flex-wrap gap-3 justify-center">
+          {newDesignerId && (
+            <Link href={`/talent/${newDesignerId}`}>
+              <Button>View my profile</Button>
+            </Link>
+          )}
+          <Link href="/talent">
+            <Button variant="secondary">Browse the directory</Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -137,10 +189,10 @@ export default function JoinPage() {
         <div className="max-w-6xl mx-auto max-w-2xl">
           <p className="text-brand-red font-medium text-sm tracking-wide uppercase mb-4">Join the directory</p>
           <h1 className="font-display text-display-md font-bold text-white mb-4 text-balance">
-            Put yourself in front of design leaders.
+            Put your profile in front of great companies.
           </h1>
           <p className="text-brand-gray-300 text-lg leading-relaxed">
-            Free to join. Your profile is shared with 230,000+ design and tech professionals and employers actively hiring.
+            Free to join. Your profile is shared with employers actively hiring.
           </p>
         </div>
       </section>
@@ -246,15 +298,88 @@ export default function JoinPage() {
                   </div>
                 </div>
 
-                <Input id="location" name="location" label="Location" placeholder="e.g. San Francisco, CA or Remote" required />
+                <div>
+                  <label className="text-sm font-medium text-brand-gray-700 mb-2 block">Location <span className="text-brand-red">*</span></label>
+                  <select
+                    value={locationOption}
+                    onChange={(e) => setLocationOption(e.target.value)}
+                    required
+                    className="w-full h-10 pl-3 pr-8 text-sm border border-brand-gray-200 rounded bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="">Select your location</option>
+                    {LOCATIONS.map((loc) => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                  {locationOption === "Other" && (
+                    <input
+                      type="text"
+                      value={locationCustom}
+                      onChange={(e) => setLocationCustom(e.target.value)}
+                      placeholder="Enter your city or region"
+                      required
+                      className="mt-2 w-full h-10 px-3 text-sm border border-brand-gray-200 rounded focus:border-brand-black focus:outline-none"
+                    />
+                  )}
+                </div>
                 <Input id="compensation" name="compensation" label="Desired compensation (USD)" placeholder="e.g. $130,000–$170,000" hint="Optional — but helps employers know if you&apos;re in range." />
-                <Select
-                  id="companySize"
-                  name="companySize"
-                  label="Preferred company size"
-                  placeholder="No preference"
-                  options={COMPANY_SIZES.map((s) => ({ value: s, label: `${s} employees` }))}
-                />
+                <div>
+                  <label className="text-sm font-medium text-brand-gray-700 mb-2 block">
+                    Preferred company size
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {COMPANY_SIZES.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedCompanySizes((prev) =>
+                          prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+                        )}
+                        className={`px-3 py-1.5 text-sm rounded border transition-colors ${
+                          selectedCompanySizes.includes(size)
+                            ? "bg-brand-black text-white border-brand-black"
+                            : "bg-white text-brand-gray-600 border-brand-gray-200 hover:border-brand-black"
+                        }`}
+                      >
+                        {size} employees
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-brand-gray-700 mb-2 block">Skills &amp; tools</label>
+                  <div className="flex flex-wrap gap-2">
+                    {DESIGN_SKILLS.map((skill) => (
+                      <button key={skill} type="button"
+                        onClick={() => setSelectedSkills((prev) => prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill])}
+                        className={`px-3 py-1.5 text-sm rounded border transition-colors ${selectedSkills.includes(skill) ? "bg-brand-black text-white border-brand-black" : "bg-white text-brand-gray-600 border-brand-gray-200 hover:border-brand-black"}`}>
+                        {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-brand-gray-700 mb-2 block">Industries</label>
+                  <div className="flex flex-wrap gap-2">
+                    {INDUSTRIES.map((industry) => (
+                      <button key={industry} type="button"
+                        onClick={() => setSelectedIndustries((prev) => prev.includes(industry) ? prev.filter((i) => i !== industry) : [...prev, industry])}
+                        className={`px-3 py-1.5 text-sm rounded border transition-colors ${selectedIndustries.includes(industry) ? "bg-brand-black text-white border-brand-black" : "bg-white text-brand-gray-600 border-brand-gray-200 hover:border-brand-black"}`}>
+                        {industry}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Select id="startAvailability" name="startAvailability" label="Available to start"
+                  placeholder="Select availability"
+                  options={START_AVAILABILITY.map((s) => ({ value: s, label: s }))} />
+
+                <Select id="remotePreference" name="remotePreference" label="Remote preference"
+                  placeholder="Select preference"
+                  options={REMOTE_PREFERENCES.map((r) => ({ value: r, label: r }))} />
 
                 <hr className="border-brand-gray-100" />
 
@@ -263,19 +388,95 @@ export default function JoinPage() {
 
                 <hr className="border-brand-gray-100" />
 
+                {/* Featured work */}
+                <div>
+                  <h3 className="font-display font-bold text-brand-black mb-1">Featured work</h3>
+                  <p className="text-sm text-brand-gray-500 mb-5">
+                    Add up to 5 projects — a URL and a one-sentence description of your contribution.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {projects.map((project, i) => (
+                      <div key={i} className="flex flex-col gap-2 bg-brand-gray-50 border border-brand-gray-100 rounded-lg p-4 relative">
+                        <button
+                          type="button"
+                          onClick={() => setProjects((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="absolute top-3 right-3 text-brand-gray-400 hover:text-brand-black transition-colors"
+                          aria-label="Remove project"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <input
+                          type="url"
+                          value={project.url}
+                          onChange={(e) => setProjects((prev) => prev.map((p, idx) => idx === i ? { ...p, url: e.target.value } : p))}
+                          placeholder="https://example.com/project"
+                          className="h-9 px-3 text-sm border border-brand-gray-200 rounded bg-white focus:border-brand-black focus:outline-none w-full"
+                        />
+                        <input
+                          type="text"
+                          value={project.description}
+                          onChange={(e) => setProjects((prev) => prev.map((p, idx) => idx === i ? { ...p, description: e.target.value } : p))}
+                          placeholder="One sentence about your contribution or what you built..."
+                          maxLength={200}
+                          className="h-9 px-3 text-sm border border-brand-gray-200 rounded bg-white focus:border-brand-black focus:outline-none w-full"
+                        />
+                      </div>
+                    ))}
+                    {projects.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setProjects((prev) => [...prev, { url: "", description: "" }])}
+                        className="flex items-center gap-2 text-sm text-brand-gray-500 hover:text-brand-black transition-colors border border-dashed border-brand-gray-200 hover:border-brand-gray-400 rounded-lg px-4 py-3"
+                      >
+                        <Plus className="w-4 h-4" /> Add a project
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <hr className="border-brand-gray-100" />
+
+                {/* Beyond the work */}
+                <div>
+                  <h3 className="font-display font-bold text-brand-black mb-1">Beyond the work</h3>
+                  <p className="text-sm text-brand-gray-500 mb-5">All optional. Help employers get to know the person behind the portfolio.</p>
+                  <div className="flex flex-col gap-5">
+                    <Textarea id="funFacts" name="funFacts" label="Fun facts about me" placeholder="e.g. I've visited 30 countries, I make my own hot sauce..." rows={3} />
+                    <Input id="mostProudOf" name="mostProudOf" label="Work I'm most proud of" placeholder="e.g. Redesigned checkout flow that increased conversion 40%" />
+                    <Input id="pets" name="pets" label="Pets" placeholder="e.g. Two cats named Figma and Framer" />
+                    <Input id="recentlyRead" name="recentlyRead" label="Recently read" placeholder="e.g. The Design of Everyday Things" />
+                    <Input id="instruments" name="instruments" label="Instruments I play" placeholder="e.g. Guitar, piano" />
+                    <Input id="hobbies" name="hobbies" label="Hobbies" placeholder="e.g. Rock climbing, ceramics, sourdough" />
+                    <div>
+                      <label className="text-sm font-medium text-brand-gray-700 mb-2 block">Languages spoken</label>
+                      <div className="flex flex-wrap gap-2">
+                        {LANGUAGES.map((lang) => (
+                          <button key={lang} type="button"
+                            onClick={() => setSelectedLanguages((prev) => prev.includes(lang) ? prev.filter((l) => l !== lang) : [...prev, lang])}
+                            className={`px-3 py-1.5 text-sm rounded border transition-colors ${selectedLanguages.includes(lang) ? "bg-brand-black text-white border-brand-black" : "bg-white text-brand-gray-600 border-brand-gray-200 hover:border-brand-black"}`}>
+                            {lang}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="border-brand-gray-100" />
+
                 <div className="flex flex-col gap-3">
                   <label className="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" name="publicProfile" defaultChecked className="w-4 h-4 rounded border-brand-gray-300 mt-0.5" />
+                    <input
+                      type="checkbox"
+                      checked={stealthMode}
+                      onChange={(e) => setStealthMode(e.target.checked)}
+                      className="w-4 h-4 rounded border-brand-gray-300 mt-0.5"
+                    />
                     <div>
-                      <span className="text-sm font-medium text-brand-gray-700">Show my profile publicly in the directory</span>
-                      <p className="text-xs text-brand-gray-400 mt-0.5">Anyone visiting Design Better Careers can see your profile.</p>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" name="shareConfidentially" className="w-4 h-4 rounded border-brand-gray-300 mt-0.5" />
-                    <div>
-                      <span className="text-sm font-medium text-brand-gray-700">Confidentially share my info with interested employers</span>
-                      <p className="text-xs text-brand-gray-400 mt-0.5">We may share your contact details with employers who ask about you specifically.</p>
+                      <span className="text-sm font-medium text-brand-gray-700">Stealth mode</span>
+                      <p className="text-xs text-brand-gray-400 mt-0.5">
+                        Keep your profile hidden from the public directory. We&apos;ll still share it directly with employers we curate for you.
+                      </p>
                     </div>
                   </label>
                   <label className="flex items-start gap-3 cursor-pointer">
@@ -285,8 +486,8 @@ export default function JoinPage() {
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">
-                    {error}
+                  <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700 space-y-1">
+                    {error.split("\n").map((line, i) => <p key={i}>{line}</p>)}
                   </div>
                 )}
 

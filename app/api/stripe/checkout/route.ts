@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { stripe, JOB_POSTING_PRICE } from "@/lib/stripe";
+import { getStripe, JOB_POSTING_PRICE } from "@/lib/stripe";
 import { z } from "zod";
 
 const schema = z.object({
@@ -8,6 +8,7 @@ const schema = z.object({
   posterLastName: z.string().min(1),
   posterEmail: z.string().email(),
   company: z.string().min(1),
+  companyUrl: z.string().url().optional().or(z.literal("")),
   title: z.string().min(1),
   role: z.string().min(1),
   location: z.string().min(1),
@@ -19,6 +20,8 @@ const schema = z.object({
   visaSponsorship: z.boolean().default(false),
   jobUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().optional(),
+  couponCode: z.string().optional(),
+  matchFrequency: z.enum(["once", "weekly", "biweekly"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -32,6 +35,7 @@ export async function POST(req: NextRequest) {
         posterLastName: data.posterLastName,
         posterEmail: data.posterEmail,
         company: data.company,
+        companyUrl: data.companyUrl || null,
         title: data.title,
         role: data.role,
         location: data.location,
@@ -45,12 +49,32 @@ export async function POST(req: NextRequest) {
         description: data.description,
         active: false,
         expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+        matchFrequency: data.matchFrequency ?? "once",
       },
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-    const session = await stripe.checkout.sessions.create({
+    // Apply partial coupon discount if provided
+    let finalPrice = JOB_POSTING_PRICE;
+    if (data.couponCode) {
+      const coupon = await db.coupon.findUnique({
+        where: { code: data.couponCode.trim().toUpperCase() },
+      });
+      if (coupon && coupon.active && !(coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses)) {
+        if (coupon.discountType === "percent") {
+          finalPrice = Math.round(JOB_POSTING_PRICE * (1 - coupon.discountValue / 100));
+        } else {
+          finalPrice = Math.max(0, JOB_POSTING_PRICE - coupon.discountValue * 100);
+        }
+        await db.coupon.update({
+          where: { id: coupon.id },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+    }
+
+    const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: data.posterEmail,
@@ -58,7 +82,7 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "usd",
-            unit_amount: JOB_POSTING_PRICE,
+            unit_amount: finalPrice,
             product_data: {
               name: "Design Better Careers — Job Posting",
               description: `${data.title} at ${data.company} · 60 days · Newsletter placement · Candidate shortlist`,

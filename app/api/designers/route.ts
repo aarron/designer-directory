@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resend, FROM } from "@/lib/resend";
+import { getResend, getFrom } from "@/lib/resend";
 import { z } from "zod";
 
 const schema = z.object({
@@ -16,13 +16,28 @@ const schema = z.object({
   location: z.string().min(1),
   experienceLevel: z.string().min(1),
   typeOfRole: z.array(z.string()).default([]),
-  companySize: z.string().optional(),
+  companySize: z.array(z.string()).default([]),
+  skills: z.array(z.string()).default([]),
+  industries: z.array(z.string()).default([]),
+  startAvailability: z.string().optional(),
+  remotePreference: z.string().optional(),
   compensation: z.string().optional(),
   requiresVisa: z.boolean().default(false),
   openToWork: z.enum(["OPEN", "OPEN_SOON", "NOT_LOOKING"]).default("OPEN"),
   publicProfile: z.boolean().default(true),
   shareConfidentially: z.boolean().default(false),
   photoUrl: z.string().url().optional().nullable(),
+  projects: z.array(z.object({
+    url: z.string().url(),
+    description: z.string().max(200),
+  })).max(5).default([]),
+  funFacts: z.string().optional(),
+  mostProudOf: z.string().optional(),
+  pets: z.string().optional(),
+  recentlyRead: z.string().optional(),
+  languagesSpoken: z.array(z.string()).default([]),
+  instruments: z.string().optional(),
+  hobbies: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -47,8 +62,8 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const editUrl = `${appUrl}/profile/edit?token=${designer.editToken}`;
 
-    await resend.emails.send({
-      from: FROM,
+    await getResend().emails.send({
+      from: getFrom(),
       to: designer.email,
       subject: "Your Design Better Careers profile is live!",
       html: `

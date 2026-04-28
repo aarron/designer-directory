@@ -1,18 +1,26 @@
 import { db } from "@/lib/db";
-import { JobCard } from "@/components/JobCard";
-import { PRIMARY_ROLES, EXPERIENCE_LEVELS } from "@/lib/utils";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { ArrowRight } from "lucide-react";
+import { Suspense } from "react";
+import { JobCard } from "@/components/JobCard";
+import { ResultsBar } from "@/components/ResultsBar";
+import { PRIMARY_ROLES, EXPERIENCE_LEVELS } from "@/lib/utils";
 
 interface SearchParams {
   role?: string;
   level?: string;
   type?: string;
   remote?: string;
+  sort?: string;
+  view?: string;
 }
 
+const SORT_OPTIONS = [
+  { value: "", label: "RECENTLY POSTED" },
+  { value: "featured", label: "FEATURED FIRST" },
+];
+
 async function getJobs(params: SearchParams) {
+  const sortFeatured = params.sort === "featured";
   return db.job.findMany({
     where: {
       active: true,
@@ -21,103 +29,199 @@ async function getJobs(params: SearchParams) {
       ...(params.type ? { typeOfRole: params.type } : {}),
       ...(params.remote === "true" ? { remote: true } : {}),
     },
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    orderBy: sortFeatured
+      ? [{ featured: "desc" }, { createdAt: "desc" }]
+      : [{ createdAt: "desc" }],
   });
 }
 
-export default async function JobsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const params = await searchParams;
   const jobs = await getJobs(params);
-  const activeFilters = Object.values(params).filter(Boolean).length;
+  const total = await db.job.count({ where: { active: true } });
+
+  const view = params.view === "list" ? "list" : "grid";
+  const activeFilters = Object.entries(params)
+    .filter(([k]) => !["sort", "view"].includes(k))
+    .filter(([, v]) => Boolean(v)).length;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-        <div>
-          <h1 className="font-display text-display-md font-bold text-brand-black">Open design roles</h1>
-          <p className="text-brand-gray-500 mt-2">
-            {jobs.length} job{jobs.length !== 1 ? "s" : ""} posted
-            {activeFilters > 0 ? " matching your filters" : ""}
-          </p>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-6xl mx-auto px-6 pt-16 pb-24">
+
+        {/* Hero */}
+        <div className="flex items-end justify-between mb-10 border-b border-brand-gray-100 pb-10">
+          <div>
+            <h1 className="font-display text-display-lg font-bold text-brand-black leading-none">
+              Open design roles<span className="text-brand-red">.</span>
+            </h1>
+            <p className="text-[11px] uppercase tracking-widest text-brand-gray-400 font-semibold mt-3">
+              Jobs · Design Better Careers
+            </p>
+          </div>
+          <div className="flex items-center gap-4 flex-shrink-0 ml-8">
+            <div className="text-right">
+              <p className="font-display font-bold text-display-md text-brand-red leading-none">{total}</p>
+              <p className="text-[11px] uppercase tracking-widest text-brand-gray-400 font-semibold mt-1">Roles open</p>
+            </div>
+            <div className="hidden md:flex flex-col gap-2">
+              <Link
+                href="/post-a-job"
+                className="inline-flex items-center gap-2 bg-brand-black text-white text-[11px] uppercase tracking-widest font-bold px-5 py-3 rounded hover:bg-brand-gray-800 transition-colors whitespace-nowrap"
+              >
+                Post a Job — $249 →
+              </Link>
+              <Link
+                href="/jobs/manage"
+                className="text-[11px] text-brand-gray-400 hover:text-brand-black transition-colors text-center uppercase tracking-widest font-medium"
+              >
+                Manage a listing
+              </Link>
+            </div>
+          </div>
         </div>
-        <Link href="/post-a-job">
-          <Button className="gap-2 whitespace-nowrap">
-            Post a Job — $249 <ArrowRight className="w-4 h-4" />
-          </Button>
-        </Link>
-      </div>
 
-      {/* Filters */}
-      <form className="mb-8 flex flex-wrap gap-3">
-        <select
-          name="role"
-          defaultValue={params.role || ""}
-          className="h-9 pl-3 pr-8 text-sm border border-brand-gray-200 rounded bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer"
-        >
-          <option value="">All roles</option>
-          {PRIMARY_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+        {/* Filter row */}
+        <form className="mb-8">
+          {params.sort && <input type="hidden" name="sort" value={params.sort} />}
+          {params.view && <input type="hidden" name="view" value={params.view} />}
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+            <JobFilterSelect label="Role" name="role" value={params.role || ""}>
+              <option value="">All roles</option>
+              {PRIMARY_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+            </JobFilterSelect>
 
-        <select
-          name="level"
-          defaultValue={params.level || ""}
-          className="h-9 pl-3 pr-8 text-sm border border-brand-gray-200 rounded bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer"
-        >
-          <option value="">All experience levels</option>
-          {EXPERIENCE_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-        </select>
+            <JobFilterSelect label="Experience" name="level" value={params.level || ""}>
+              <option value="">All levels</option>
+              {EXPERIENCE_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </JobFilterSelect>
 
-        <select
-          name="type"
-          defaultValue={params.type || ""}
-          className="h-9 pl-3 pr-8 text-sm border border-brand-gray-200 rounded bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer"
-        >
-          <option value="">Any type</option>
-          <option value="Full-time">Full-time</option>
-          <option value="Contract">Contract</option>
-          <option value="Part-time">Part-time</option>
-        </select>
+            <JobFilterSelect label="Type" name="type" value={params.type || ""}>
+              <option value="">Any type</option>
+              <option value="Full-time">Full-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Part-time">Part-time</option>
+            </JobFilterSelect>
 
-        <label className="h-9 px-3 flex items-center gap-2 text-sm border border-brand-gray-200 rounded bg-white cursor-pointer hover:border-brand-black transition-colors">
-          <input type="checkbox" name="remote" value="true" defaultChecked={params.remote === "true"} className="rounded" />
-          Remote
-        </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] uppercase tracking-widest text-brand-gray-400 font-semibold">Remote</label>
+              <label className="h-8 px-3 flex items-center gap-2 text-[11px] border border-brand-gray-200 bg-white cursor-pointer hover:border-brand-black transition-colors uppercase tracking-wide font-medium">
+                <input
+                  type="checkbox"
+                  name="remote"
+                  value="true"
+                  defaultChecked={params.remote === "true"}
+                  className="rounded"
+                />
+                Remote only
+              </label>
+            </div>
 
-        <button type="submit" className="h-9 px-4 text-sm font-medium bg-brand-black text-white rounded hover:bg-brand-gray-800 transition-colors">
-          Filter
-        </button>
-        {activeFilters > 0 && (
-          <Link href="/jobs" className="h-9 px-4 text-sm font-medium border border-brand-gray-200 rounded text-brand-gray-600 hover:border-brand-black hover:text-brand-black transition-colors flex items-center">
-            Clear
-          </Link>
+            <div className="flex items-end gap-2">
+              <button
+                type="submit"
+                className="h-8 px-4 text-[11px] uppercase tracking-widest font-bold text-white bg-brand-black hover:bg-brand-gray-800 transition-colors"
+              >
+                Filter
+              </button>
+              {activeFilters > 0 && (
+                <Link
+                  href="/jobs"
+                  className="h-8 px-3 text-[11px] uppercase tracking-widest font-medium border border-brand-gray-200 text-brand-gray-500 hover:border-brand-black hover:text-brand-black transition-colors flex items-center"
+                >
+                  Clear
+                </Link>
+              )}
+            </div>
+          </div>
+        </form>
+
+        {/* Results bar */}
+        <Suspense>
+          <ResultsBar
+            showing={jobs.length}
+            total={total}
+            sortOptions={SORT_OPTIONS}
+          />
+        </Suspense>
+
+        {/* Grid / List */}
+        {jobs.length === 0 ? (
+          <div className="py-24 text-center">
+            <p className="font-display font-bold text-display-sm text-brand-black">
+              No roles match<span className="text-brand-red">.</span>
+            </p>
+            <p className="text-brand-gray-500 text-sm mt-3">
+              Try adjusting your filters or check back soon.
+            </p>
+            {activeFilters > 0 && (
+              <Link
+                href="/jobs"
+                className="inline-block mt-6 text-[11px] uppercase tracking-widest font-bold border border-brand-gray-200 px-5 py-2.5 hover:border-brand-black transition-colors"
+              >
+                Clear filters
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {jobs.map((job) => (
+              <JobCard key={job.id} job={job} />
+            ))}
+          </div>
         )}
-      </form>
 
-      {jobs.length === 0 ? (
-        <div className="text-center py-20 text-brand-gray-400">
-          <p className="text-lg font-medium">No jobs match your filters.</p>
-          <p className="text-sm mt-2 mb-8">Try adjusting your filters or check back soon.</p>
-          <Link href="/post-a-job">
-            <Button variant="secondary">Post a Job</Button>
+        {/* Employer CTA */}
+        <div className="mt-20 border-t border-brand-gray-100 pt-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <p className="font-display font-bold text-display-sm text-brand-black">
+              Hiring a designer?<span className="text-brand-red">.</span>
+            </p>
+            <p className="text-brand-gray-500 text-sm mt-2 max-w-md">
+              Reach 230,000+ design professionals and get a curated shortlist of matched candidates.
+            </p>
+          </div>
+          <Link
+            href="/post-a-job"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-brand-black text-white text-[11px] uppercase tracking-widest font-bold px-6 py-3.5 rounded hover:bg-brand-gray-800 transition-colors whitespace-nowrap"
+          >
+            Post a Job — $249 →
           </Link>
         </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {jobs.map((job) => <JobCard key={job.id} job={job} compact />)}
-        </div>
-      )}
+      </div>
+    </div>
+  );
+}
 
-      {/* Employer CTA */}
-      <div className="mt-16 bg-brand-gray-50 border border-brand-gray-100 rounded-xl p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div>
-          <p className="font-display font-bold text-brand-black text-lg">Hiring a designer?</p>
-          <p className="text-brand-gray-500 text-sm mt-1 max-w-md">
-            Reach 230,000+ design professionals and get a curated shortlist of matched candidates.
-          </p>
-        </div>
-        <Link href="/post-a-job" className="flex-shrink-0">
-          <Button className="gap-2">Post a Job — $249 <ArrowRight className="w-4 h-4" /></Button>
-        </Link>
+function JobFilterSelect({
+  label,
+  name,
+  value,
+  children,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[9px] uppercase tracking-widest text-brand-gray-400 font-semibold">
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          name={name}
+          defaultValue={value}
+          className={`h-8 pl-2 pr-6 text-[11px] border border-brand-gray-200 bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer uppercase tracking-wide font-medium ${value ? "border-brand-black" : ""}`}
+        >
+          {children}
+        </select>
+        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-brand-gray-400 text-[10px]">▾</span>
       </div>
     </div>
   );

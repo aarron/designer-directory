@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh",
+      "schedule": "0 9 1 */2 *"
+    },
+    {
+      "path": "/api/cron/match",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/confirm-check",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/repost-nudge",
+      "schedule": "0 9 * * 1"
+    }
+  ]
+}

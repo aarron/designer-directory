@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getResend, getFrom } from "@/lib/resend";
 import { z } from "zod";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://designbetter.careers";
 
 export async function GET(req: NextRequest) {
   const token = new URL(req.url).searchParams.get("token");
@@ -27,14 +30,40 @@ const updateSchema = z.object({
   location: z.string().min(1),
   experienceLevel: z.string().min(1),
   typeOfRole: z.array(z.string()).default([]),
-  companySize: z.string().optional(),
+  companySize: z.array(z.string()).default([]),
+  skills: z.array(z.string()).default([]),
+  industries: z.array(z.string()).default([]),
+  startAvailability: z.string().optional(),
+  remotePreference: z.string().optional(),
   compensation: z.string().optional(),
   requiresVisa: z.boolean().default(false),
   openToWork: z.enum(["OPEN", "OPEN_SOON", "NOT_LOOKING"]),
   publicProfile: z.boolean().default(true),
   shareConfidentially: z.boolean().default(false),
   photoUrl: z.string().url().optional().nullable(),
+  funFacts: z.string().optional(),
+  mostProudOf: z.string().optional(),
+  pets: z.string().optional(),
+  recentlyRead: z.string().optional(),
+  languagesSpoken: z.array(z.string()).default([]),
+  instruments: z.string().optional(),
+  hobbies: z.string().optional(),
+  projects: z.array(z.object({
+    url: z.string().url(),
+    description: z.string().max(200),
+  })).max(5).default([]),
 });
+
+export async function DELETE(req: NextRequest) {
+  const token = new URL(req.url).searchParams.get("token");
+  if (!token) return NextResponse.json({ error: "Token required" }, { status: 400 });
+
+  const designer = await db.designer.findUnique({ where: { editToken: token } });
+  if (!designer) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await db.designer.delete({ where: { id: designer.id } });
+  return NextResponse.json({ success: true });
+}
 
 export async function PUT(req: NextRequest) {
   try {
@@ -47,6 +76,10 @@ export async function PUT(req: NextRequest) {
     const { token, ...updates } = data;
     void token;
 
+    const wasNotLooking = designer.openToWork === "NOT_LOOKING";
+    const nowNotLooking = updates.openToWork === "NOT_LOOKING";
+    const justSwitchedToNotLooking = !wasNotLooking && nowNotLooking;
+
     await db.designer.update({
       where: { id: designer.id },
       data: {
@@ -56,6 +89,27 @@ export async function PUT(req: NextRequest) {
         photoUrl: updates.photoUrl || null,
       },
     });
+
+    // Send success story email when designer switches to NOT_LOOKING
+    if (justSwitchedToNotLooking) {
+      const storyUrl = `${APP_URL}/success-story?token=${designer.editToken}`;
+      await getResend().emails.send({
+        from: getFrom(),
+        to: designer.email,
+        subject: "Did Design Better Careers help you land your next role? 🎉",
+        html: `
+          <p>Hi ${designer.firstName},</p>
+          <p>Congratulations on what sounds like an exciting new chapter!</p>
+          <p>We noticed you updated your status to "Not looking" — if you connected with an employer through Design Better Careers, we'd love to hear about it.</p>
+          <p>Sharing your story takes 2 minutes and helps other designers see what's possible. We feature stories in our newsletter, which reaches 230,000+ readers.</p>
+          <p>
+            <a href="${storyUrl}" style="display:inline-block;background:#C1121F;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Share your story →</a>
+          </p>
+          <p style="color:#888;font-size:14px;">No pressure at all — if it wasn't through us, that's completely fine. Wishing you the best in your new role!</p>
+          <p>— Design Better Careers</p>
+        `,
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

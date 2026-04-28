@@ -6,7 +6,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { PRIMARY_ROLES, EXPERIENCE_LEVELS, COMPANY_SIZES } from "@/lib/utils";
-import { Users, Mail, Briefcase, ArrowRight, CheckCircle } from "lucide-react";
+import { Users, Mail, Briefcase, ArrowRight, CheckCircle, Tag, Zap } from "lucide-react";
 
 const roleTypeOptions = [
   { value: "Full-time", label: "Full-time" },
@@ -40,6 +40,36 @@ const perks = [
 export default function PostAJobPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [matchFrequency, setMatchFrequency] = useState("weekly");
+  const [couponResult, setCouponResult] = useState<{
+    valid: boolean;
+    isFree?: boolean;
+    discountType?: string;
+    discountValue?: number;
+    discountedPrice?: number;
+    message: string;
+  } | null>(null);
+
+  async function handleApplyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponValidating(true);
+    setCouponResult(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode }),
+      });
+      const data = await res.json();
+      setCouponResult(data);
+    } catch {
+      setCouponResult({ valid: false, message: "Could not validate coupon." });
+    } finally {
+      setCouponValidating(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -61,14 +91,20 @@ export default function PostAJobPage() {
       typeOfRole: data.get("typeOfRole"),
       experienceLevel: data.get("experienceLevel"),
       compensation: data.get("compensation"),
+      companyUrl: data.get("companyUrl"),
       companySize: data.get("companySize"),
       visaSponsorship: data.get("visaSponsorship") === "on",
       jobUrl: data.get("jobUrl"),
       description: data.get("description"),
+      matchFrequency,
+      ...(couponResult?.valid ? { couponCode: couponCode.trim().toUpperCase() } : {}),
     };
 
+    const isFree = couponResult?.valid && couponResult?.isFree;
+
     try {
-      const res = await fetch("/api/stripe/checkout", {
+      const endpoint = isFree ? "/api/jobs/free" : "/api/stripe/checkout";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -81,7 +117,11 @@ export default function PostAJobPage() {
         return;
       }
 
-      window.location.href = json.url;
+      if (isFree) {
+        window.location.href = `/post-a-job/success?job_id=${json.jobId}`;
+      } else {
+        window.location.href = json.url;
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -133,7 +173,13 @@ export default function PostAJobPage() {
                 Tell us about the role
               </h2>
               <p className="text-brand-gray-500 text-sm mb-8">
-                Fill in the details below. After submitting, you&apos;ll be taken to checkout — $249 for 60 days.
+                Fill in the details below. After submitting, you&apos;ll be taken to checkout —{" "}
+                {couponResult?.valid && !couponResult.isFree && couponResult.discountedPrice !== undefined ? (
+                  <><s className="text-brand-gray-400">$249</s> <span className="text-green-600 font-medium">${couponResult.discountedPrice}</span></>
+                ) : couponResult?.valid && couponResult.isFree ? (
+                  <><s className="text-brand-gray-400">$249</s> <span className="text-green-600 font-medium">free!</span></>
+                ) : "$249"}{" "}
+                for 60 days.
               </p>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -150,6 +196,14 @@ export default function PostAJobPage() {
                   required
                 />
                 <Input id="company" name="company" label="Company name" required />
+                <Input
+                  id="companyUrl"
+                  name="companyUrl"
+                  type="url"
+                  label="Company website"
+                  placeholder="https://yourcompany.com"
+                  hint="Used to display your company logo on your listing automatically."
+                />
 
                 <hr className="border-brand-gray-100" />
 
@@ -226,6 +280,65 @@ export default function PostAJobPage() {
                   rows={8}
                 />
 
+                {/* Candidate matching */}
+                <div className="bg-brand-gray-50 border border-brand-gray-100 rounded-lg p-4">
+                  <p className="text-sm font-medium text-brand-gray-700 mb-1 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-brand-red" /> Automated candidate matching
+                  </p>
+                  <p className="text-xs text-brand-gray-500 mb-3">
+                    We match your role against our talent pool and deliver ranked profiles to your inbox automatically. No manual searching required.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { value: "once", label: "Once — a shortlist when my job goes live" },
+                      { value: "weekly", label: "Weekly — fresh matches every 7 days" },
+                      { value: "biweekly", label: "Bi-weekly — new matches every two weeks" },
+                    ].map(({ value, label }) => (
+                      <label key={value} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="matchFrequency"
+                          value={value}
+                          checked={matchFrequency === value}
+                          onChange={() => setMatchFrequency(value)}
+                          className="w-4 h-4 accent-brand-red"
+                        />
+                        <span className="text-sm text-brand-gray-700">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Coupon code */}
+                <div className="bg-brand-gray-50 border border-brand-gray-100 rounded-lg p-4">
+                  <p className="text-sm font-medium text-brand-gray-700 mb-3 flex items-center gap-2">
+                    <Tag className="w-4 h-4" /> Have a coupon code?
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())}
+                      placeholder="Enter code"
+                      className="flex-1 h-9 px-3 text-sm border border-brand-gray-200 rounded bg-white focus:border-brand-black focus:outline-none uppercase tracking-widest"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim() || couponValidating}
+                      className="h-9 px-4 text-sm font-medium rounded border border-brand-gray-200 hover:border-brand-black transition-colors disabled:opacity-40"
+                    >
+                      {couponValidating ? "Checking…" : "Apply"}
+                    </button>
+                  </div>
+                  {couponResult && (
+                    <p className={`text-sm mt-2 font-medium ${couponResult.valid ? "text-green-600" : "text-red-600"}`}>
+                      {couponResult.valid ? "✓" : "✗"} {couponResult.message}
+                    </p>
+                  )}
+                </div>
+
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">
                     {error}
@@ -233,7 +346,13 @@ export default function PostAJobPage() {
                 )}
 
                 <Button type="submit" size="lg" disabled={loading} className="gap-2">
-                  {loading ? "Preparing checkout..." : "Continue to payment — $249"}
+                  {loading
+                    ? "Submitting..."
+                    : couponResult?.valid && couponResult?.isFree
+                    ? "Post for free"
+                    : couponResult?.valid && couponResult?.discountedPrice !== undefined
+                    ? `Continue to payment — $${couponResult.discountedPrice}`
+                    : "Continue to payment — $249"}
                   {!loading && <ArrowRight className="w-4 h-4" />}
                 </Button>
               </form>
@@ -243,7 +362,19 @@ export default function PostAJobPage() {
             <div className="flex flex-col gap-6">
               <div className="bg-brand-gray-50 border border-brand-gray-100 rounded-xl p-6 sticky top-24">
                 <p className="font-display font-bold text-brand-black text-lg mb-1">One-time post</p>
-                <p className="text-display-sm font-display font-bold text-brand-red mb-4">$249</p>
+                {couponResult?.valid && !couponResult.isFree && couponResult.discountedPrice !== undefined ? (
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <p className="text-display-sm font-display font-bold text-brand-red">${couponResult.discountedPrice}</p>
+                    <p className="text-lg font-display text-brand-gray-400 line-through">$249</p>
+                  </div>
+                ) : couponResult?.valid && couponResult.isFree ? (
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <p className="text-display-sm font-display font-bold text-green-600">Free</p>
+                    <p className="text-lg font-display text-brand-gray-400 line-through">$249</p>
+                  </div>
+                ) : (
+                  <p className="text-display-sm font-display font-bold text-brand-red mb-4">$249</p>
+                )}
                 <ul className="flex flex-col gap-3 text-sm text-brand-gray-600">
                   {[
                     "Active for 60 days",
@@ -261,8 +392,8 @@ export default function PostAJobPage() {
                 <div className="mt-6 pt-6 border-t border-brand-gray-200">
                   <p className="text-xs text-brand-gray-400">
                     Questions? Email{" "}
-                    <a href="mailto:jobs@thecuriositydepartment.com" className="underline hover:text-brand-black">
-                      jobs@thecuriositydepartment.com
+                    <a href="mailto:careers@thecuriositydepartment.com" className="underline hover:text-brand-black">
+                      careers@thecuriositydepartment.com
                     </a>
                   </p>
                 </div>
