@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 import { ArtisticAvatar } from "@/components/ArtisticAvatar";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { ContactButton } from "@/components/ContactButton";
@@ -518,7 +519,7 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
               href="/post-a-job"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-red text-white text-sm font-semibold tracking-wide uppercase rounded hover:bg-red-700 transition-colors"
             >
-              Post a Job — $249
+              Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
             </Link>
           </div>
 

@@ -6,6 +6,7 @@ import { DesignerCard } from "@/components/DesignerCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, MapPin, Users } from "lucide-react";
 import { ROLE_SEO, SEO_LOCATIONS, roleFromSlug, locationFromSlug, locationWhereClause } from "@/lib/seo";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 
 export const revalidate = 3600;
 
@@ -110,7 +111,7 @@ export default async function HireRoleLocationPage({
           <div className="flex flex-wrap items-center gap-6">
             <Link href="/post-a-job">
               <Button className="gap-2">
-                Post a Job — $249 <ArrowRight className="w-4 h-4" />
+                Post a Job — ${JOB_POSTING_PRICE_DOLLARS} <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <div className="flex items-center gap-2 text-brand-gray-400 text-sm">
@@ -171,7 +172,7 @@ export default async function HireRoleLocationPage({
           </div>
           <Link href="/post-a-job" className="flex-shrink-0">
             <Button className="gap-2 whitespace-nowrap">
-              Post a Job — $249 <ArrowRight className="w-4 h-4" />
+              Post a Job — ${JOB_POSTING_PRICE_DOLLARS} <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>

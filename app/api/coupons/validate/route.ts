@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const { code } = await req.json();
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   const isFree = coupon.discountType === "percent" && coupon.discountValue === 100;
-  const originalPrice = 249;
+  const originalPrice = JOB_POSTING_PRICE_DOLLARS;
 
   let discountedPrice: number;
   let message: string;

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { Button } from "@/components/ui/Button";
 import { ROLE_SEO } from "@/lib/seo";
 import { ArrowRight, Users, Briefcase, Mail, Zap } from "lucide-react";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 import type { Designer } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -84,7 +85,7 @@ export default async function HomePage() {
               </Link>
               <Link href="/post-a-job">
                 <Button size="lg" className="gap-2 bg-transparent text-white border border-brand-gray-500 hover:border-white hover:bg-brand-gray-900">
-                  Post a Job — $249
+                  Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
                 </Button>
               </Link>
             </div>
@@ -179,7 +180,7 @@ export default async function HomePage() {
               </div>
               <Link href="/post-a-job">
                 <Button size="lg" className="gap-2">
-                  Post a Job — $249 <ArrowRight className="w-4 h-4" />
+                  Post a Job — ${JOB_POSTING_PRICE_DOLLARS} <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
             </div>

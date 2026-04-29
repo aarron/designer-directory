@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 
 export function HeaderNav() {
   const [open, setOpen] = useState(false);
@@ -26,7 +27,7 @@ export function HeaderNav() {
             Add Your Profile
           </Link>
           <Link href="/post-a-job" className="rounded bg-brand-red px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-90">
-            Post a Job — $249
+            Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
           </Link>
         </div>
 
@@ -51,7 +52,7 @@ export function HeaderNav() {
             Add Your Profile
           </Link>
           <Link href="/post-a-job" className="rounded bg-brand-red px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white text-center transition-opacity hover:opacity-90" onClick={() => setOpen(false)}>
-            Post a Job — $249
+            Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
           </Link>
         </div>
       )}

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { JobCard } from "@/components/JobCard";
 import { ResultsBar } from "@/components/ResultsBar";
 import { PRIMARY_ROLES, EXPERIENCE_LEVELS } from "@/lib/utils";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 
 interface SearchParams {
   role?: string;
@@ -73,7 +74,7 @@ export default async function JobsPage({
                 href="/post-a-job"
                 className="inline-flex items-center gap-2 bg-brand-black text-white text-[11px] uppercase tracking-widest font-bold px-5 py-3 rounded hover:bg-brand-gray-800 transition-colors whitespace-nowrap"
               >
-                Post a Job — $249 →
+                Post a Job — ${JOB_POSTING_PRICE_DOLLARS} →
               </Link>
               <Link
                 href="/jobs/manage"
@@ -189,7 +190,7 @@ export default async function JobsPage({
             href="/post-a-job"
             className="flex-shrink-0 inline-flex items-center gap-2 bg-brand-black text-white text-[11px] uppercase tracking-widest font-bold px-6 py-3.5 rounded hover:bg-brand-gray-800 transition-colors whitespace-nowrap"
           >
-            Post a Job — $249 →
+            Post a Job — ${JOB_POSTING_PRICE_DOLLARS} →
           </Link>
         </div>
       </div>

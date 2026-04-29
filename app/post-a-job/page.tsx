@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { PRIMARY_ROLES, EXPERIENCE_LEVELS, COMPANY_SIZES } from "@/lib/utils";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 import { Users, Mail, Briefcase, ArrowRight, CheckCircle, Tag, Zap } from "lucide-react";
 
 const roleTypeOptions = [
@@ -175,10 +176,10 @@ export default function PostAJobPage() {
               <p className="text-brand-gray-500 text-sm mb-8">
                 Fill in the details below. After submitting, you&apos;ll be taken to checkout —{" "}
                 {couponResult?.valid && !couponResult.isFree && couponResult.discountedPrice !== undefined ? (
-                  <><s className="text-brand-gray-400">$249</s> <span className="text-green-600 font-medium">${couponResult.discountedPrice}</span></>
+                  <><s className="text-brand-gray-400">${JOB_POSTING_PRICE_DOLLARS}</s> <span className="text-green-600 font-medium">${couponResult.discountedPrice}</span></>
                 ) : couponResult?.valid && couponResult.isFree ? (
-                  <><s className="text-brand-gray-400">$249</s> <span className="text-green-600 font-medium">free!</span></>
-                ) : "$249"}{" "}
+                  <><s className="text-brand-gray-400">${JOB_POSTING_PRICE_DOLLARS}</s> <span className="text-green-600 font-medium">free!</span></>
+                ) : `$${JOB_POSTING_PRICE_DOLLARS}`}{" "}
                 for 60 days.
               </p>
 
@@ -352,7 +353,7 @@ export default function PostAJobPage() {
                     ? "Post for free"
                     : couponResult?.valid && couponResult?.discountedPrice !== undefined
                     ? `Continue to payment — $${couponResult.discountedPrice}`
-                    : "Continue to payment — $249"}
+                    : `Continue to payment — $${JOB_POSTING_PRICE_DOLLARS}`}
                   {!loading && <ArrowRight className="w-4 h-4" />}
                 </Button>
               </form>
@@ -365,15 +366,15 @@ export default function PostAJobPage() {
                 {couponResult?.valid && !couponResult.isFree && couponResult.discountedPrice !== undefined ? (
                   <div className="flex items-baseline gap-2 mb-4">
                     <p className="text-display-sm font-display font-bold text-brand-red">${couponResult.discountedPrice}</p>
-                    <p className="text-lg font-display text-brand-gray-400 line-through">$249</p>
+                    <p className="text-lg font-display text-brand-gray-400 line-through">${JOB_POSTING_PRICE_DOLLARS}</p>
                   </div>
                 ) : couponResult?.valid && couponResult.isFree ? (
                   <div className="flex items-baseline gap-2 mb-4">
                     <p className="text-display-sm font-display font-bold text-green-600">Free</p>
-                    <p className="text-lg font-display text-brand-gray-400 line-through">$249</p>
+                    <p className="text-lg font-display text-brand-gray-400 line-through">${JOB_POSTING_PRICE_DOLLARS}</p>
                   </div>
                 ) : (
-                  <p className="text-display-sm font-display font-bold text-brand-red mb-4">$249</p>
+                  <p className="text-display-sm font-display font-bold text-brand-red mb-4">${JOB_POSTING_PRICE_DOLLARS}</p>
                 )}
                 <ul className="flex flex-col gap-3 text-sm text-brand-gray-600">
                   {[

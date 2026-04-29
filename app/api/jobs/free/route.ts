@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getResend, getFrom } from "@/lib/resend";
+import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 import { z } from "zod";
 
 const schema = z.object({
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const isFree =
       (coupon.discountType === "percent" && coupon.discountValue === 100) ||
-      (coupon.discountType === "fixed" && coupon.discountValue >= 249);
+      (coupon.discountType === "fixed" && coupon.discountValue >= JOB_POSTING_PRICE_DOLLARS);
 
     if (!isFree) {
       return NextResponse.json({ error: "Coupon does not cover the full amount." }, { status: 400 });
