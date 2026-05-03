@@ -62,10 +62,10 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
   return (
     <Link
       href={`/talent/${designer.id}`}
-      className="bg-white border border-brand-gray-100 hover:border-brand-gray-300 hover:shadow-md transition-all group flex items-start overflow-hidden animate-fade-in"
+      className="bg-white border border-brand-gray-100 hover:border-brand-gray-300 hover:shadow-md transition-all group block relative overflow-hidden animate-fade-in"
     >
-      {/* Photo / Avatar — square, never stretches taller than wide */}
-      <div className="w-[28%] flex-shrink-0 aspect-square relative bg-brand-gray-100 overflow-hidden">
+      {/* Photo / Avatar — square, drives card height */}
+      <div className="w-[28%] aspect-square relative bg-brand-gray-100 overflow-hidden">
         {designer.photoUrl ? (
           <Image
             src={designer.photoUrl}
@@ -84,8 +84,8 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 p-4 flex flex-col gap-2.5">
+      {/* Content — absolutely fills the right portion, clipped to avatar height */}
+      <div className="absolute inset-0 left-[28%] overflow-hidden p-4 flex flex-col gap-2.5">
 
         {/* Name + subtitle */}
         <div>
