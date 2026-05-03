@@ -85,15 +85,15 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
       </div>
 
       {/* Content — absolutely fills the right portion, clipped to avatar height */}
-      <div className="absolute inset-0 left-[28%] overflow-hidden p-4 flex flex-col gap-2.5">
+      <div className="absolute inset-0 left-[28%] overflow-hidden px-4 py-3 flex flex-col justify-between">
 
         {/* Name + subtitle */}
-        <div>
-          <p className="font-display font-bold text-[22px] leading-tight text-brand-black group-hover:text-brand-red transition-colors">
+        <div className="min-w-0">
+          <p className="font-display font-bold text-[18px] leading-tight text-brand-black group-hover:text-brand-red transition-colors truncate">
             {designer.firstName} {designer.lastName}<span className="text-brand-red">.</span>
           </p>
           {(designer.title || designer.company) && (
-            <p className="text-[13px] italic text-brand-gray-500 mt-1 leading-snug truncate">
+            <p className="text-[12px] italic text-brand-gray-500 mt-0.5 leading-snug truncate">
               {designer.title || designer.primaryRole}
               {designer.company && (
                 <span className="not-italic font-semibold text-brand-gray-600"> · {designer.company}</span>
@@ -102,41 +102,14 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
           )}
         </div>
 
-        {/* Role / Level grid */}
-        <div className="grid grid-cols-2 border border-brand-gray-100">
-          <div className="px-2.5 py-2 border-r border-brand-gray-100">
-            <p className="text-[8px] uppercase tracking-widest text-brand-gray-400 font-semibold">Role</p>
-            <p className="text-[13px] font-bold text-brand-red leading-tight mt-0.5 truncate">{designer.primaryRole}</p>
-          </div>
-          <div className="px-2.5 py-2">
-            <p className="text-[8px] uppercase tracking-widest text-brand-gray-400 font-semibold">Level</p>
-            <p className="text-[13px] font-bold text-brand-black leading-tight mt-0.5 truncate">{designer.experienceLevel}</p>
-          </div>
+        {/* Role · Level — inline, no borders */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[12px] font-bold text-brand-red truncate">{designer.primaryRole}</span>
+          <span className="text-brand-gray-300 flex-shrink-0">·</span>
+          <span className="text-[12px] font-medium text-brand-gray-500 truncate">{designer.experienceLevel}</span>
         </div>
 
-        {/* Skills */}
-        {designer.skills && designer.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {designer.skills.slice(0, 3).map((skill) => (
-              <span
-                key={skill}
-                className="text-[9px] px-1.5 py-0.5 bg-brand-gray-50 border border-brand-gray-100 text-brand-gray-600 uppercase tracking-wide font-semibold"
-              >
-                {skill}
-              </span>
-            ))}
-            {designer.skills.length > 3 && (
-              <span className="text-[9px] px-1 py-0.5 text-brand-gray-400">
-                +{designer.skills.length - 3}
-              </span>
-            )}
-          </div>
-        )}
-
-      </div>
-
-      {/* Status — pinned to top-right of card */}
-      <div className="absolute top-2.5 right-2.5">
+        {/* Status */}
         <span
           className={`text-[9px] font-bold tracking-widest uppercase ${
             designer.openToWork === "OPEN"
@@ -148,6 +121,7 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
         >
           ● {status.label}
         </span>
+
       </div>
     </Link>
   );
