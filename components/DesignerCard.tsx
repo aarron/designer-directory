@@ -133,20 +133,21 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
           </div>
         )}
 
-        {/* Status — pinned to bottom */}
-        <div className="mt-auto pt-1">
-          <span
-            className={`text-[9px] font-bold tracking-widest uppercase ${
-              designer.openToWork === "OPEN"
-                ? "text-green-600"
-                : designer.openToWork === "OPEN_SOON"
-                ? "text-amber-500"
-                : "text-brand-gray-400"
-            }`}
-          >
-            ● {status.label}
-          </span>
-        </div>
+      </div>
+
+      {/* Status — pinned to top-right of card */}
+      <div className="absolute top-2.5 right-2.5">
+        <span
+          className={`text-[9px] font-bold tracking-widest uppercase ${
+            designer.openToWork === "OPEN"
+              ? "text-green-600"
+              : designer.openToWork === "OPEN_SOON"
+              ? "text-amber-500"
+              : "text-brand-gray-400"
+          }`}
+        >
+          ● {status.label}
+        </span>
       </div>
     </Link>
   );
