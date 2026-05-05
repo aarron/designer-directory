@@ -20,7 +20,7 @@ const ROUNDED: Record<string, string> = {
 export function ArtisticAvatar({
   seed,
   size = 56,
-  rounded = "full",
+  rounded = "none",
   className = "",
 }: {
   seed: string;
