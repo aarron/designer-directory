@@ -145,17 +145,17 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
           {/* Photo */}
           <div className="flex-shrink-0 w-full md:w-56">
-            <div className="relative">
+            <div className="relative w-full aspect-square">
               {designer.photoUrl ? (
                 <Image
                   src={designer.photoUrl}
                   alt={name}
-                  width={224}
-                  height={224}
-                  className="w-full aspect-square object-cover"
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 768px) 100vw, 224px"
                 />
               ) : (
-                <ArtisticAvatar seed={name} size={224} className="w-full aspect-square" />
+                <ArtisticAvatar seed={name} size={224} className="w-full h-full" />
               )}
             </div>
           </div>
