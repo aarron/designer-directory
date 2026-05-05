@@ -19,7 +19,7 @@ export function DesignerCard({ designer, view = "grid" }: DesignerCardProps) {
         href={`/talent/${designer.id}`}
         className="bg-white border-b border-brand-gray-100 hover:bg-brand-gray-50 transition-colors group flex items-center gap-4 px-6 py-4"
       >
-        <div className={`w-10 h-10 flex-shrink-0 overflow-hidden bg-brand-gray-100 ${designer.photoUrl ? "rounded-full" : ""}`}>
+        <div className="w-10 h-10 flex-shrink-0 overflow-hidden bg-brand-gray-100">
           {designer.photoUrl ? (
             <Image
               src={designer.photoUrl}
