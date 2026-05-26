@@ -13,15 +13,17 @@ function getDomain(url: string | null | undefined): string | null {
 
 interface CompanyLogoProps {
   companyUrl?: string | null;
+  companyLogoUrl?: string | null;
   company: string;
   size?: number;
   className?: string;
 }
 
-type LogoStage = "clearbit" | "favicon" | "initials";
+type LogoStage = "explicit" | "clearbit" | "favicon" | "initials";
 
-export function CompanyLogo({ companyUrl, company, size = 40, className = "" }: CompanyLogoProps) {
-  const [stage, setStage] = useState<LogoStage>("clearbit");
+export function CompanyLogo({ companyUrl, companyLogoUrl, company, size = 40, className = "" }: CompanyLogoProps) {
+  const initialStage: LogoStage = companyLogoUrl ? "explicit" : "clearbit";
+  const [stage, setStage] = useState<LogoStage>(initialStage);
   const domain = getDomain(companyUrl);
 
   const initials = company
@@ -31,7 +33,7 @@ export function CompanyLogo({ companyUrl, company, size = 40, className = "" }: 
     .join("")
     .toUpperCase();
 
-  if (!domain || stage === "initials") {
+  if (stage === "initials" || (!domain && !companyLogoUrl)) {
     return (
       <div
         style={{ width: size, height: size, minWidth: size }}
@@ -43,12 +45,15 @@ export function CompanyLogo({ companyUrl, company, size = 40, className = "" }: 
   }
 
   const src =
-    stage === "clearbit"
+    stage === "explicit"
+      ? companyLogoUrl!
+      : stage === "clearbit"
       ? `https://logo.clearbit.com/${domain}`
       : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
 
   const handleError = () => {
-    if (stage === "clearbit") setStage("favicon");
+    if (stage === "explicit") setStage(domain ? "clearbit" : "initials");
+    else if (stage === "clearbit") setStage("favicon");
     else setStage("initials");
   };
 

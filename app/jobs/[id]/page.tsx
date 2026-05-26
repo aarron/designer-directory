@@ -104,7 +104,7 @@ export default async function JobDetailPage({
               </div>
             )}
             <div className="flex items-center gap-4 mb-4">
-              <CompanyLogo companyUrl={job.companyUrl} company={job.company} size={52} className="border-white/20" />
+              <CompanyLogo companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} size={52} className="border-white/20" />
               <div>
                 <h1 className="font-display text-display-sm font-bold text-white leading-tight">{job.title}</h1>
                 <div className="flex items-center gap-2 mt-1">
