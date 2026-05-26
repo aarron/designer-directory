@@ -18,8 +18,10 @@ interface CompanyLogoProps {
   className?: string;
 }
 
+type LogoStage = "clearbit" | "favicon" | "initials";
+
 export function CompanyLogo({ companyUrl, company, size = 40, className = "" }: CompanyLogoProps) {
-  const [failed, setFailed] = useState(false);
+  const [stage, setStage] = useState<LogoStage>("clearbit");
   const domain = getDomain(companyUrl);
 
   const initials = company
@@ -29,7 +31,7 @@ export function CompanyLogo({ companyUrl, company, size = 40, className = "" }: 
     .join("")
     .toUpperCase();
 
-  if (!domain || failed) {
+  if (!domain || stage === "initials") {
     return (
       <div
         style={{ width: size, height: size, minWidth: size }}
@@ -40,14 +42,24 @@ export function CompanyLogo({ companyUrl, company, size = 40, className = "" }: 
     );
   }
 
+  const src =
+    stage === "clearbit"
+      ? `https://logo.clearbit.com/${domain}`
+      : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+
+  const handleError = () => {
+    if (stage === "clearbit") setStage("favicon");
+    else setStage("initials");
+  };
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+      src={src}
       alt={`${company} logo`}
       width={size}
       height={size}
-      onError={() => setFailed(true)}
+      onError={handleError}
       style={{ width: size, height: size, minWidth: size }}
       className={`rounded-lg object-contain bg-white border border-brand-gray-100 ${className}`}
     />
