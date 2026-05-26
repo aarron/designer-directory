@@ -22,22 +22,38 @@ function getDomain(url: string | null | undefined): string | null {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return null; }
 }
 
-function CompanySquare({ companyUrl, company }: { companyUrl?: string | null; company: string }) {
-  const [failed, setFailed] = useState(false);
+type SquareStage = "explicit" | "clearbit" | "favicon" | "initials";
+
+function CompanySquare({ companyUrl, companyLogoUrl, company }: { companyUrl?: string | null; companyLogoUrl?: string | null; company: string }) {
+  const initialStage: SquareStage = companyLogoUrl ? "explicit" : "clearbit";
+  const [stage, setStage] = useState<SquareStage>(initialStage);
   const domain = getDomain(companyUrl);
   const bg = companyBg(company);
   const initial = company.trim()[0]?.toUpperCase() ?? "?";
 
+  const src =
+    stage === "explicit"
+      ? companyLogoUrl!
+      : stage === "clearbit"
+      ? `https://logo.clearbit.com/${domain}`
+      : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+
+  const handleError = () => {
+    if (stage === "explicit") setStage(domain ? "clearbit" : "initials");
+    else if (stage === "clearbit") setStage("favicon");
+    else setStage("initials");
+  };
+
   return (
     <div className="absolute inset-0 flex items-center justify-center p-6" style={{ backgroundColor: bg }}>
-      {domain && !failed ? (
+      {stage !== "initials" && (domain || companyLogoUrl) ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+          src={src}
           alt={`${company} logo`}
           width={72}
           height={72}
-          onError={() => setFailed(true)}
+          onError={handleError}
           className="object-contain w-full h-full"
         />
       ) : (
@@ -60,7 +76,7 @@ export function JobCard({ job }: { job: Job }) {
     >
       {/* Company square — same proportion as DesignerCard photo */}
       <div className="w-[28%] flex-shrink-0 aspect-square relative overflow-hidden container-type-inline">
-        <CompanySquare companyUrl={job.companyUrl} company={job.company} />
+        <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} />
       </div>
 
       {/* Content */}
