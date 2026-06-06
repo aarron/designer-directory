@@ -189,24 +189,21 @@ export async function POST(req: NextRequest) {
                     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 700;
                                color: #0A0A0A; line-height: 1.3; letter-spacing: -0.01em;
                                font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Build a portfolio that helps you land your dream job
+                      A strong portfolio is your best shot at the job you want
                     </h2>
                     <p style="margin: 0 0 12px; font-size: 15px; line-height: 1.7; color: #444444;
                                font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Portfolio Club is a Design Better membership program with weekly portfolio
-                      critiques, best practices, and inspiration to help you put your best work
-                      forward.
-                    </p>
-                    <p style="margin: 0 0 12px; font-size: 15px; line-height: 1.7; color: #444444;
-                               font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Get your portfolio reviewed by top designers and leaders who'll give you
-                      real-world advice you can act on. Members also get access to our Slack
-                      community to connect with other designers at every stage of their career.
+                      Portfolio Club is a feature of Design Better's paid membership on Substack.
+                      Design leaders—including Daniel Burka, MDS, and Bob Baxley—critique your
+                      work and give you specific, actionable feedback. Bring your portfolio,
+                      leave knowing exactly what to improve.
                     </p>
                     <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444444;
                                font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Become a Design Better paid member to join—and take
-                      <strong style="color: #0A0A0A;">20% off an annual membership</strong>.
+                      Membership also includes our Slack community, Design Better books,
+                      ad-free episodes, two bonus episodes each month, and our newsletters
+                      The Roundup and The Brief. Take
+                      <strong style="color: #0A0A0A;">20% off an annual subscription</strong>.
                     </p>
                     <a href="https://designbetterpodcast.com/82af4d0a"
                       style="display: inline-block; background: #0A0A0A; color: #ffffff;
