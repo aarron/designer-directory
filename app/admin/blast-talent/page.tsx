@@ -84,7 +84,7 @@ export default function BlastTalentPage() {
 
           {/* Logo header */}
           <div className="px-8 py-6 border-b border-[#EBEBEB]">
-            <img src="/logo-red.png" alt="Design Better Careers" className="h-5" />
+            <img src="/og-image.png" alt="Design Better Careers" className="w-40" />
           </div>
 
           {/* Intro */}

@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
           <!-- Logo header -->
           <tr>
             <td style="padding: 32px 40px 24px; border-bottom: 1px solid #EBEBEB;">
-              <img src="${appUrl}/logo-red.png" alt="Design Better Careers" height="24"
+              <img src="${appUrl}/og-image.png" alt="Design Better Careers" width="200"
                 style="display: block;" />
             </td>
           </tr>
