@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
               <h1 style="margin: 0 0 14px; font-size: 24px; font-weight: 700; line-height: 1.2;
                          color: #0A0A0A; letter-spacing: -0.02em;
                          font-family: 'Helvetica Neue', Arial, sans-serif;">
-                New design jobs worth your time
+                New jobs on Design Better Careers
               </h1>
               <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #444444;
                          font-family: 'Helvetica Neue', Arial, sans-serif;">

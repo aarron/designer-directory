@@ -90,7 +90,7 @@ export default function BlastTalentPage() {
           {/* Intro */}
           <div className="px-8 pt-8 pb-6">
             <h2 className="text-[20px] font-bold text-[#0A0A0A] mb-3 tracking-tight leading-snug">
-              New design jobs worth your time
+              New jobs on Design Better Careers
             </h2>
             <p className="text-sm text-[#444444] leading-relaxed">
               Hi [First name], there are {preview?.totalJobs ?? "—"} open design roles on Design Better Careers right now. Here are six worth a look.
