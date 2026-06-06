@@ -56,10 +56,15 @@ export default function BlastTalentPage() {
         body: JSON.stringify({ dryRun: false }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(`Error ${res.status}: ${data.error || JSON.stringify(data)}`);
+        setStatus("error");
+        return;
+      }
       setResult(data);
       setStatus("done");
-    } catch {
-      setError("Failed to send emails.");
+    } catch (e) {
+      setError(`Request failed: ${String(e)}`);
       setStatus("error");
     }
   }

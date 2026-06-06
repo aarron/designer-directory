@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getResend, getFrom } from "@/lib/resend";
 
+// Sending to ~350 designers sequentially needs more than the default timeout
+export const maxDuration = 300;
+
 /**
  * POST /api/admin/blast-talent
  * Sends a job digest + Portfolio Club email to all visible designers.
