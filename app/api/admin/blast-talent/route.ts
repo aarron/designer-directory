@@ -21,21 +21,26 @@ export async function POST(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://designbetter.careers";
 
   // Fetch jobs — featured first, then newest, max 6
-  const jobs = await db.job.findMany({
-    where: { active: true, expiresAt: { gt: new Date() } },
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-    take: 6,
-    select: {
-      id: true,
-      title: true,
-      company: true,
-      location: true,
-      remote: true,
-      role: true,
-      typeOfRole: true,
-      companyLogoUrl: true,
-    },
-  });
+  const [jobs, totalJobs] = await Promise.all([
+    db.job.findMany({
+      where: { active: true, expiresAt: { gt: new Date() } },
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        company: true,
+        location: true,
+        remote: true,
+        role: true,
+        typeOfRole: true,
+        companyLogoUrl: true,
+      },
+    }),
+    db.job.count({
+      where: { active: true, expiresAt: { gt: new Date() } },
+    }),
+  ]);
 
   // Fetch all visible designers
   const designers = await db.designer.findMany({
@@ -48,6 +53,7 @@ export async function POST(req: NextRequest) {
       dryRun: true,
       designerCount: designers.length,
       jobCount: jobs.length,
+      totalJobs,
       jobs: jobs.map((j) => `${j.title} at ${j.company}`),
     });
   }
@@ -139,8 +145,8 @@ export async function POST(req: NextRequest) {
               </h1>
               <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #444444;
                          font-family: 'Helvetica Neue', Arial, sans-serif;">
-                Hi ${designer.firstName}, we've added new openings to Design Better Careers—roles
-                at companies doing interesting work. Here are six worth a look.
+                Hi ${designer.firstName}, there are ${totalJobs} open design roles on Design Better
+                Careers right now. Here are six worth a look.
               </p>
             </td>
           </tr>

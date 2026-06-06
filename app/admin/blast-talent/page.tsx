@@ -6,6 +6,7 @@ import Link from "next/link";
 interface DryRunResult {
   designerCount: number;
   jobCount: number;
+  totalJobs: number;
   jobs: string[];
 }
 
@@ -92,7 +93,7 @@ export default function BlastTalentPage() {
               New design jobs worth your time
             </h2>
             <p className="text-sm text-[#444444] leading-relaxed">
-              Hi [First name], we've added new openings to Design Better Careers—roles at companies doing interesting work. Here are six worth a look.
+              Hi [First name], there are {preview?.totalJobs ?? "—"} open design roles on Design Better Careers right now. Here are six worth a look.
             </p>
           </div>
 
