@@ -5,6 +5,34 @@ import { getResend, getFrom } from "@/lib/resend";
 // Sending to ~350 designers sequentially needs more than the default timeout
 export const maxDuration = 300;
 
+// Addresses that received the first (partial) send on 2026-06-06 — skip to avoid duplicates.
+// Remove this after the follow-up send completes.
+const ALREADY_SENT = new Set([
+  "jkoesterich@gmail.com", "cmb270@me.com", "maya.okafor.test@designbetter.test",
+  "sublimitycreative@gmail.com", "bill@billjordandesign.com", "mitchsoper@gmail.com",
+  "rachelmmurray@gmail.com", "hello@hellokelsie.com", "isuruar@gmail.com",
+  "jaclyndesigns11@gmail.com", "doon@malekzadeh.net", "raphael.sisa@gmail.com",
+  "vedaborgave@gmail.com", "balpers@alumni.stanford.edu", "heyheyjjmoi@gmail.com",
+  "laupompeu58@gmail.com", "theo.cavalcanti@gmail.com", "michael@avertek.net",
+  "pavlematic009@gmail.com", "heathercolleen@fastmail.com", "nikhil.biniwale@gmail.com",
+  "benjamin.chemelski@gmail.com", "staciekammerling@gmail.com", "jeanneawuor83@gmail.com",
+  "ritziewilliams@gmail.com", "rainifrancesco@gmail.com", "carloslugo.blackbird@gmail.com",
+  "arichero@gmail.com", "ybelfort@gmail.com", "van@vanshea.com",
+  "anindya.chowdhury@gmail.com", "pondertheweb@gmail.com", "dylanrose10@gmail.com",
+  "nb@nainibansal.com", "paulcinske@gmail.com", "brendan@radcat.design",
+  "lwaldal@gmail.com", "rdotcee@gmail.com", "jason@jasonchatfield.com",
+  "lanibeer@hotmail.com", "useche.alfredo@gmail.com", "sau888@gmail.com",
+  "uxtra13@gmail.com", "joshuamax@gmail.com", "ozkaya.hilal@gmail.com",
+  "carlosjsf89@gmail.com", "caileybardwell@gmail.com", "ayushrkl123@gmail.com",
+  "shotolahammed01@gmail.com", "saintvalmedia@gmail.com", "dextercferg@gmail.com",
+  "michael@acquazzone.net", "donraed1@gmail.com", "scott@jenson.org",
+  "eledelusignan@gmail.com", "connormurphydesign@gmail.com", "greg@thexmentor.us",
+  "caryngallis@gmail.com", "salve@linesoforigin.com", "sridivya.kuncham@gmail.com",
+  "yimjisook@gmail.com", "anybody@tomgreever.com", "designdiana23@gmail.com",
+  "jochen@studiobacks.com", "desireepillsburydesign@gmail.com", "jonathan.minori@gmail.com",
+  "hector.perla@gmail.com", "chuck@mallott.me",
+]);
+
 /**
  * POST /api/admin/blast-talent
  * Sends a job digest + Portfolio Club email to all visible designers.
@@ -45,11 +73,12 @@ export async function POST(req: NextRequest) {
     }),
   ]);
 
-  // Fetch all visible designers
-  const designers = await db.designer.findMany({
+  // Fetch all visible designers, excluding those who already received the first partial send
+  const allDesigners = await db.designer.findMany({
     where: { publicProfile: true, hidden: false },
     select: { id: true, firstName: true, email: true, editToken: true },
   });
+  const designers = allDesigners.filter((d) => !ALREADY_SENT.has(d.email.toLowerCase()));
 
   if (dryRun) {
     return NextResponse.json({
