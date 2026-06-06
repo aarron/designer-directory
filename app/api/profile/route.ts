@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getResend, getFrom } from "@/lib/resend";
 import { z } from "zod";
+import { getCorpusStats, formatSubscribers } from "@/lib/corpus";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://designbetter.careers";
 
@@ -93,6 +94,8 @@ export async function PUT(req: NextRequest) {
     // Send success story email when designer switches to NOT_LOOKING
     if (justSwitchedToNotLooking) {
       const storyUrl = `${APP_URL}/success-story?token=${designer.editToken}`;
+      const corpusStats = await getCorpusStats();
+      const subscriberLabel = formatSubscribers(corpusStats?.subscribers) ?? "hundreds of thousands of";
       await getResend().emails.send({
         from: getFrom(),
         to: designer.email,
@@ -101,7 +104,7 @@ export async function PUT(req: NextRequest) {
           <p>Hi ${designer.firstName},</p>
           <p>Congratulations on what sounds like an exciting new chapter!</p>
           <p>We noticed you updated your status to "Not looking" — if you connected with an employer through Design Better Careers, we'd love to hear about it.</p>
-          <p>Sharing your story takes 2 minutes and helps other designers see what's possible. We feature stories in our newsletter, which reaches 230,000+ readers.</p>
+          <p>Sharing your story takes 2 minutes and helps other designers see what's possible. We feature stories in our newsletter, which reaches ${subscriberLabel} readers.</p>
           <p>
             <a href="${storyUrl}" style="display:inline-block;background:#C1121F;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Share your story →</a>
           </p>

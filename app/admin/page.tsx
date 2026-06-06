@@ -27,11 +27,17 @@ export default async function AdminPage() {
       <div className="flex items-center justify-between mb-10">
         <h1 className="font-display text-display-sm font-bold text-brand-black">Admin</h1>
         <div className="flex flex-wrap gap-3">
+          <Link href="/admin/jobs/new">
+            <Button variant="primary">+ Add Job</Button>
+          </Link>
           <Link href="/admin/success-stories">
             <Button variant="secondary">Success Stories</Button>
           </Link>
           <Link href="/admin/coupons">
             <Button variant="secondary">Coupon Codes</Button>
+          </Link>
+          <Link href="/admin/blast-talent">
+            <Button variant="primary">Send Job Digest</Button>
           </Link>
           <Link href="/admin/refresh">
             <Button variant="secondary">Relaunch Email Blast</Button>

@@ -80,12 +80,6 @@ const STAGE_MAP = [
   { label: "Mature",  range: "1,000+", value: "1000+" },
 ];
 
-const STATUS_DOT: Record<string, string> = {
-  OPEN:       "bg-green-500",
-  OPEN_SOON:  "bg-yellow-400",
-  NOT_LOOKING: "bg-brand-gray-400",
-};
-
 export default async function DesignerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const designer = await getDesigner(id);
@@ -103,7 +97,6 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
     .flatMap((s) => s.split(",").map((v) => v.trim()))
     .filter(Boolean);
   const allSizes = sizes.length === COMPANY_SIZES.length;
-  // For each stored value, try to find a STAGE_MAP match; fall back to the raw value
   const resolvedSizes = sizes.map((s) => {
     const match = STAGE_MAP.find(
       ({ value, label }) =>
@@ -130,19 +123,21 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
     designer.instruments || designer.hobbies;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <div className="max-w-5xl mx-auto px-6 pt-8 pb-24">
 
         <Link
           href="/talent"
-          className="inline-flex items-center gap-2 text-sm text-brand-gray-400 hover:text-brand-black transition-colors mb-10"
+          className="inline-flex items-center gap-2 text-sm transition-colors duration-[120ms] mb-10 text-[var(--text-3)] hover:text-[var(--text-1)]"
         >
           <ArrowLeft className="w-4 h-4" /> Back to directory
         </Link>
 
         {/* ── HERO ──────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-12 pb-14 border-b border-brand-gray-100">
-
+        <div
+          className="flex flex-col md:flex-row gap-8 md:gap-12 pb-14"
+          style={{ borderBottom: "1px solid var(--divider)" }}
+        >
           {/* Photo */}
           <div className="flex-shrink-0 w-full md:w-56">
             <div className="relative w-full aspect-square">
@@ -167,85 +162,98 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
             <div className="flex items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOT[designer.openToWork]}`} />
-                  <span className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-gray-600">
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{
+                      background: designer.openToWork === "OPEN" ? "var(--newsletter-fg)"
+                        : designer.openToWork === "OPEN_SOON" ? "var(--book-fg)"
+                        : "var(--text-3)",
+                    }}
+                  />
+                  <span className="font-mono text-[11px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-2)" }}>
                     {status.label}
                   </span>
                 </div>
                 {designer.requiresVisa && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800 uppercase tracking-wide">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-xs font-normal uppercase tracking-[0.12em]"
+                    style={{ background: "var(--book-bg)", color: "var(--book-fg)" }}
+                  >
                     Requires US visa sponsorship
                   </span>
                 )}
               </div>
               <Link
                 href="/profile"
-                className="flex-shrink-0 text-[11px] font-semibold uppercase tracking-widest text-brand-gray-400 hover:text-brand-black transition-colors border border-brand-gray-200 hover:border-brand-black px-3 py-1.5 rounded"
+                className="flex-shrink-0 font-mono text-[11px] font-normal uppercase tracking-[0.12em] px-3 py-1.5 rounded transition-colors duration-[120ms] text-[var(--text-3)] hover:text-[var(--text-1)]"
               >
                 Edit profile →
               </Link>
             </div>
 
             {/* Name */}
-            <h1 className="font-display text-6xl md:text-7xl font-bold text-brand-black leading-none mb-3 break-words">
-              {name}<span className="text-brand-red">.</span>
+            <h1
+              className="font-display text-6xl md:text-7xl font-bold leading-none mb-3 break-words"
+              style={{ color: "var(--text-1)" }}
+            >
+              {name}<span style={{ color: "#FF4725" }}>.</span>
             </h1>
 
             {/* Title at company */}
             {(designer.title || designer.primaryRole) && (
-              <p className="text-lg italic text-brand-gray-500 mb-6">
+              <p className="text-lg italic mb-6" style={{ color: "var(--text-2)" }}>
                 {designer.title || designer.primaryRole}
                 {designer.company && (
-                  <> at <strong className="not-italic font-bold text-brand-black">{designer.company}</strong></>
+                  <> at <strong className="not-italic font-bold" style={{ color: "var(--text-1)" }}>{designer.company}</strong></>
                 )}
               </p>
             )}
 
-            <hr className="border-brand-gray-100 mb-6" />
+            <hr className="mb-6" style={{ borderColor: "var(--divider)" }} />
 
-            {/* Stats grid — top-left: Primary Role (red), top-right: Experience, bottom-left: Open To, bottom-right: Compensation */}
-            <div className="grid grid-cols-2 border border-brand-gray-200 divide-x divide-y divide-brand-gray-200 mb-6">
-              <div className="p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2">
+            {/* Stats grid — gap-px trick: colored parent + surface-1 children = hairline dividers */}
+            <div className="grid grid-cols-2 mb-6" style={{ background: "var(--divider)", gap: "1px" }}>
+              <div className="p-4" style={{ background: "var(--bg)" }}>
+                <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
                   Primary Role
                 </p>
-                <p className="font-display text-2xl font-bold text-brand-red leading-none">
+                <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--signal-text)" }}>
                   {designer.primaryRole}
                 </p>
               </div>
-              <div className="p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2">
+              <div className="p-4" style={{ background: "var(--bg)" }}>
+                <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
                   Experience
                 </p>
                 {exp ? (
                   <>
-                    <p className="font-display text-2xl font-bold text-brand-black leading-none">{exp.years}</p>
-                    <p className="text-xs text-brand-gray-500 mt-1">{exp.stage}</p>
+                    <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--text-1)" }}>{exp.years}</p>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-2)" }}>{exp.stage}</p>
                   </>
                 ) : (
-                  <p className="font-display text-2xl font-bold text-brand-gray-200 leading-none">—</p>
+                  <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--text-3)" }}>—</p>
                 )}
               </div>
-              <div className="p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2">
+              <div className="p-4" style={{ background: "var(--bg)" }}>
+                <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
                   Open To
                 </p>
                 {designer.typeOfRole.length > 0 ? (
-                  <p className="font-display text-2xl font-bold text-brand-black leading-none">
+                  <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--text-1)" }}>
                     {designer.typeOfRole.join(", ")}
                   </p>
                 ) : (
-                  <p className="font-display text-2xl font-bold text-brand-gray-200 leading-none">—</p>
+                  <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--text-3)" }}>—</p>
                 )}
               </div>
-              <div className="p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2">
+              <div className="p-4" style={{ background: "var(--bg)" }}>
+                <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
                   Desired Compensation
                 </p>
                 {compensation ? (
-                  <p className="font-display text-2xl font-bold text-brand-black leading-none">{compensation}</p>
+                  <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--text-1)" }}>{compensation}</p>
                 ) : (
-                  <p className="font-display text-2xl font-bold text-brand-gray-200 leading-none">—</p>
+                  <p className="font-display text-2xl font-bold leading-none" style={{ color: "var(--text-3)" }}>—</p>
                 )}
               </div>
             </div>
@@ -253,15 +261,15 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
             {/* Where they work */}
             {locations.length > 0 && (
               <div className="mb-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2">
+                <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
                   Where they work
                 </p>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   {locations.map((loc, i) => (
                     <span key={i} className="flex items-center gap-x-3">
-                      {i > 0 && <span className="text-brand-gray-300 select-none">/</span>}
-                      <span className="flex items-center gap-1.5 text-sm font-medium text-brand-black">
-                        <span className="text-brand-red text-[10px]">◆</span>
+                      {i > 0 && <span className="select-none" style={{ color: "var(--divider-strong)" }}>/</span>}
+                      <span className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-1)" }}>
+                        <span style={{ color: "#FF4725", fontSize: "10px" }}>◆</span>
                         {loc}
                       </span>
                     </span>
@@ -278,7 +286,8 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
                   href={designer.websiteUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 border border-brand-gray-300 text-brand-black hover:border-brand-black text-sm font-semibold tracking-wide uppercase transition-colors rounded"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-wide transition-colors duration-[120ms] rounded-md hover:bg-[var(--surface-2)]"
+                  style={{ background: "var(--surface-1)", color: "var(--text-1)" }}
                 >
                   <Globe className="w-3.5 h-3.5" />
                   Portfolio
@@ -289,7 +298,8 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
                   href={designer.linkedinUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 border border-brand-gray-300 text-brand-black hover:border-brand-black text-sm font-semibold tracking-wide uppercase transition-colors rounded"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-wide transition-colors duration-[120ms] rounded-md hover:bg-[var(--surface-2)]"
+                  style={{ background: "var(--surface-1)", color: "var(--text-1)" }}
                 >
                   <Linkedin className="w-3.5 h-3.5" />
                   LinkedIn
@@ -303,13 +313,13 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
         {designer.bio && (
           <div className="py-12">
             <div className="flex gap-8 md:gap-16">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 w-28 flex-shrink-0 pt-1">
+              <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] w-28 flex-shrink-0 pt-1" style={{ color: "var(--text-3)" }}>
                 About
               </p>
               <div className="flex-1 min-w-0">
-                <p className="text-xl leading-relaxed text-brand-black preserve-formatting">{designer.bio}</p>
+                <p className="text-xl leading-relaxed preserve-formatting" style={{ color: "var(--text-1)" }}>{designer.bio}</p>
               </div>
-              <p className="hidden md:block text-xs text-brand-gray-400 text-right whitespace-nowrap flex-shrink-0">
+              <p className="hidden md:block text-xs text-right whitespace-nowrap flex-shrink-0" style={{ color: "var(--text-3)" }}>
                 Last updated<br />{lastEdited}
               </p>
             </div>
@@ -318,22 +328,22 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
         {/* ── AVAILABILITY & REMOTE ─────────────────────────── */}
         {(designer.startAvailability || designer.remotePreference) && (
-          <div className="py-12 border-b border-brand-gray-100">
+          <div className="py-12" style={{ borderBottom: "1px solid var(--divider)" }}>
             <div className="flex gap-8 md:gap-16">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 w-28 flex-shrink-0 pt-1">
+              <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] w-28 flex-shrink-0 pt-1" style={{ color: "var(--text-3)" }}>
                 Availability
               </p>
               <div className="flex flex-wrap gap-x-10 gap-y-4">
                 {designer.startAvailability && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-1">Available to start</p>
-                    <p className="font-medium text-brand-black">{designer.startAvailability}</p>
+                    <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Available to start</p>
+                    <p className="font-medium" style={{ color: "var(--text-1)" }}>{designer.startAvailability}</p>
                   </div>
                 )}
                 {designer.remotePreference && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-1">Remote preference</p>
-                    <p className="font-medium text-brand-black">{designer.remotePreference}</p>
+                    <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Remote preference</p>
+                    <p className="font-medium" style={{ color: "var(--text-1)" }}>{designer.remotePreference}</p>
                   </div>
                 )}
               </div>
@@ -344,19 +354,18 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
         {/* ── PREFERRED COMPANY SIZE ─────────────────────────── */}
         {designer.companySize.length > 0 && (
           <div className="py-12">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 mb-6">
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-6" style={{ color: "var(--text-3)" }}>
               Preferred Company Size
             </p>
-            {/* Top rule + bottom rule only — show only selected sizes */}
-            <div className="border-t border-b border-brand-gray-200">
+            <div style={{ borderTop: "1px solid var(--divider)", borderBottom: "1px solid var(--divider)" }}>
               <div className="flex flex-wrap gap-x-10 gap-y-4 py-5">
                 {resolvedSizes.map(({ label, range, key }) => (
                   <div key={key} className="px-4 py-1">
-                    <p className="font-display font-bold text-lg leading-tight text-brand-black">
+                    <p className="font-display font-bold text-lg leading-tight" style={{ color: "var(--text-1)" }}>
                       {label}
                     </p>
                     {range && (
-                      <p className="text-xs mt-1 text-brand-gray-500">
+                      <p className="text-xs mt-1" style={{ color: "var(--text-2)" }}>
                         {range} employees
                       </p>
                     )}
@@ -369,9 +378,9 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
         {/* ── SKILLS & TOOLS ────────────────────────────────── */}
         {designer.skills.length > 0 && (
-          <div className="py-12 border-b border-brand-gray-100">
+          <div className="py-12" style={{ borderBottom: "1px solid var(--divider)" }}>
             <div className="flex gap-8 md:gap-16">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 w-28 flex-shrink-0 pt-1">
+              <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] w-28 flex-shrink-0 pt-1" style={{ color: "var(--text-3)" }}>
                 Skills &amp; Tools
               </p>
               <div className="flex flex-wrap gap-2">
@@ -385,9 +394,9 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
         {/* ── INDUSTRIES ────────────────────────────────────── */}
         {designer.industries.length > 0 && (
-          <div className="py-12 border-b border-brand-gray-100">
+          <div className="py-12" style={{ borderBottom: "1px solid var(--divider)" }}>
             <div className="flex gap-8 md:gap-16">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 w-28 flex-shrink-0 pt-1">
+              <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] w-28 flex-shrink-0 pt-1" style={{ color: "var(--text-3)" }}>
                 Industries
               </p>
               <div className="flex flex-wrap gap-2">
@@ -401,9 +410,9 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
         {/* ── FEATURED WORK ─────────────────────────────────── */}
         {projects.length > 0 && (
-          <div className="py-12 border-b border-brand-gray-100">
+          <div className="py-12" style={{ borderBottom: "1px solid var(--divider)" }}>
             <div className="flex gap-8 md:gap-16">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 w-28 flex-shrink-0 pt-1">
+              <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] w-28 flex-shrink-0 pt-1" style={{ color: "var(--text-3)" }}>
                 Featured Work
               </p>
               <div className="flex flex-col gap-5 flex-1">
@@ -418,12 +427,15 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
                       rel="noreferrer"
                       className="flex items-start gap-4 group"
                     >
-                      <div className="w-8 h-8 border border-brand-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:border-brand-red transition-colors">
-                        <ExternalLink className="w-3.5 h-3.5 text-brand-gray-400 group-hover:text-brand-red transition-colors" />
+                      <div
+                        className="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5 rounded transition-colors duration-[120ms] group-hover:bg-[var(--surface-alt)]"
+                        style={{ background: "var(--surface-2)" }}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 transition-colors duration-[120ms] group-hover:text-[#FF4725]" style={{ color: "var(--text-3)" }} />
                       </div>
                       <div>
-                        <p className="text-brand-black leading-relaxed group-hover:text-brand-red transition-colors">{project.description}</p>
-                        <p className="text-xs text-brand-gray-400 mt-0.5">{hostname}</p>
+                        <p className="leading-relaxed transition-colors duration-[120ms] group-hover:text-[#FF4725]" style={{ color: "var(--text-1)" }}>{project.description}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>{hostname}</p>
                       </div>
                     </a>
                   );
@@ -435,63 +447,63 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
         {/* ── BEYOND THE WORK ───────────────────────────────── */}
         {hasBeyond && (
-          <div className="py-12 border-b border-brand-gray-100">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 mb-8">
+          <div className="py-12" style={{ borderBottom: "1px solid var(--divider)" }}>
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-8" style={{ color: "var(--text-3)" }}>
               Beyond the Work
             </p>
             <div className="grid sm:grid-cols-2 gap-x-16 gap-y-8">
               {designer.funFacts && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <Sparkles className="w-3 h-3 text-brand-red" /> Fun facts
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <Sparkles className="w-3 h-3" style={{ color: "#FF4725" }} /> Fun facts
                   </p>
-                  <p className="text-brand-gray-700 text-sm leading-relaxed preserve-formatting">{designer.funFacts}</p>
+                  <p className="text-sm leading-relaxed preserve-formatting" style={{ color: "var(--text-2)" }}>{designer.funFacts}</p>
                 </div>
               )}
               {designer.mostProudOf && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <Trophy className="w-3 h-3 text-brand-red" /> Most proud of
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <Trophy className="w-3 h-3" style={{ color: "#FF4725" }} /> Most proud of
                   </p>
-                  <p className="text-brand-gray-700 text-sm leading-relaxed">{designer.mostProudOf}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-2)" }}>{designer.mostProudOf}</p>
                 </div>
               )}
               {designer.pets && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <PawPrint className="w-3 h-3 text-brand-red" /> Pets
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <PawPrint className="w-3 h-3" style={{ color: "#FF4725" }} /> Pets
                   </p>
-                  <p className="text-brand-gray-700 text-sm">{designer.pets}</p>
+                  <p className="text-sm" style={{ color: "var(--text-2)" }}>{designer.pets}</p>
                 </div>
               )}
               {designer.recentlyRead && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <BookOpen className="w-3 h-3 text-brand-red" /> Recently read
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <BookOpen className="w-3 h-3" style={{ color: "#FF4725" }} /> Recently read
                   </p>
-                  <p className="text-brand-gray-700 text-sm">{designer.recentlyRead}</p>
+                  <p className="text-sm" style={{ color: "var(--text-2)" }}>{designer.recentlyRead}</p>
                 </div>
               )}
               {designer.instruments && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <Music className="w-3 h-3 text-brand-red" /> Instruments
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <Music className="w-3 h-3" style={{ color: "#FF4725" }} /> Instruments
                   </p>
-                  <p className="text-brand-gray-700 text-sm">{designer.instruments}</p>
+                  <p className="text-sm" style={{ color: "var(--text-2)" }}>{designer.instruments}</p>
                 </div>
               )}
               {designer.hobbies && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <Smile className="w-3 h-3 text-brand-red" /> Hobbies
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <Smile className="w-3 h-3" style={{ color: "#FF4725" }} /> Hobbies
                   </p>
-                  <p className="text-brand-gray-700 text-sm">{designer.hobbies}</p>
+                  <p className="text-sm" style={{ color: "var(--text-2)" }}>{designer.hobbies}</p>
                 </div>
               )}
               {designer.languagesSpoken.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-gray-400 mb-2 flex items-center gap-2">
-                    <Globe className="w-3 h-3 text-brand-red" /> Languages spoken
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-2 flex items-center gap-2" style={{ color: "var(--text-3)" }}>
+                    <Globe className="w-3 h-3" style={{ color: "#FF4725" }} /> Languages spoken
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {designer.languagesSpoken.map((lang) => (
@@ -509,15 +521,15 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
           {/* Hire CTA */}
           <div className="flex-1">
-            <p className="font-display font-bold text-brand-black text-lg mb-1">
+            <p className="font-display font-bold text-lg mb-1" style={{ color: "var(--text-1)" }}>
               Interested in hiring {designer.firstName}?
             </p>
-            <p className="text-sm text-brand-gray-500 mb-4">
+            <p className="text-sm mb-4" style={{ color: "var(--text-2)" }}>
               Post a job to reach {designer.firstName} and 300+ other senior designers actively looking.
             </p>
             <Link
               href="/post-a-job"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-red text-white text-sm font-semibold tracking-wide uppercase rounded hover:bg-red-700 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-wide rounded-md transition-colors duration-[120ms] bg-[#FF4725] text-[#0A0A0A] hover:bg-[#e03d1e]"
             >
               Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
             </Link>
@@ -525,7 +537,7 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
 
           {/* Share + meta */}
           <div className="flex-shrink-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-gray-400 mb-3">
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-3" style={{ color: "var(--text-3)" }}>
               Share this profile
             </p>
             <div className="flex flex-col gap-2">
@@ -534,7 +546,7 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${name}'s profile on Design Better Careers`)}&url=${encodeURIComponent(`${appUrl}/talent/${designer.id}`)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-sm text-brand-gray-500 hover:text-brand-black transition-colors"
+                className="flex items-center gap-2 text-sm transition-colors duration-[120ms] text-[var(--text-3)] hover:text-[var(--text-1)]"
               >
                 <Share2 className="w-4 h-4" />
                 Share on X / Twitter
@@ -543,15 +555,15 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${appUrl}/talent/${designer.id}`)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-sm text-brand-gray-500 hover:text-brand-black transition-colors"
+                className="flex items-center gap-2 text-sm transition-colors duration-[120ms] text-[var(--text-3)] hover:text-[var(--text-1)]"
               >
                 <Linkedin className="w-4 h-4" />
                 Share on LinkedIn
               </a>
             </div>
             {!designer.bio && (
-              <div className="mt-4 pt-4 border-t border-brand-gray-100">
-                <p className="text-xs text-brand-gray-400">Last updated {lastEdited}</p>
+              <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--divider)" }}>
+                <p className="text-xs" style={{ color: "var(--text-3)" }}>Last updated {lastEdited}</p>
               </div>
             )}
           </div>

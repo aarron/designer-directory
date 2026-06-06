@@ -5,45 +5,51 @@ import { HeaderNav } from "@/components/HeaderNav";
 import { Footer } from "@/components/Footer";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { getCorpusStats, formatSubscribers } from "@/lib/corpus";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://designbetter.careers";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Design Better Careers — Design Jobs & Talent Directory",
-    template: "%s | Design Better Careers",
-  },
-  description:
-    "The career hub for 230,000+ design and tech professionals. Browse senior design talent or post your open role to reach the best designers.",
-  metadataBase: new URL(APP_URL.startsWith("http") ? APP_URL : `https://${APP_URL}`),
-  alternates: {
-    canonical: APP_URL,
-  },
-  openGraph: {
-    title: "Design Better Careers",
+export async function generateMetadata(): Promise<Metadata> {
+  const corpusStats = await getCorpusStats();
+  const subscriberLabel = formatSubscribers(corpusStats?.subscribers) ?? "hundreds of thousands of";
+
+  return {
+    title: {
+      default: "Design Better Careers — Design Jobs & Talent Directory",
+      template: "%s | Design Better Careers",
+    },
     description:
-      "Browse senior design talent or post your open role to reach 230,000+ design professionals.",
-    siteName: "Design Better Careers",
-    type: "website",
-    url: APP_URL,
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Design Better Careers — Design Jobs & Talent Directory",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Design Better Careers",
-    description: "Senior design talent. Quality jobs. 230,000+ readers.",
-    images: ["/og-image.png"],
-  },
-};
+      `The career hub for ${subscriberLabel} design and tech professionals. Browse senior design talent or post your open role to reach the best designers.`,
+    metadataBase: new URL(APP_URL.startsWith("http") ? APP_URL : `https://${APP_URL}`),
+    alternates: {
+      canonical: APP_URL,
+    },
+    openGraph: {
+      title: "Design Better Careers",
+      description:
+        `Browse senior design talent or post your open role to reach ${subscriberLabel} design professionals.`,
+      siteName: "Design Better Careers",
+      type: "website",
+      url: APP_URL,
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: "Design Better Careers — Design Jobs & Talent Directory",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Design Better Careers",
+      description: `Senior design talent. Quality jobs. ${subscriberLabel} readers.`,
+      images: ["/og-image.png"],
+    },
+  };
+}
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -83,12 +89,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <head>
+        {/* Aktiv Grotesk — Adobe Fonts (Design Better subscription kit) */}
+        <link rel="stylesheet" href="https://use.typekit.net/pvj2wrc.css" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="flex flex-col min-h-screen bg-white text-brand-black font-body">
+      <body className="flex flex-col min-h-screen font-body">
         <HeaderNav />
         <main className="flex-grow">{children}</main>
         <Footer />
