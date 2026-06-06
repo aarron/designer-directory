@@ -20,11 +20,11 @@ export async function POST(req: NextRequest) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://designbetter.careers";
 
-  // Fetch jobs — featured first, then newest, max 10
+  // Fetch jobs — featured first, then newest, max 6
   const jobs = await db.job.findMany({
     where: { active: true, expiresAt: { gt: new Date() } },
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-    take: 10,
+    take: 6,
     select: {
       id: true,
       title: true,
@@ -62,29 +62,43 @@ export async function POST(req: NextRequest) {
 
     const jobRows = jobs
       .map((job) => {
-        const locationStr = [job.location, job.remote ? "Remote" : null]
-          .filter(Boolean)
-          .join(" · ");
+        const parts: string[] = [];
+        if (job.location) parts.push(job.location);
+        if (job.remote) parts.push("Remote");
+        const locationStr = parts.join(" · ");
+
         return `
           <tr>
-            <td style="padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.08);">
-              <div style="display: flex; align-items: flex-start; gap: 12px;">
-                ${
-                  job.companyLogoUrl
-                    ? `<img src="${job.companyLogoUrl}" alt="${job.company}" width="32" height="32"
-                        style="border-radius: 6px; flex-shrink: 0; margin-top: 2px;" />`
-                    : ""
-                }
-                <div>
-                  <a href="${appUrl}/jobs/${job.id}"
-                    style="color: #F2F0EC; font-size: 16px; font-weight: 600; text-decoration: none; display: block; margin-bottom: 4px;">
-                    ${job.title}
-                  </a>
-                  <span style="color: rgba(242,240,236,0.62); font-size: 14px;">
-                    ${job.company}${locationStr ? ` &nbsp;·&nbsp; ${locationStr}` : ""}
-                  </span>
-                </div>
-              </div>
+            <td style="padding: 18px 0; border-bottom: 1px solid #EBEBEB;">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  ${job.companyLogoUrl ? `
+                  <td width="44" valign="top" style="padding-right: 14px;">
+                    <img src="${job.companyLogoUrl}" alt="${job.company}" width="36" height="36"
+                      style="display: block; border-radius: 8px; border: 1px solid #EBEBEB;" />
+                  </td>` : ""}
+                  <td valign="top">
+                    <a href="${appUrl}/jobs/${job.id}"
+                      style="color: #0A0A0A; font-size: 16px; font-weight: 700;
+                             text-decoration: none; display: block; margin-bottom: 3px;
+                             font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      ${job.title}
+                    </a>
+                    <span style="color: #767676; font-size: 14px;
+                                 font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      ${job.company}${locationStr ? ` &nbsp;&middot;&nbsp; ${locationStr}` : ""}
+                    </span>
+                  </td>
+                  <td valign="middle" align="right" style="padding-left: 16px; white-space: nowrap;">
+                    <a href="${appUrl}/jobs/${job.id}"
+                      style="display: inline-block; color: #FF4725; font-size: 13px;
+                             font-weight: 600; text-decoration: none;
+                             font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      Apply →
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>`;
       })
@@ -96,99 +110,130 @@ export async function POST(req: NextRequest) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New jobs for designers — Design Better Careers</title>
+  <title>New design jobs — Design Better Careers</title>
 </head>
-<body style="margin: 0; padding: 0; background: #0A0A0A;">
-  <div style="background: #0A0A0A; max-width: 600px; margin: 0 auto; font-family: 'Helvetica Neue', Arial, sans-serif;">
+<body style="margin: 0; padding: 0; background: #F5F2EC;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"
+    style="background: #F5F2EC; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0"
+          style="max-width: 600px; width: 100%; background: #ffffff;
+                 border: 1px solid #E8E5E0;">
 
-    <!-- Logo -->
-    <div style="padding: 36px 40px 28px;">
-      <img src="${appUrl}/logo-white.png" alt="Design Better Careers" height="28"
-        style="display: block;" />
-    </div>
+          <!-- Logo header -->
+          <tr>
+            <td style="padding: 32px 40px 24px; border-bottom: 1px solid #EBEBEB;">
+              <img src="${appUrl}/logo-red.png" alt="Design Better Careers" height="24"
+                style="display: block;" />
+            </td>
+          </tr>
 
-    <!-- Intro -->
-    <div style="padding: 0 40px 32px;">
-      <h1 style="margin: 0 0 16px; font-size: 26px; font-weight: 700; line-height: 1.2;
-                 color: #F2F0EC; letter-spacing: -0.02em;">
-        New jobs for designers
-      </h1>
-      <p style="margin: 0; font-size: 16px; line-height: 1.7; color: rgba(242,240,236,0.8);">
-        Hi ${designer.firstName}, we've added new openings to Design Better Careers—roles at companies
-        doing work worth your attention. Take a look.
-      </p>
-    </div>
+          <!-- Intro -->
+          <tr>
+            <td style="padding: 36px 40px 28px;">
+              <h1 style="margin: 0 0 14px; font-size: 24px; font-weight: 700; line-height: 1.2;
+                         color: #0A0A0A; letter-spacing: -0.02em;
+                         font-family: 'Helvetica Neue', Arial, sans-serif;">
+                New design jobs worth your time
+              </h1>
+              <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #444444;
+                         font-family: 'Helvetica Neue', Arial, sans-serif;">
+                Hi ${designer.firstName}, we've added new openings to Design Better Careers—roles
+                at companies doing interesting work. Here are six worth a look.
+              </p>
+            </td>
+          </tr>
 
-    <!-- Divider -->
-    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 0 40px;"></div>
+          <!-- Jobs list -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tbody>
+                  ${jobRows}
+                </tbody>
+              </table>
+            </td>
+          </tr>
 
-    <!-- Jobs list -->
-    <div style="padding: 8px 40px 24px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tbody>
-          ${jobRows}
-        </tbody>
-      </table>
-    </div>
+          <!-- View all CTA -->
+          <tr>
+            <td style="padding: 32px 40px 40px;">
+              <a href="${appUrl}/jobs"
+                style="display: inline-block; background: #FF4725; color: #ffffff;
+                       font-size: 15px; font-weight: 700; padding: 14px 28px;
+                       text-decoration: none; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                View all open roles →
+              </a>
+            </td>
+          </tr>
 
-    <!-- View all CTA -->
-    <div style="padding: 8px 40px 40px;">
-      <a href="${appUrl}/jobs"
-        style="display: inline-block; background: #FF4725; color: #0A0A0A;
-               font-size: 15px; font-weight: 700; padding: 14px 28px;
-               text-decoration: none;">
-        View all open roles →
-      </a>
-    </div>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <div style="height: 1px; background: #EBEBEB;"></div>
+            </td>
+          </tr>
 
-    <!-- Divider -->
-    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 0 40px;"></div>
+          <!-- Portfolio Club -->
+          <tr>
+            <td style="padding: 36px 40px 40px;">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="border-left: 3px solid #FF4725; padding-left: 20px;">
+                    <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700;
+                               letter-spacing: 0.1em; text-transform: uppercase; color: #FF4725;
+                               font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      Portfolio Club
+                    </p>
+                    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 700;
+                               color: #0A0A0A; line-height: 1.3; letter-spacing: -0.01em;
+                               font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      Get feedback that moves your portfolio forward
+                    </h2>
+                    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444444;
+                               font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      Submit your portfolio for a constructive critique from a design leader,
+                      Eli, and Aarron. You'll get practical feedback to help you build a
+                      portfolio you're proud to send to hiring managers—plus access to our
+                      Slack community for ongoing peer support.
+                    </p>
+                    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444444;
+                               font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      As a Design Better Careers member, take
+                      <strong style="color: #0A0A0A;">20% off</strong> an annual membership.
+                    </p>
+                    <a href="https://designbetterpodcast.com/82af4d0a"
+                      style="display: inline-block; background: #0A0A0A; color: #ffffff;
+                             font-size: 14px; font-weight: 700; padding: 12px 24px;
+                             text-decoration: none;
+                             font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      Join Portfolio Club — 20% off →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <!-- Portfolio Club -->
-    <div style="padding: 36px 40px;">
-      <div style="border-left: 3px solid #FF4725; padding-left: 20px;">
-        <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-                   text-transform: uppercase; color: #FF4725;">
-          Portfolio Club
-        </p>
-        <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 700; color: #F2F0EC;
-                   line-height: 1.3; letter-spacing: -0.01em;">
-          Get feedback that moves your portfolio forward
-        </h2>
-        <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7;
-                   color: rgba(242,240,236,0.8);">
-          Portfolio Club is a Design Better program where you submit your portfolio for
-          a constructive critique from a design leader, Eli, and Aarron. You'll get
-          practical feedback to help you build a portfolio you're proud to send to
-          hiring managers. Members also get access to our Slack community for ongoing
-          peer feedback and support.
-        </p>
-        <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7;
-                   color: rgba(242,240,236,0.8);">
-          As a Design Better Careers member, take <strong style="color: #F2F0EC;">20% off</strong>
-          an annual membership.
-        </p>
-        <a href="https://designbetterpodcast.com/82af4d0a"
-          style="display: inline-block; border: 1px solid rgba(255,255,255,0.18);
-                 color: #F2F0EC; font-size: 14px; font-weight: 600; padding: 12px 24px;
-                 text-decoration: none;">
-          Join Portfolio Club — 20% off →
-        </a>
-      </div>
-    </div>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px; border-top: 1px solid #EBEBEB;
+                        background: #F9F7F4;">
+              <p style="margin: 0; font-size: 12px; color: #AAAAAA; line-height: 1.6;
+                          font-family: 'Helvetica Neue', Arial, sans-serif;">
+                You're receiving this because you have a profile on
+                <a href="${appUrl}" style="color: #AAAAAA;">Design Better Careers</a>.
+                &nbsp;&middot;&nbsp;
+                <a href="${unsubscribeUrl}" style="color: #AAAAAA;">Remove my profile</a>
+              </p>
+            </td>
+          </tr>
 
-    <!-- Footer -->
-    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 0 40px;"></div>
-    <div style="padding: 24px 40px 40px;">
-      <p style="margin: 0; font-size: 13px; color: rgba(242,240,236,0.38); line-height: 1.6;">
-        You're receiving this because you have a profile on
-        <a href="${appUrl}" style="color: rgba(242,240,236,0.38);">Design Better Careers</a>.
-        &nbsp;·&nbsp;
-        <a href="${unsubscribeUrl}" style="color: rgba(242,240,236,0.38);">Remove my profile</a>
-      </p>
-    </div>
-
-  </div>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 

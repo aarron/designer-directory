@@ -75,65 +75,84 @@ export default function BlastTalentPage() {
       </p>
 
       {/* Email preview card */}
-      <div className="rounded-xl overflow-hidden border border-brand-gray-100 mb-8">
-        <div className="bg-[#0A0A0A] px-8 py-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-[rgba(242,240,236,0.38)] mb-6">
-            Email preview — dark background
-          </p>
+      <div className="rounded-xl overflow-hidden border border-brand-gray-100 mb-8 bg-[#F5F2EC] p-6">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-gray-400 mb-4">Email preview</p>
 
-          {/* Logo placeholder */}
-          <div className="mb-6">
-            <img src="/logo-white.png" alt="Design Better Careers" className="h-6" />
+        {/* Simulated email card */}
+        <div className="bg-white border border-[#E8E5E0] max-w-[540px]">
+
+          {/* Logo header */}
+          <div className="px-8 py-6 border-b border-[#EBEBEB]">
+            <img src="/logo-red.png" alt="Design Better Careers" className="h-5" />
           </div>
 
-          <h2 className="text-[22px] font-bold text-[#F2F0EC] mb-3 tracking-tight">
-            New jobs for designers
-          </h2>
-          <p className="text-sm text-[rgba(242,240,236,0.8)] leading-relaxed mb-6">
-            Hi [First name], we've added new openings to Design Better Careers—roles at companies doing work worth your attention. Take a look.
-          </p>
+          {/* Intro */}
+          <div className="px-8 pt-8 pb-6">
+            <h2 className="text-[20px] font-bold text-[#0A0A0A] mb-3 tracking-tight leading-snug">
+              New design jobs worth your time
+            </h2>
+            <p className="text-sm text-[#444444] leading-relaxed">
+              Hi [First name], we've added new openings to Design Better Careers—roles at companies doing interesting work. Here are six worth a look.
+            </p>
+          </div>
 
           {/* Job list preview */}
-          <div className="border-t border-[rgba(255,255,255,0.08)] py-3 mb-2">
-            <p className="text-[#F2F0EC] text-sm font-semibold mb-0.5">Product Designer</p>
-            <p className="text-[rgba(242,240,236,0.62)] text-xs">Framer · Remote</p>
-          </div>
-          <div className="border-t border-[rgba(255,255,255,0.08)] py-3 mb-2">
-            <p className="text-[#F2F0EC] text-sm font-semibold mb-0.5">Product Designer</p>
-            <p className="text-[rgba(242,240,236,0.62)] text-xs">Commure · Mountain View, CA</p>
-          </div>
-          <div className="border-t border-[rgba(255,255,255,0.08)] py-3 mb-4">
-            <p className="text-[rgba(242,240,236,0.38)] text-xs italic">+ more listings…</p>
+          <div className="px-8">
+            {[
+              { title: "Product Designer", company: "Framer", loc: "Remote" },
+              { title: "AI Conversation Designer", company: "Notion", loc: "San Francisco, CA" },
+              { title: "Product Designer", company: "Commure", loc: "Mountain View, CA" },
+            ].map((j, i) => (
+              <div key={i} className="py-4 border-b border-[#EBEBEB] flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-[#0A0A0A] mb-0.5">{j.title}</p>
+                  <p className="text-xs text-[#767676]">{j.company} · {j.loc}</p>
+                </div>
+                <span className="text-xs font-semibold text-[#FF4725]">Apply →</span>
+              </div>
+            ))}
+            <div className="py-3 border-b border-[#EBEBEB]">
+              <p className="text-xs text-[#AAAAAA] italic">+ 3 more listings…</p>
+            </div>
           </div>
 
-          <div className="mb-8">
-            <span className="inline-block bg-[#FF4725] text-[#0A0A0A] text-sm font-bold px-5 py-3">
+          {/* CTA */}
+          <div className="px-8 py-7">
+            <span className="inline-block bg-[#FF4725] text-white text-sm font-bold px-6 py-3">
               View all open roles →
             </span>
           </div>
 
+          {/* Divider */}
+          <div className="px-8"><div className="h-px bg-[#EBEBEB]" /></div>
+
           {/* Portfolio Club */}
-          <div className="border-t border-[rgba(255,255,255,0.08)] pt-6">
+          <div className="px-8 py-7">
             <div className="border-l-[3px] border-[#FF4725] pl-5">
-              <p className="text-xs font-bold tracking-widest uppercase text-[#FF4725] mb-2">Portfolio Club</p>
-              <p className="text-[#F2F0EC] font-bold text-lg mb-2 leading-snug">Get feedback that moves your portfolio forward</p>
-              <p className="text-[rgba(242,240,236,0.8)] text-sm leading-relaxed mb-4">
-                Submit your portfolio for a constructive critique from a design leader, Eli, and Aarron.
-                Members also get access to our Slack community for ongoing peer support.
-                As a Design Better Careers member, take <strong className="text-[#F2F0EC]">20% off</strong> an annual membership.
+              <p className="text-[10px] font-bold tracking-widest uppercase text-[#FF4725] mb-2">Portfolio Club</p>
+              <p className="text-base font-bold text-[#0A0A0A] mb-2 leading-snug">Get feedback that moves your portfolio forward</p>
+              <p className="text-sm text-[#444444] leading-relaxed mb-4">
+                Submit your portfolio for a critique from a design leader, Eli, and Aarron. Members also get Slack community access for peer support. Take <strong>20% off</strong> an annual membership.
               </p>
-              <span className="inline-block border border-[rgba(255,255,255,0.18)] text-[#F2F0EC] text-sm font-semibold px-5 py-2.5">
+              <span className="inline-block bg-[#0A0A0A] text-white text-sm font-bold px-5 py-2.5">
                 Join Portfolio Club — 20% off →
               </span>
             </div>
           </div>
+
+          {/* Footer */}
+          <div className="px-8 py-4 border-t border-[#EBEBEB] bg-[#F9F7F4]">
+            <p className="text-[11px] text-[#AAAAAA]">
+              You're receiving this because you have a profile on Design Better Careers. · Remove my profile
+            </p>
+          </div>
         </div>
 
-        <div className="bg-white px-8 py-4 border-t border-brand-gray-100">
+        <div className="mt-4 flex flex-col gap-1">
           <p className="text-xs text-brand-gray-400">
             <strong>Subject:</strong> New design jobs—and a way to get feedback on your portfolio
           </p>
-          <p className="text-xs text-brand-gray-400 mt-1">
+          <p className="text-xs text-brand-gray-400">
             <strong>From:</strong> Design Better Careers &lt;careers@thecuriositydepartment.com&gt;
           </p>
         </div>
