@@ -189,19 +189,24 @@ export async function POST(req: NextRequest) {
                     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 700;
                                color: #0A0A0A; line-height: 1.3; letter-spacing: -0.01em;
                                font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Get feedback that moves your portfolio forward
+                      Build a portfolio that helps you land your dream job
                     </h2>
-                    <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444444;
+                    <p style="margin: 0 0 12px; font-size: 15px; line-height: 1.7; color: #444444;
                                font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Submit your portfolio for a constructive critique from a design leader,
-                      Eli, and Aarron. You'll get practical feedback to help you build a
-                      portfolio you're proud to send to hiring managers—plus access to our
-                      Slack community for ongoing peer support.
+                      Portfolio Club is a Design Better membership program with weekly portfolio
+                      critiques, best practices, and inspiration to help you put your best work
+                      forward.
+                    </p>
+                    <p style="margin: 0 0 12px; font-size: 15px; line-height: 1.7; color: #444444;
+                               font-family: 'Helvetica Neue', Arial, sans-serif;">
+                      Get your portfolio reviewed by top designers and leaders who'll give you
+                      real-world advice you can act on. Members also get access to our Slack
+                      community to connect with other designers at every stage of their career.
                     </p>
                     <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #444444;
                                font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      As a Design Better Careers member, take
-                      <strong style="color: #0A0A0A;">20% off</strong> an annual membership.
+                      Become a Design Better paid member to join—and take
+                      <strong style="color: #0A0A0A;">20% off an annual membership</strong>.
                     </p>
                     <a href="https://designbetterpodcast.com/82af4d0a"
                       style="display: inline-block; background: #0A0A0A; color: #ffffff;
