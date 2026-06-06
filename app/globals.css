@@ -3,8 +3,9 @@
 @theme {
   /* Brand colors */
   --color-brand-red: #FF4725;
-  --color-brand-black: #000000;
+  --color-brand-black: #0A0A0A;
   --color-brand-white: #FFFFFF;
+  --color-brand-paper: #F5F2EC;
   --color-brand-gray-50: #F9F9F9;
   --color-brand-gray-100: #F0F0F0;
   --color-brand-gray-200: #E0E0E0;
@@ -17,8 +18,8 @@
   --color-brand-gray-900: #111111;
 
   /* Fonts */
-  --font-display: "F37Lineca", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  --font-display: "F37Lineca", "Space Grotesk", system-ui, sans-serif;
+  --font-body: "aktiv-grotesk", "Inter Tight", "Inter", system-ui, sans-serif;
 
   /* Display font sizes */
   --text-display-xl: 4.5rem;
@@ -30,12 +31,12 @@
   --text-display-sm: 1.75rem;
   --text-display-sm--line-height: 1.15;
 
-  /* Border radius overrides */
-  --radius-sm: 2px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
+  /* Border radius — design system */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
 
   /* Animations */
   --animate-fade-in: fadeIn 0.2s ease-in-out;
@@ -120,10 +121,82 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-3);
+  }
+
+  /* Design Better semantic tokens — light theme */
+  :root {
+    --text-1: #0A0A0A;
+    --text-2: rgba(10, 10, 10, 0.65);
+    --text-3: rgba(10, 10, 10, 0.40);
+    --bg: #F5F2EC;
+    --surface-1: #FFFFFF;
+    --surface-2: #EEEAE2;
+    --surface-alt: #EDE9E1;
+    --sidebar-bg: #F0EDE6;
+    --divider: rgba(10, 10, 10, 0.08);
+    --divider-strong: rgba(10, 10, 10, 0.18);
+    --hairline: rgba(10, 10, 10, 0.08);
+    --signal: #FF4725;
+    --signal-text: #FF4725;
+    --input-border: rgba(10, 10, 10, 0.20);
+    --input-focus: #FF4725;
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-2: 0 4px 12px rgba(0,0,0,0.09), 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-3: 0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07);
+  }
+
+  /* Dark theme — applied via data-theme="dark" on any element */
+  [data-theme="dark"] {
+    --text-1: #F2F0EC;
+    --text-2: rgba(242, 240, 236, 0.62);
+    --text-3: rgba(242, 240, 236, 0.38);
+    --bg: #0A0A0A;
+    --surface-1: #161616;
+    --surface-2: #1E1E1E;
+    --surface-alt: #222222;
+    --sidebar-bg: #141414;
+    --divider: rgba(255, 255, 255, 0.08);
+    --divider-strong: rgba(255, 255, 255, 0.18);
+    --hairline: rgba(255, 255, 255, 0.08);
+    --input-border: rgba(255, 255, 255, 0.18);
+    --input-focus: #FF4725;
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.30);
+    --shadow-2: 0 4px 12px rgba(0,0,0,0.40);
+    --shadow-3: 0 20px 60px rgba(0,0,0,0.50);
+    /* Content type vars — unchanged in dark mode */
+    --newsletter-fg: #4DB87A;
+    --newsletter-bg: rgba(77,184,122,0.12);
+    --video-fg: #E06060;
+    --video-bg: rgba(224,96,96,0.12);
+    --podcast-fg: #4A8ED4;
+    --podcast-bg: rgba(74,142,212,0.12);
+    --book-fg: #C8973A;
+    --book-bg: rgba(200,151,58,0.12);
+  }
+
+  /* Light theme content type vars */
+  :root {
+    --newsletter-fg: #2E7A4E;
+    --newsletter-bg: rgba(77,184,122,0.10);
+    --video-fg: #C0392B;
+    --video-bg: rgba(224,96,96,0.10);
+    --podcast-fg: #2C6EA8;
+    --podcast-bg: rgba(74,142,212,0.10);
+    --book-fg: #8B5E1A;
+    --book-bg: rgba(200,151,58,0.10);
+  }
+
+  html {
+    background: var(--bg);
+  }
+
   body {
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
-    color: #111111;
-    background: #FFFFFF;
+    font-family: "aktiv-grotesk", "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
+    color: var(--text-1);
+    background: var(--bg);
   }
 
   a {
