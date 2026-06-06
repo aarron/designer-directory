@@ -138,7 +138,7 @@ export default function BlastTalentPage() {
                 Membership also includes our Slack community, Design Better books, ad-free episodes, two bonus episodes each month, and our newsletters The Roundup and The Brief. Take <strong>20% off an annual subscription</strong>.
               </p>
               <span className="inline-block bg-[#0A0A0A] text-white text-sm font-bold px-5 py-2.5">
-                Join Portfolio Club — 20% off →
+                Join Portfolio Club — 20% off annual membership →
               </span>
             </div>
           </div>

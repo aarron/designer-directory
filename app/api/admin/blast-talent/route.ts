@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
                              font-size: 14px; font-weight: 700; padding: 12px 24px;
                              text-decoration: none;
                              font-family: 'Helvetica Neue', Arial, sans-serif;">
-                      Join Portfolio Club — 20% off →
+                      Join Portfolio Club — 20% off annual membership →
                     </a>
                   </td>
                 </tr>
