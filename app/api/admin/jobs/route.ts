@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 /**
+ * GET /api/admin/jobs
+ * List all active jobs with id, title, company, jobUrl.
+ * Auth: x-admin-secret header.
+ */
+export async function GET(req: NextRequest) {
+  const secret = req.headers.get("x-admin-secret");
+  if (secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const jobs = await db.job.findMany({
+    where: { active: true },
+    select: { id: true, title: true, company: true, jobUrl: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return NextResponse.json(jobs);
+}
+
+/**
  * POST /api/admin/jobs
  * Create a job directly without payment.
  * Auth: x-admin-secret header must match ADMIN_SECRET env var.
