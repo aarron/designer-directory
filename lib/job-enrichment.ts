@@ -475,6 +475,48 @@ export function domainOf(url: string | null | undefined): string | null {
   } catch { return null; }
 }
 
+/**
+ * Last-resort domain lookup for rows that never recorded a companyUrl.
+ * Guesses "<name>.com" but only accepts it if the site identifies itself with
+ * the company name, so we never staple a stranger's logo onto a listing.
+ */
+export async function guessDomain(company: string): Promise<string | null> {
+  const word = company.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!word || word.length < 3) return null;
+  const compact = company.toLowerCase().replace(/[^a-z0-9]/g, "");
+  for (const domain of [`${compact}.com`, `${word}.com`]) {
+    try {
+      const res = await fetch(`https://${domain}`, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(8000),
+        headers: { "User-Agent": UA },
+      });
+      if (!res.ok) continue;
+      const html = (await res.text()).slice(0, 20000);
+      const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "";
+      const siteName = /<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)/i.exec(html)?.[1] ?? "";
+      const haystack = `${title} ${siteName}`.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (haystack.includes(word)) return domain;
+    } catch { /* try the next shape */ }
+  }
+  return null;
+}
+
+/**
+ * Authoritative domain for a company we already track in SOURCES.
+ * Built lazily because SOURCES is declared further down this module.
+ */
+let sourceDomains: Map<string, { domain: string; url: string }> | null = null;
+
+export function knownCompanySite(company: string): { domain: string; url: string } | null {
+  if (!sourceDomains) {
+    sourceDomains = new Map(
+      SOURCES.map((s) => [s.name.trim().toLowerCase(), { domain: s.domain, url: s.url }]),
+    );
+  }
+  return sourceDomains.get(company.trim().toLowerCase()) ?? null;
+}
+
 // ── Sources ───────────────────────────────────────────────────────────────
 
 export interface Source {

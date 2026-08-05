@@ -7,6 +7,8 @@ import {
   mapExperience,
   dedupKey,
   domainOf,
+  guessDomain,
+  knownCompanySite,
   type CandidateJob,
 } from "@/lib/job-enrichment";
 
@@ -71,7 +73,20 @@ export async function GET(req: NextRequest) {
 
   for (const job of candidates as CandidateJob[]) {
     try {
-      const domain = job.companyDomain ?? domainOf(job.companyUrl);
+      // Board aggregators (WWR, Remotive, RemoteOK) don't report the employer's
+      // own domain, so recover it before resolving a logo.
+      let domain = job.companyDomain ?? domainOf(job.companyUrl);
+      let companyUrl = job.companyUrl;
+      if (!domain) {
+        const known = knownCompanySite(job.company);
+        if (known) {
+          domain = known.domain;
+          companyUrl = companyUrl ?? known.url;
+        } else {
+          domain = await guessDomain(job.company);
+          if (domain) companyUrl = companyUrl ?? `https://${domain}`;
+        }
+      }
       const logoUrl = await resolveAndStoreLogo(job.company, domain, job.logoHint);
       await db.job.create({
         data: {
@@ -79,7 +94,7 @@ export async function GET(req: NextRequest) {
           posterLastName: "Walter",
           posterEmail: "aarronwalter@gmail.com",
           company: job.company,
-          companyUrl: job.companyUrl,
+          companyUrl,
           companyLogoUrl: logoUrl,
           title: job.title,
           role: mapRole(job.title),

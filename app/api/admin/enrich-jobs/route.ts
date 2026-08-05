@@ -9,6 +9,8 @@ import {
   extractCompensation,
   dedupKey,
   domainOf,
+  guessDomain,
+  knownCompanySite,
   mapLimit,
   type CandidateJob,
 } from "@/lib/job-enrichment";
@@ -152,13 +154,31 @@ async function enrichLogos(offset: number, limit: number, dryRun: boolean) {
     if (!(await logoNeedsUpgrade(job.companyLogoUrl))) {
       return { company: job.company, status: "kept" as const };
     }
-    const domain = domainOf(job.companyUrl);
+
+    // Many older rows never stored a companyUrl, leaving nothing to resolve
+    // against. Recover it from the source list first, then by verified guess.
+    let domain = domainOf(job.companyUrl);
+    let learnedUrl: string | null = null;
+    if (!domain) {
+      const known = knownCompanySite(job.company);
+      if (known) {
+        domain = known.domain;
+        learnedUrl = known.url;
+      } else {
+        domain = await guessDomain(job.company);
+        if (domain) learnedUrl = `https://${domain}`;
+      }
+    }
     if (!domain) return { company: job.company, status: "no-domain" as const };
     if (dryRun) return { company: job.company, status: "would-upgrade" as const };
 
     const logoUrl = await resolveAndStoreLogo(job.company, domain);
+    const data: Record<string, unknown> = {};
+    if (learnedUrl && !job.companyUrl) data.companyUrl = learnedUrl;
+    if (logoUrl) data.companyLogoUrl = logoUrl;
+    if (Object.keys(data).length) await db.job.update({ where: { id: job.id }, data });
+
     if (!logoUrl) return { company: job.company, status: "not-found" as const };
-    await db.job.update({ where: { id: job.id }, data: { companyLogoUrl: logoUrl } });
     return { company: job.company, status: "upgraded" as const, logoUrl };
   });
 
