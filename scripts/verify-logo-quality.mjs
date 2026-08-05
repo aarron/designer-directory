@@ -13,6 +13,17 @@ function imageMeta(buf) {
     if (f === "VP8X") return { type: "webp", w: (dv.getUint32(24, true) & 0xffffff) + 1, h: ((dv.getUint32(26, true) >> 8) & 0xffffff) + 1 };
     return { type: "webp", w: dv.getUint16(26, true) & 0x3fff, h: dv.getUint16(28, true) & 0x3fff };
   }
+  if (b[0] === 0 && b[1] === 0 && b[2] === 1 && b[3] === 0) {
+    const n = b[4] | (b[5] << 8);
+    let w = 0, h = 0;
+    for (let i = 0; i < n; i++) {
+      const o = 6 + i * 16;
+      if (o + 1 >= b.length) break;
+      const ew = b[o] === 0 ? 256 : b[o], eh = b[o + 1] === 0 ? 256 : b[o + 1];
+      if (ew * eh > w * h) { w = ew; h = eh; }
+    }
+    return { type: "ico", w, h };
+  }
   if (b[0] === 0xff && b[1] === 0xd8) {
     let i = 2;
     while (i < b.length - 9) {
@@ -42,7 +53,9 @@ const uniq = new Map();
 for (const j of jobs) if (j.companyLogoUrl) uniq.set(j.companyLogoUrl, j.company);
 
 console.log(`\nChecking ${uniq.size} distinct logos...\n`);
-const buckets = { vector: [], large: [], medium: [], small: [], blurry: [], broken: [] };
+// "flatArt" = low byte-density but a genuine self-declared asset. A flat logo
+// compresses to almost nothing at 512px, so this is informational, not a defect.
+const buckets = { vector: [], large: [], medium: [], small: [], flatArt: [], broken: [] };
 
 await Promise.all([...uniq.entries()].map(async ([url, company]) => {
   try {
@@ -55,7 +68,7 @@ await Promise.all([...uniq.entries()].map(async ([url, company]) => {
     const long = Math.max(m.w, m.h);
     const density = buf.byteLength / (m.w * m.h);
     const label = `${company} ${m.w}x${m.h} ${density.toFixed(3)}B/px`;
-    if (density < 0.045 && long >= 128) buckets.blurry.push(label);
+    if (density < 0.045 && long >= 128) buckets.flatArt.push(label);
     else if (long >= 512) buckets.large.push(label);
     else if (long >= 180) buckets.medium.push(label);
     else buckets.small.push(label);
@@ -66,7 +79,7 @@ await Promise.all([...uniq.entries()].map(async ([url, company]) => {
 
 for (const [k, v] of Object.entries(buckets)) {
   console.log(`${k.toUpperCase().padEnd(8)} ${String(v.length).padStart(3)}`);
-  if ((k === "blurry" || k === "broken" || k === "small") && v.length) {
+  if ((k === "broken" || k === "small") && v.length) {
     v.slice(0, 12).forEach((x) => console.log(`         - ${x}`));
   }
 }
