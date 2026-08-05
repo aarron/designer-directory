@@ -621,16 +621,15 @@ export async function guessDomain(company: string): Promise<string | null> {
   if (!word || word.length < 3) return null;
   const compact = company.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-  // Try a domain the name already contains before inventing one. Stripping the
-  // dots out of "Lemon.io" yields lemonio.com — a different company that still
-  // passes the name check — so this ordering matters for correctness.
+  // When the company name already states its domain ("Lemon.io", "brand.ai"),
+  // trust it and stop. Verification is skipped deliberately: sites behind bot
+  // protection refuse datacenter IPs, and falling through would then invent
+  // lemonio.com — a *different* company that passes the name check just as
+  // convincingly. An unverified correct domain beats a verified wrong one.
   const embedded = /\b([a-z0-9][a-z0-9-]*\.[a-z]{2,})\b/i.exec(company)?.[1]?.toLowerCase();
+  if (embedded) return embedded;
 
-  const attempts = embedded
-    ? [embedded, `${compact}.com`, `${word}.com`]
-    : [`${compact}.com`, `${word}.com`];
-
-  for (const domain of attempts) {
+  for (const domain of [`${compact}.com`, `${word}.com`]) {
     try {
       const res = await politeFetch(`https://${domain}`, { timeoutMs: 8000, accept: "text/html,*/*" });
       if (!res || !res.ok) continue;
