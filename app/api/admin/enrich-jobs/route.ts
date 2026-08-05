@@ -11,6 +11,8 @@ import {
   domainOf,
   guessDomain,
   knownCompanySite,
+  ingestNewJobs,
+  pruneExpiredJobs,
   mapLimit,
   type CandidateJob,
 } from "@/lib/job-enrichment";
@@ -44,6 +46,15 @@ export async function POST(req: NextRequest) {
   if (mode === "data") return enrichData(dryRun);
   if (mode === "logos") {
     return enrichLogos(body.offset ?? 0, body.limit ?? 12, dryRun, body.companies);
+  }
+  // Same code path the daily cron uses — exposed here so a run can be
+  // triggered by hand without the CRON_SECRET.
+  if (mode === "ingest") {
+    const r = await ingestNewJobs();
+    return NextResponse.json({ ok: true, mode, ...r, errors: r.errors.slice(0, 10) });
+  }
+  if (mode === "prune") {
+    return NextResponse.json({ ok: true, mode, ...(await pruneExpiredJobs()) });
   }
   return NextResponse.json({ error: `Unknown mode "${mode}"` }, { status: 400 });
 }

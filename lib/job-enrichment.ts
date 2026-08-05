@@ -897,6 +897,129 @@ export function dedupKey(company: string, title: string): string {
   return `${company.trim().toLowerCase()}|${title.trim().toLowerCase()}`;
 }
 
+// ── Ingest / prune ───────────────────────────────────────────────────────
+// Shared by the daily cron and the admin trigger so there is exactly one
+// implementation of "add new jobs" and "retire dead ones".
+
+export interface IngestResult {
+  added: number;
+  skipped: number;
+  withDescription: number;
+  withCompensation: number;
+  withLogo: number;
+  errors: string[];
+}
+
+export async function ingestNewJobs(): Promise<IngestResult> {
+  const { db } = await import("@/lib/db");
+
+  const existing = await db.job.findMany({
+    where: { active: true },
+    select: { jobUrl: true, title: true, company: true },
+  });
+  const seenUrls = new Set(existing.map((j) => j.jobUrl).filter(Boolean) as string[]);
+  const seenKeys = new Set(existing.map((j) => dedupKey(j.company ?? "", j.title ?? "")));
+
+  const all = await fetchAllCandidates();
+  const fresh: CandidateJob[] = [];
+  for (const j of all) {
+    if (!j.jobUrl || !j.company) continue;
+    const k = dedupKey(j.company, j.title);
+    if (seenUrls.has(j.jobUrl) || seenKeys.has(k)) continue;
+    seenUrls.add(j.jobUrl);
+    seenKeys.add(k);
+    fresh.push(j);
+  }
+
+  const result: IngestResult = {
+    added: 0, skipped: all.length - fresh.length,
+    withDescription: 0, withCompensation: 0, withLogo: 0, errors: [],
+  };
+
+  for (const job of fresh) {
+    try {
+      // Board aggregators don't report the employer's own domain, so recover
+      // it before attempting a logo.
+      let domain = job.companyDomain ?? domainOf(job.companyUrl);
+      let companyUrl = job.companyUrl;
+      if (!domain) {
+        const known = knownCompanySite(job.company);
+        if (known) {
+          domain = known.domain;
+          companyUrl = companyUrl ?? known.url;
+        } else {
+          domain = await guessDomain(job.company);
+          if (domain) companyUrl = companyUrl ?? `https://${domain}`;
+        }
+      }
+      const logoUrl = await resolveAndStoreLogo(job.company, domain, job.logoHint);
+
+      await db.job.create({
+        data: {
+          posterFirstName: "Aarron",
+          posterLastName: "Walter",
+          posterEmail: "aarronwalter@gmail.com",
+          company: job.company,
+          companyUrl,
+          companyLogoUrl: logoUrl,
+          title: job.title,
+          role: mapRole(job.title),
+          location: job.location || "Not specified",
+          remote: job.remote,
+          typeOfRole: job.typeOfRole,
+          experienceLevel: mapExperience(job.title),
+          compensation: job.compensation,
+          description: job.description,
+          jobUrl: job.jobUrl,
+          active: true,
+          featured: false,
+          stripePaymentStatus: "paid",
+          expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+          // null keeps this job out of the talent-matching digest cron.
+          matchFrequency: null,
+        },
+      });
+      result.added++;
+      if (job.description) result.withDescription++;
+      if (job.compensation) result.withCompensation++;
+      if (logoUrl) result.withLogo++;
+    } catch (err) {
+      result.errors.push(`${job.company} — ${job.title}: ${String(err).slice(0, 160)}`);
+    }
+  }
+
+  return result;
+}
+
+/** Retire jobs whose source listing is definitively gone. */
+export async function pruneExpiredJobs(): Promise<{ checked: number; pruned: number }> {
+  const { db } = await import("@/lib/db");
+  const jobs = await db.job.findMany({
+    where: { active: true, jobUrl: { not: null } },
+    select: { id: true, jobUrl: true },
+  });
+
+  let pruned = 0;
+  await mapLimit(jobs, 10, async (job) => {
+    if (!job.jobUrl) return;
+    try {
+      const res = await fetch(job.jobUrl, {
+        method: "HEAD",
+        redirect: "follow",
+        signal: AbortSignal.timeout(6000),
+      });
+      // Only an explicit "gone" counts. A 403 or timeout is usually a bot
+      // check, not a closed role.
+      if (res.status === 404 || res.status === 410) {
+        await db.job.update({ where: { id: job.id }, data: { active: false } });
+        pruned++;
+      }
+    } catch { /* network hiccup — leave it alone */ }
+  });
+
+  return { checked: jobs.length, pruned };
+}
+
 // ── Logo storage ─────────────────────────────────────────────────────────
 
 function slugify(s: string): string {
