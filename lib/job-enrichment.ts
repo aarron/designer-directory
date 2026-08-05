@@ -650,7 +650,19 @@ async function jobPageLogoCandidates(jobUrl: string, company: string): Promise<C
   ].map((c) => ({ ...c, src: `job-page:${c.src}` }));
 }
 
-export type ResolvedLogo = { url: string; contentType: string; ext: string; quality: number; src: string };
+export type ResolvedLogo = {
+  url: string;
+  contentType: string;
+  ext: string;
+  quality: number;
+  src: string;
+  /**
+   * The bytes that were scored. Kept so the caller never has to re-fetch the
+   * winner: some hosts answer intermittently, and re-requesting a logo we had
+   * already downloaded was discarding good results.
+   */
+  buf: ArrayBuffer;
+};
 
 function extFor(contentType: string, type: string): string {
   if (/svg/i.test(contentType) || type === "svg") return "svg";
@@ -723,6 +735,7 @@ export async function resolveBestLogo(
         ext: extFor(got.contentType, s.meta.type),
         quality: s.quality,
         src: `${t.src} (${s.why})`,
+        buf: got.buf,
       };
     }
     if (best.quality >= 512) break; // vector or a large authentic asset — done
@@ -1308,10 +1321,8 @@ export async function resolveAndStoreLogo(
     const best = await resolveBestLogo(domain, hint, company, jobUrl);
     if (!best) return null;
     try {
-      // Handles http(s) and the data: URIs used for inline SVG logos.
-      const got = await fetchImage(best.url, 15000);
-      if (!got) return null;
-      const body = got.buf;
+      // Reuse the bytes gathered during scoring — no second request.
+      const body = best.buf;
       const { put } = await import("@vercel/blob");
       // Deterministic path + no random suffix means re-runs replace the old
       // file in place rather than piling up copies. (@vercel/blob 0.27 permits
