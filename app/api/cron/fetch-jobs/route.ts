@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
     withCompensation: ingest.withCompensation,
     withLogo: ingest.withLogo,
     pruned: prune.pruned,
+    prunedByStatus: prune.byStatus,
+    prunedByCopy: prune.byCopy,
     checked: prune.checked,
     errorCount: ingest.errors.length,
     errors: ingest.errors.slice(0, 10),

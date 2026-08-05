@@ -208,11 +208,14 @@ async function enrichLogos(offset: number, limit: number, dryRun: boolean, compa
     const hint = (job.jobUrl ? hints.get(job.jobUrl) : undefined)
       ?? hints.get(dedupKey(job.company ?? "", job.title ?? ""));
 
-    // A source-supplied logo is enough on its own — no domain required.
-    if (!domain && !hint) return { company: job.company, status: "no-domain" as const };
+    // A source-supplied logo or the posting page is enough on its own — plenty
+    // of employers here have no discoverable site.
+    if (!domain && !hint && !job.jobUrl) {
+      return { company: job.company, status: "no-domain" as const };
+    }
     if (dryRun) return { company: job.company, status: "would-upgrade" as const };
 
-    const logoUrl = await resolveAndStoreLogo(job.company, domain, hint);
+    const logoUrl = await resolveAndStoreLogo(job.company, domain, hint, job.jobUrl);
     const data: Record<string, unknown> = {};
     if (learnedUrl && !job.companyUrl) data.companyUrl = learnedUrl;
     if (logoUrl) data.companyLogoUrl = logoUrl;

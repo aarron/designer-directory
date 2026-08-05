@@ -329,10 +329,26 @@ const MIN_DENSITY = 0.045;
 
 type Scored = { ok: true; meta: ImgMeta; quality: number; why: string } | { ok: false; why: string };
 
+/**
+ * An SVG is only usable if it actually closes. unavatar.io intermittently
+ * returns truncated bodies, and because `imageMeta` recognises "<svg" from the
+ * first few hundred bytes those scored as a perfect vector and beat every other
+ * candidate — producing logos no browser could decode.
+ */
+function svgIsWellFormed(buf: ArrayBuffer): boolean {
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+  if (!/<\/svg\s*>/i.test(text)) return false;
+  // Needs at least one drawable element to be worth storing.
+  return /<(path|rect|circle|ellipse|polygon|polyline|line|text|image|use|g)\b/i.test(text);
+}
+
 export function scoreImage(buf: ArrayBuffer, authentic: boolean): Scored {
   const meta = imageMeta(buf);
   if (!meta) return { ok: false, why: "unrecognized format" };
-  if (meta.vector) return { ok: true, meta, quality: 4096, why: "vector" };
+  if (meta.vector) {
+    if (!svgIsWellFormed(buf)) return { ok: false, why: "truncated/empty svg" };
+    return { ok: true, meta, quality: 4096, why: "vector" };
+  }
   const { w, h } = meta;
   if (!w || !h) return { ok: false, why: "no dimensions" };
   const long = Math.max(w, h);
@@ -402,13 +418,23 @@ async function fetchImage(url: string, timeoutMs = 10000): Promise<{ buf: ArrayB
   } catch { return null; }
 }
 
-/** Resizing proxies hide the real asset behind a `url` query param. */
+/**
+ * Image proxies hide the real asset either behind a `url` query param
+ * (Next.js) or by embedding the full URL in the path (RemoteOK's resize-cgi,
+ * Cloudflare image resizing). Unwrapping reaches the full-resolution original.
+ */
 function unwrapImageProxy(url: string): string {
   try {
     const u = new URL(url);
     const inner = u.searchParams.get("url");
     if (inner && /\/_next\/image|\/_vercel\/image|\/cdn-cgi\/image/.test(u.pathname)) {
       return new URL(inner, u.origin).href;
+    }
+    // ".../resize-cgi/image/width=300/https://r2.example.com/real.webp"
+    const embedded = /(https?:\/\/.+)$/.exec(u.pathname.slice(1));
+    if (embedded) {
+      const candidate = embedded[1];
+      if (/^https?:\/\/[^/]+\./.test(candidate)) return candidate;
     }
   } catch { /* fall through */ }
   return url;
@@ -467,12 +493,16 @@ function markupLogoCandidates(html: string, base: string, company: string): Cand
     const alt = /alt=["']([^"']*)/i.exec(tag)?.[1] ?? "";
     const src = /\bsrc=["']([^"']+)/i.exec(tag)?.[1];
     const srcset = /srcset=["']([^"']+)/i.exec(tag)?.[1];
+    // Lazy-loaded logos keep a placeholder in src and the real file in a data
+    // attribute — RemoteOK's job pages do exactly this.
+    const lazy = /\bdata-(?:src|original|lazy-src|lazy)=["']([^"']+)/i.exec(tag)?.[1];
 
-    const hay = `${alt} ${src ?? ""} ${srcset ?? ""}`.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const hay = `${alt} ${src ?? ""} ${srcset ?? ""} ${lazy ?? ""}`.toLowerCase().replace(/[^a-z0-9]/g, "");
     if (!(tokens.some((t) => hay.includes(t)) || hay.includes(compact))) continue;
 
     const raw: string[] = [];
-    if (src) raw.push(src);
+    if (lazy) raw.push(lazy);
+    if (src && !/pixel\.gif|placeholder|data:image\/gif/i.test(src)) raw.push(src);
     if (srcset) {
       const widest = srcset
         .split(",")
@@ -589,6 +619,24 @@ function simpleIconsCandidate(company: string): Candidate | null {
   };
 }
 
+/**
+ * The posting itself is often the best source: ATS and aggregator job pages
+ * display the employer's logo, and for companies with no discoverable site of
+ * their own (or one that blocks us) it's the only place it exists.
+ */
+async function jobPageLogoCandidates(jobUrl: string, company: string): Promise<Candidate[]> {
+  const res = await politeFetch(jobUrl, { timeoutMs: 12000, accept: "text/html,*/*" });
+  if (!res || !res.ok) return [];
+  let html: string;
+  try { html = await res.text(); } catch { return []; }
+
+  const base = (() => { try { return new URL(jobUrl).origin; } catch { return jobUrl; } })();
+  return [
+    ...markupLogoCandidates(html, base, company),
+    ...inlineSvgCandidates(html, company),
+  ].map((c) => ({ ...c, src: `job-page:${c.src}` }));
+}
+
 export type ResolvedLogo = { url: string; contentType: string; ext: string; quality: number; src: string };
 
 function extFor(contentType: string, type: string): string {
@@ -609,6 +657,7 @@ export async function resolveBestLogo(
   domain: string | null | undefined,
   provided?: string | null,
   company?: string | null,
+  jobUrl?: string | null,
 ): Promise<ResolvedLogo | null> {
   const tiers: Candidate[] = [];
   if (provided) tiers.push({ url: provided, hint: 512, src: "source-provided", authentic: true });
@@ -632,6 +681,10 @@ export async function resolveBestLogo(
     if (si) tiers.push(si);
   }
   tiers.push(...markup.slice(0, 4));
+  // The posting page — the only source for employers with no site of their own.
+  if (jobUrl && company) {
+    tiers.push(...(await jobPageLogoCandidates(jobUrl, company)).slice(0, 4));
+  }
   tiers.push(...weak.slice(0, 4));
   if (domain) {
     tiers.push({ url: `https://unavatar.io/${domain}?fallback=false`, hint: 256, src: "unavatar", authentic: false });
@@ -1103,7 +1156,7 @@ export async function ingestNewJobs(): Promise<IngestResult> {
           if (domain) companyUrl = companyUrl ?? `https://${domain}`;
         }
       }
-      const logoUrl = await resolveAndStoreLogo(job.company, domain, job.logoHint);
+      const logoUrl = await resolveAndStoreLogo(job.company, domain, job.logoHint, job.jobUrl);
 
       await db.job.create({
         data: {
@@ -1142,33 +1195,64 @@ export async function ingestNewJobs(): Promise<IngestResult> {
   return result;
 }
 
-/** Retire jobs whose source listing is definitively gone. */
-export async function pruneExpiredJobs(): Promise<{ checked: number; pruned: number }> {
+/**
+ * Phrases that mean the role is closed. Boards frequently keep serving a 200
+ * page for a filled role and say so only in the copy — and some (Getro) answer
+ * 403 to HEAD while serving the page fine over GET — so status codes alone
+ * leave stale listings on the board.
+ */
+const CLOSED_PHRASES = [
+  "no longer accepting",
+  "no longer available",
+  "no longer open",
+  "position has been filled",
+  "this position is closed",
+  "this job is closed",
+  "posting is closed",
+  "applications are closed",
+  "job posting has expired",
+  "this role has been filled",
+];
+
+/** Retire jobs whose source listing is gone or explicitly closed. */
+export async function pruneExpiredJobs(): Promise<{
+  checked: number; pruned: number; byStatus: number; byCopy: number;
+}> {
   const { db } = await import("@/lib/db");
   const jobs = await db.job.findMany({
     where: { active: true, jobUrl: { not: null } },
     select: { id: true, jobUrl: true },
   });
 
-  let pruned = 0;
-  await mapLimit(jobs, 10, async (job) => {
+  let byStatus = 0;
+  let byCopy = 0;
+
+  await mapLimit(jobs, 8, async (job) => {
     if (!job.jobUrl) return;
+    const retire = async () => {
+      await db.job.update({ where: { id: job.id }, data: { active: false } });
+    };
+
     try {
-      const res = await fetch(job.jobUrl, {
-        method: "HEAD",
-        redirect: "follow",
-        signal: AbortSignal.timeout(6000),
-      });
-      // Only an explicit "gone" counts. A 403 or timeout is usually a bot
-      // check, not a closed role.
+      const res = await politeFetch(job.jobUrl, { timeoutMs: 12000, accept: "text/html,*/*", tries: 1 });
+      if (!res) return; // network hiccup — leave it alone
+
       if (res.status === 404 || res.status === 410) {
-        await db.job.update({ where: { id: job.id }, data: { active: false } });
-        pruned++;
+        await retire();
+        byStatus++;
+        return;
       }
-    } catch { /* network hiccup — leave it alone */ }
+      if (!res.ok) return; // 403/429/5xx: bot check or transient, not evidence
+
+      const html = (await res.text()).slice(0, 300_000).toLowerCase();
+      if (CLOSED_PHRASES.some((p) => html.includes(p))) {
+        await retire();
+        byCopy++;
+      }
+    } catch { /* leave it alone */ }
   });
 
-  return { checked: jobs.length, pruned };
+  return { checked: jobs.length, pruned: byStatus + byCopy, byStatus, byCopy };
 }
 
 // ── Logo storage ─────────────────────────────────────────────────────────
@@ -1192,13 +1276,16 @@ export async function resolveAndStoreLogo(
   company: string,
   domain: string | null | undefined,
   hint?: string | null,
+  jobUrl?: string | null,
 ): Promise<string | null> {
+  // jobUrl is intentionally not part of the key: it varies per posting but
+  // yields the same employer logo, and including it would defeat the memo.
   const key = `${slugify(company)}|${domain ?? ""}|${hint ?? ""}`;
   const cached = logoMemo.get(key);
   if (cached) return cached;
 
   const task = (async () => {
-    const best = await resolveBestLogo(domain, hint, company);
+    const best = await resolveBestLogo(domain, hint, company, jobUrl);
     if (!best) return null;
     try {
       // Handles http(s) and the data: URIs used for inline SVG logos.
