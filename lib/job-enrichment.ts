@@ -473,12 +473,20 @@ export async function resolveBestLogo(
 ): Promise<ResolvedLogo | null> {
   const tiers: Candidate[] = [];
   if (provided) tiers.push({ url: provided, hint: 512, src: "source-provided", authentic: true });
-  if (domain) tiers.push(...(await siteIconCandidates(domain)).slice(0, 8));
-  // Brand-accurate vector art, tried only after the company's own assets.
+
+  // Order matters. A large icon the company declares about itself is the most
+  // faithful (it keeps multi-colour artwork), so those go first. Next comes the
+  // Simple Icons vector, which is always crisp — better than spending many slow
+  // probes on small or speculative paths. Everything weaker follows.
+  const siteIcons = domain ? await siteIconCandidates(domain) : [];
+  const strong = siteIcons.filter((c) => c.hint >= 192);
+  const weak = siteIcons.filter((c) => c.hint < 192);
+  tiers.push(...strong.slice(0, 5));
   if (company) {
     const si = simpleIconsCandidate(company);
     if (si) tiers.push(si);
   }
+  tiers.push(...weak.slice(0, 4));
   if (domain) {
     tiers.push({ url: `https://unavatar.io/${domain}?fallback=false`, hint: 256, src: "unavatar", authentic: false });
     tiers.push({ url: `https://icons.duckduckgo.com/ip3/${domain}.ico`, hint: 64, src: "duckduckgo", authentic: false });

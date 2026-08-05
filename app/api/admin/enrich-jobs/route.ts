@@ -36,13 +36,15 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({})) as {
-    mode?: string; offset?: number; limit?: number; dryRun?: boolean;
+    mode?: string; offset?: number; limit?: number; dryRun?: boolean; companies?: string[];
   };
   const mode = body.mode ?? "data";
   const dryRun = Boolean(body.dryRun);
 
   if (mode === "data") return enrichData(dryRun);
-  if (mode === "logos") return enrichLogos(body.offset ?? 0, body.limit ?? 12, dryRun);
+  if (mode === "logos") {
+    return enrichLogos(body.offset ?? 0, body.limit ?? 12, dryRun, body.companies);
+  }
   return NextResponse.json({ error: `Unknown mode "${mode}"` }, { status: 400 });
 }
 
@@ -142,16 +144,23 @@ async function logoNeedsUpgrade(url: string | null): Promise<boolean> {
   }
 }
 
-async function enrichLogos(offset: number, limit: number, dryRun: boolean) {
+async function enrichLogos(offset: number, limit: number, dryRun: boolean, companies?: string[]) {
   const all = await db.job.findMany({
-    where: { active: true },
+    where: {
+      active: true,
+      // Optional filter so a handful of stragglers can be retried without
+      // re-probing every employer on the board.
+      ...(companies?.length ? { company: { in: companies } } : {}),
+    },
     select: { id: true, company: true, companyUrl: true, companyLogoUrl: true },
     orderBy: { id: "asc" },
   });
 
   const batch = all.slice(offset, offset + limit);
   const results = await mapLimit(batch, 4, async (job) => {
-    if (!(await logoNeedsUpgrade(job.companyLogoUrl))) {
+    // With an explicit company list, always re-resolve — the caller is asking
+    // for a retry, not a conditional check.
+    if (!companies?.length && !(await logoNeedsUpgrade(job.companyLogoUrl))) {
       return { company: job.company, status: "kept" as const };
     }
 
