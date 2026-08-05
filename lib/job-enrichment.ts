@@ -620,14 +620,20 @@ export async function guessDomain(company: string): Promise<string | null> {
   const word = company.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (!word || word.length < 3) return null;
   const compact = company.toLowerCase().replace(/[^a-z0-9]/g, "");
-  for (const domain of [`${compact}.com`, `${word}.com`]) {
+
+  // Try a domain the name already contains before inventing one. Stripping the
+  // dots out of "Lemon.io" yields lemonio.com — a different company that still
+  // passes the name check — so this ordering matters for correctness.
+  const embedded = /\b([a-z0-9][a-z0-9-]*\.[a-z]{2,})\b/i.exec(company)?.[1]?.toLowerCase();
+
+  const attempts = embedded
+    ? [embedded, `${compact}.com`, `${word}.com`]
+    : [`${compact}.com`, `${word}.com`];
+
+  for (const domain of attempts) {
     try {
-      const res = await fetch(`https://${domain}`, {
-        redirect: "follow",
-        signal: AbortSignal.timeout(8000),
-        headers: { "User-Agent": UA },
-      });
-      if (!res.ok) continue;
+      const res = await politeFetch(`https://${domain}`, { timeoutMs: 8000, accept: "text/html,*/*" });
+      if (!res || !res.ok) continue;
       const html = (await res.text()).slice(0, 20000);
       const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "";
       const siteName = /<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)/i.exec(html)?.[1] ?? "";
