@@ -13,6 +13,7 @@ import {
   knownCompanySite,
   ingestNewJobs,
   pruneExpiredJobs,
+  resolveBestLogo,
   mapLimit,
   type CandidateJob,
 } from "@/lib/job-enrichment";
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({})) as {
     mode?: string; offset?: number; limit?: number; dryRun?: boolean; companies?: string[];
+    jobId?: string; company?: string;
   };
   const mode = body.mode ?? "data";
   const dryRun = Boolean(body.dryRun);
@@ -55,6 +57,20 @@ export async function POST(req: NextRequest) {
   }
   if (mode === "prune") {
     return NextResponse.json({ ok: true, mode, ...(await pruneExpiredJobs()) });
+  }
+  // Reports what the resolver actually tried for one job, so failures can be
+  // diagnosed from the server's own vantage point rather than inferred.
+  if (mode === "diagnose") {
+    const job = await db.job.findFirst({
+      where: body.jobId ? { id: body.jobId } : { active: true, company: body.company ?? "" },
+      select: { id: true, company: true, companyUrl: true, jobUrl: true, companyLogoUrl: true },
+    });
+    if (!job) return NextResponse.json({ error: "No matching job" }, { status: 404 });
+    const trace: string[] = [];
+    const best = await resolveBestLogo(
+      domainOf(job.companyUrl), null, job.company, job.jobUrl, trace,
+    );
+    return NextResponse.json({ ok: true, mode, job, best, trace });
   }
   return NextResponse.json({ error: `Unknown mode "${mode}"` }, { status: 400 });
 }

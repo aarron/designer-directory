@@ -671,6 +671,8 @@ export async function resolveBestLogo(
   provided?: string | null,
   company?: string | null,
   jobUrl?: string | null,
+  /** Optional sink for a tier-by-tier account of what was tried. */
+  trace?: string[],
 ): Promise<ResolvedLogo | null> {
   const tiers: Candidate[] = [];
   if (provided) tiers.push({ url: provided, hint: 512, src: "source-provided", authentic: true });
@@ -696,7 +698,9 @@ export async function resolveBestLogo(
   tiers.push(...markup.slice(0, 4));
   // The posting page — the only source for employers with no site of their own.
   if (jobUrl && company) {
-    tiers.push(...(await jobPageLogoCandidates(jobUrl, company)).slice(0, 4));
+    const jp = await jobPageLogoCandidates(jobUrl, company);
+    trace?.push(`· job-page yielded ${jp.length} candidate(s) from ${jobUrl.slice(0, 90)}`);
+    tiers.push(...jp.slice(0, 4));
   }
   tiers.push(...weak.slice(0, 4));
   if (domain) {
@@ -708,9 +712,10 @@ export async function resolveBestLogo(
   let best: ResolvedLogo | null = null;
   for (const t of tiers) {
     const got = await fetchImage(t.url);
-    if (!got) continue;
+    if (!got) { trace?.push(`✗ ${t.src}: unreachable/not-an-image — ${t.url.slice(0, 110)}`); continue; }
     const s = scoreImage(got.buf, t.authentic);
-    if (!s.ok) continue;
+    if (!s.ok) { trace?.push(`✗ ${t.src}: ${s.why} — ${t.url.slice(0, 110)}`); continue; }
+    trace?.push(`✓ ${t.src}: ${s.why} [${s.meta.type}] q=${s.quality} — ${t.url.slice(0, 110)}`);
     if (!best || s.quality > best.quality) {
       best = {
         url: t.url,
