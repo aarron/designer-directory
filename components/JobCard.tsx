@@ -16,48 +16,32 @@ function companyBg(name: string): string {
   return LOGO_PALETTES[Math.abs(h) % LOGO_PALETTES.length];
 }
 
-function getDomain(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return null; }
-}
+// Logos are resolved and quality-checked at ingest, then mirrored into Blob
+// (see lib/job-enrichment.ts). There is deliberately no client-side favicon
+// fallback: those services return whatever low-res icon they have, upscaled,
+// and a soft 32px smudge reads as broken where a clean lettermark reads as
+// intentional. So it's the vetted logo or the lettermark, nothing in between.
+type SquareStage = "explicit" | "initials";
 
-// Clearbit's free logo API was retired, so it is no longer in the chain.
-// `explicit` is the high-resolution logo mirrored into Blob at ingest
-// (see lib/job-enrichment.ts); `unavatar` is a live fallback for older rows
-// that never got one. A blurry upscaled favicon looks worse than a clean
-// lettermark, so there is no favicon-service tier here.
-type SquareStage = "explicit" | "unavatar" | "initials";
-
-function CompanySquare({ companyUrl, companyLogoUrl, company, compact = false }: {
-  companyUrl?: string | null;
+function CompanySquare({ companyLogoUrl, company, compact = false }: {
   companyLogoUrl?: string | null;
   company: string;
   /** Tighter padding + smaller lettermark for the 36px list-view square. */
   compact?: boolean;
 }) {
-  const domain = getDomain(companyUrl);
-  const initialStage: SquareStage = companyLogoUrl ? "explicit" : domain ? "unavatar" : "initials";
-  const [stage, setStage] = useState<SquareStage>(initialStage);
+  const [stage, setStage] = useState<SquareStage>(companyLogoUrl ? "explicit" : "initials");
   const bg = companyBg(company);
   const initial = company.trim()[0]?.toUpperCase() ?? "?";
-
-  const src =
-    stage === "explicit" ? companyLogoUrl!
-    : `https://unavatar.io/${domain}?fallback=false`;
-
-  const handleError = () => {
-    if (stage === "explicit" && domain) setStage("unavatar");
-    else setStage("initials");
-  };
+  const handleError = () => setStage("initials");
 
   return (
     <div
       className={`absolute inset-0 flex items-center justify-center ${compact ? "p-1" : "p-6"}`}
       style={{ backgroundColor: bg }}
     >
-      {stage !== "initials" && (domain || companyLogoUrl) ? (
+      {stage === "explicit" && companyLogoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={`${company} logo`} width={72} height={72} onError={handleError} className="object-contain w-full h-full" />
+        <img src={companyLogoUrl} alt={`${company} logo`} width={72} height={72} onError={handleError} className="object-contain w-full h-full" />
       ) : (
         <span
           className="font-display font-bold leading-none select-none"
@@ -83,7 +67,7 @@ export function JobCard({ job, variant = "grid" }: { job: Job; variant?: "grid" 
       >
         {/* Small logo square */}
         <div className="w-9 h-9 flex-shrink-0 relative overflow-hidden rounded-sm container-type-inline">
-          <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} compact />
+          <CompanySquare companyLogoUrl={job.companyLogoUrl} company={job.company} compact />
         </div>
 
         {/* Title + company */}
@@ -132,7 +116,7 @@ export function JobCard({ job, variant = "grid" }: { job: Job; variant?: "grid" 
     >
       {/* Company square */}
       <div className="w-[28%] flex-shrink-0 aspect-square relative overflow-hidden container-type-inline">
-        <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} />
+        <CompanySquare companyLogoUrl={job.companyLogoUrl} company={job.company} />
       </div>
 
       {/* Content */}

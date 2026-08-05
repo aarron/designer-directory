@@ -163,11 +163,27 @@ async function enrichLogos(offset: number, limit: number, dryRun: boolean, compa
       // re-probing every employer on the board.
       ...(companies?.length ? { company: { in: companies } } : {}),
     },
-    select: { id: true, company: true, companyUrl: true, companyLogoUrl: true },
+    select: { id: true, company: true, title: true, jobUrl: true, companyUrl: true, companyLogoUrl: true },
     orderBy: { id: "asc" },
   });
 
   const batch = all.slice(offset, offset + limit);
+
+  // Aggregator listings (WWR, Remotive, RemoteOK) carry the employer's logo,
+  // and for companies that block scraping or ship only a tiny favicon it's the
+  // best asset available. It only exists in the live feed, so look it up rather
+  // than resolving from the domain alone.
+  const hints = new Map<string, string>();
+  if (batch.length) {
+    try {
+      for (const c of await fetchAllCandidates()) {
+        if (!c.logoHint) continue;
+        if (c.jobUrl) hints.set(c.jobUrl, c.logoHint);
+        hints.set(dedupKey(c.company, c.title), c.logoHint);
+      }
+    } catch { /* hints are a bonus, not a requirement */ }
+  }
+
   const results = await mapLimit(batch, 4, async (job) => {
     // With an explicit company list, always re-resolve — the caller is asking
     // for a retry, not a conditional check.
@@ -189,10 +205,14 @@ async function enrichLogos(offset: number, limit: number, dryRun: boolean, compa
         if (domain) learnedUrl = `https://${domain}`;
       }
     }
-    if (!domain) return { company: job.company, status: "no-domain" as const };
+    const hint = (job.jobUrl ? hints.get(job.jobUrl) : undefined)
+      ?? hints.get(dedupKey(job.company ?? "", job.title ?? ""));
+
+    // A source-supplied logo is enough on its own — no domain required.
+    if (!domain && !hint) return { company: job.company, status: "no-domain" as const };
     if (dryRun) return { company: job.company, status: "would-upgrade" as const };
 
-    const logoUrl = await resolveAndStoreLogo(job.company, domain);
+    const logoUrl = await resolveAndStoreLogo(job.company, domain, hint);
     const data: Record<string, unknown> = {};
     if (learnedUrl && !job.companyUrl) data.companyUrl = learnedUrl;
     if (logoUrl) data.companyLogoUrl = logoUrl;

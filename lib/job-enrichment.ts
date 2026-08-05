@@ -277,6 +277,10 @@ export function imageMeta(buf: ArrayBuffer): ImgMeta | null {
     if (fourcc === "VP8 ") {
       return { type: "webp", w: dv.getUint16(26, true) & 0x3fff, h: dv.getUint16(28, true) & 0x3fff, vector: false };
     }
+    if (fourcc === "VP8L") {
+      const bits = dv.getUint32(21, true);
+      return { type: "webp", w: (bits & 0x3fff) + 1, h: ((bits >> 14) & 0x3fff) + 1, vector: false };
+    }
     return null;
   }
   // ICO — report the largest embedded image
@@ -310,7 +314,11 @@ export function imageMeta(buf: ArrayBuffer): ImgMeta | null {
 }
 
 const MIN_LONG_EDGE = 128;
-const MIN_SHORT_EDGE = 48;
+// Wordmarks are the real logo for plenty of companies (a 374x51 lockup, say),
+// and `object-contain` renders them fine, so the short edge stays permissive.
+// The aspect cap is what rejects decorative slivers and banner strips.
+const MIN_SHORT_EDGE = 24;
+const MAX_ASPECT = 8;
 /**
  * Byte-per-pixel floor used ONLY for favicon services. Google's endpoint will
  * resize a 32px favicon up to any requested size, producing a large but blurry
@@ -330,6 +338,7 @@ export function scoreImage(buf: ArrayBuffer, authentic: boolean): Scored {
   const long = Math.max(w, h);
   const short = Math.min(w, h);
   if (long < MIN_LONG_EDGE || short < MIN_SHORT_EDGE) return { ok: false, why: `too small ${w}x${h}` };
+  if (long / short > MAX_ASPECT) return { ok: false, why: `too elongated ${w}x${h}` };
   const density = buf.byteLength / (w * h);
   if (!authentic && density < MIN_DENSITY) {
     return { ok: false, why: `upscaled favicon (${w}x${h} @ ${density.toFixed(3)} B/px)` };
@@ -339,20 +348,99 @@ export function scoreImage(buf: ArrayBuffer, authentic: boolean): Scored {
 
 const UA = "Mozilla/5.0 (compatible; DesignBetterCareers/1.0; +https://designbetter.careers)";
 
+/** GET with one retry when the host answers "slow down" rather than "no". */
+async function politeFetch(
+  url: string,
+  { timeoutMs = 10000, accept = "*/*", tries = 2 } = {},
+): Promise<Response | null> {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(timeoutMs),
+        headers: { "User-Agent": UA, Accept: accept },
+      });
+      if ((res.status === 429 || res.status === 503) && i < tries - 1) {
+        await new Promise((r) => setTimeout(r, 1200 * (i + 1)));
+        continue;
+      }
+      return res;
+    } catch {
+      if (i === tries - 1) return null;
+    }
+  }
+  return null;
+}
+
 async function fetchImage(url: string, timeoutMs = 10000): Promise<{ buf: ArrayBuffer; contentType: string } | null> {
+  const res = await politeFetch(url, { timeoutMs, accept: "image/*,*/*" });
+  if (!res || !res.ok) return null;
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!/image|svg|octet-stream/i.test(contentType)) return null;
   try {
-    const res = await fetch(url, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(timeoutMs),
-      headers: { "User-Agent": UA },
-    });
-    if (!res.ok) return null;
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!/image|svg|octet-stream/i.test(contentType)) return null;
     const buf = await res.arrayBuffer();
     if (buf.byteLength < 200) return null;
     return { buf, contentType };
   } catch { return null; }
+}
+
+/** Resizing proxies hide the real asset behind a `url` query param. */
+function unwrapImageProxy(url: string): string {
+  try {
+    const u = new URL(url);
+    const inner = u.searchParams.get("url");
+    if (inner && /\/_next\/image|\/_vercel\/image|\/cdn-cgi\/image/.test(u.pathname)) {
+      return new URL(inner, u.origin).href;
+    }
+  } catch { /* fall through */ }
+  return url;
+}
+
+/**
+ * Find the company's own logo in page markup — often an SVG or a large
+ * wordmark, and the only decent asset on sites that ship just a 32px favicon.
+ *
+ * Requires the company's own name to appear in the tag, so a "trusted by"
+ * strip of client logos can't hand us somebody else's mark.
+ */
+function markupLogoCandidates(html: string, base: string, company: string): Candidate[] {
+  const out: Candidate[] = [];
+  const tokens = company.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 3);
+  const compact = company.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = m[0];
+    if (!/logo|brand|wordmark/i.test(tag)) continue;
+    const alt = /alt=["']([^"']*)/i.exec(tag)?.[1] ?? "";
+    const src = /\bsrc=["']([^"']+)/i.exec(tag)?.[1];
+    const srcset = /srcset=["']([^"']+)/i.exec(tag)?.[1];
+
+    const hay = `${alt} ${src ?? ""} ${srcset ?? ""}`.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!(tokens.some((t) => hay.includes(t)) || hay.includes(compact))) continue;
+
+    const raw: string[] = [];
+    if (src) raw.push(src);
+    if (srcset) {
+      const widest = srcset
+        .split(",")
+        .map((s) => s.trim().split(/\s+/))
+        .sort((a, b) => (parseInt(b[1] ?? "0", 10) || 0) - (parseInt(a[1] ?? "0", 10) || 0))[0]?.[0];
+      if (widest) raw.push(widest);
+    }
+
+    for (const r of raw) {
+      const abs = absolutize(r, base);
+      if (!abs) continue;
+      const real = unwrapImageProxy(abs);
+      out.push({
+        url: real,
+        hint: /\.svg($|\?)/i.test(real) ? 900 : 300,
+        src: "markup-logo",
+        authentic: true,
+      });
+    }
+  }
+  return out;
 }
 
 function absolutize(href: string, base: string): string | null {
@@ -366,19 +454,13 @@ type Candidate = { url: string; hint: number; src: string; authentic: boolean };
  * (often 512px) and apple-touch-icons (usually >=180px). These are real
  * artwork, unlike anything a favicon service synthesizes.
  */
-async function siteIconCandidates(domain: string): Promise<Candidate[]> {
+async function siteIconCandidates(domain: string, company?: string | null): Promise<Candidate[]> {
   const out: Candidate[] = [];
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
+    const res = await politeFetch(base, { timeoutMs: 12000, accept: "text/html,*/*" });
+    if (!res || !res.ok) continue;
     let html: string;
-    try {
-      const res = await fetch(base, {
-        redirect: "follow",
-        signal: AbortSignal.timeout(10000),
-        headers: { "User-Agent": UA },
-      });
-      if (!res.ok) continue;
-      html = await res.text();
-    } catch { continue; }
+    try { html = await res.text(); } catch { continue; }
 
     for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
       const tag = m[0];
@@ -404,8 +486,8 @@ async function siteIconCandidates(domain: string): Promise<Candidate[]> {
         const mUrl = absolutize(href, base);
         if (!mUrl) continue;
         try {
-          const mr = await fetch(mUrl, { signal: AbortSignal.timeout(8000), headers: { "User-Agent": UA } });
-          if (!mr.ok) continue;
+          const mr = await politeFetch(mUrl, { timeoutMs: 8000 });
+          if (!mr || !mr.ok) continue;
           const mj = await mr.json() as { icons?: Array<{ src?: string; sizes?: string }> };
           for (const ic of mj.icons ?? []) {
             if (!ic.src) continue;
@@ -416,6 +498,7 @@ async function siteIconCandidates(domain: string): Promise<Candidate[]> {
         } catch { /* manifest optional */ }
       }
     }
+    if (company) out.push(...markupLogoCandidates(html, base, company));
     if (out.length) break;
   }
 
@@ -474,18 +557,25 @@ export async function resolveBestLogo(
   const tiers: Candidate[] = [];
   if (provided) tiers.push({ url: provided, hint: 512, src: "source-provided", authentic: true });
 
-  // Order matters. A large icon the company declares about itself is the most
-  // faithful (it keeps multi-colour artwork), so those go first. Next comes the
-  // Simple Icons vector, which is always crisp — better than spending many slow
-  // probes on small or speculative paths. Everything weaker follows.
-  const siteIcons = domain ? await siteIconCandidates(domain) : [];
-  const strong = siteIcons.filter((c) => c.hint >= 192);
-  const weak = siteIcons.filter((c) => c.hint < 192);
+  // Order matters, best-fit first:
+  //  1. a large icon the company declares about itself — square, and keeps
+  //     multi-colour artwork, so it suits the card's square well
+  //  2. the Simple Icons vector — always crisp, brand-coloured
+  //  3. a logo lifted from page markup — usually the real wordmark, and the
+  //     only decent asset on sites that ship nothing but a 32px favicon
+  //  4. small declared icons, then favicon services as a last resort
+  const siteIcons = domain ? await siteIconCandidates(domain, company) : [];
+  const markup = siteIcons.filter((c) => c.src === "markup-logo");
+  const declared = siteIcons.filter((c) => c.src !== "markup-logo");
+  const strong = declared.filter((c) => c.hint >= 192);
+  const weak = declared.filter((c) => c.hint < 192);
+
   tiers.push(...strong.slice(0, 5));
   if (company) {
     const si = simpleIconsCandidate(company);
     if (si) tiers.push(si);
   }
+  tiers.push(...markup.slice(0, 4));
   tiers.push(...weak.slice(0, 4));
   if (domain) {
     tiers.push({ url: `https://unavatar.io/${domain}?fallback=false`, hint: 256, src: "unavatar", authentic: false });

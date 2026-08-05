@@ -2,29 +2,24 @@
 
 import { useState } from "react";
 
-function getDomain(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-}
-
 interface CompanyLogoProps {
-  companyUrl?: string | null;
   companyLogoUrl?: string | null;
   company: string;
   size?: number;
   className?: string;
 }
 
-type LogoStage = "explicit" | "clearbit" | "favicon" | "initials";
-
-export function CompanyLogo({ companyUrl, companyLogoUrl, company, size = 40, className = "" }: CompanyLogoProps) {
-  const initialStage: LogoStage = companyLogoUrl ? "explicit" : "clearbit";
-  const [stage, setStage] = useState<LogoStage>(initialStage);
-  const domain = getDomain(companyUrl);
+/**
+ * Company mark for the job detail page.
+ *
+ * Only ever renders the logo resolved and quality-checked at ingest
+ * (see lib/job-enrichment.ts), falling back to initials. It deliberately does
+ * not reach for a favicon service: Clearbit's free logo API was retired, and
+ * Google's endpoint upscales a 32px favicon to whatever size you request,
+ * which renders as a blurry smudge. Initials look intentional; that doesn't.
+ */
+export function CompanyLogo({ companyLogoUrl, company, size = 40, className = "" }: CompanyLogoProps) {
+  const [failed, setFailed] = useState(false);
 
   const initials = company
     .split(/\s+/)
@@ -33,40 +28,27 @@ export function CompanyLogo({ companyUrl, companyLogoUrl, company, size = 40, cl
     .join("")
     .toUpperCase();
 
-  if (stage === "initials" || (!domain && !companyLogoUrl)) {
+  if (!companyLogoUrl || failed) {
     return (
       <div
-        style={{ width: size, height: size, minWidth: size }}
-        className={`rounded-lg bg-brand-gray-100 flex items-center justify-center ${className}`}
+        style={{ width: size, height: size, minWidth: size, background: "var(--surface-2)" }}
+        className={`rounded-md flex items-center justify-center ${className}`}
       >
-        <span className="text-xs font-bold text-brand-gray-500 leading-none">{initials}</span>
+        <span className="text-xs font-bold leading-none" style={{ color: "var(--text-3)" }}>{initials}</span>
       </div>
     );
   }
 
-  const src =
-    stage === "explicit"
-      ? companyLogoUrl!
-      : stage === "clearbit"
-      ? `https://logo.clearbit.com/${domain}`
-      : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
-
-  const handleError = () => {
-    if (stage === "explicit") setStage(domain ? "clearbit" : "initials");
-    else if (stage === "clearbit") setStage("favicon");
-    else setStage("initials");
-  };
-
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={companyLogoUrl}
       alt={`${company} logo`}
       width={size}
       height={size}
-      onError={handleError}
+      onError={() => setFailed(true)}
       style={{ width: size, height: size, minWidth: size }}
-      className={`rounded-lg object-contain bg-white border border-brand-gray-100 ${className}`}
+      className={`rounded-md object-contain ${className}`}
     />
   );
 }

@@ -44,32 +44,37 @@ export default async function JobDetailPage({
   const isExpired = job.expiresAt ? job.expiresAt < new Date() : false;
 
   return (
-    <div className="min-h-screen bg-brand-gray-50">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
 
       {/* Owner management bar */}
       {isOwner && (
-        <div className="bg-brand-black border-b border-white/10">
+        <div data-theme="dark" style={{ background: "#0A0A0A", borderBottom: "1px solid var(--divider)" }}>
           <div className="max-w-4xl mx-auto px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm text-white">
-              <Settings className="w-4 h-4 text-brand-gray-400 flex-shrink-0" />
-              <span className="text-brand-gray-300">
-                <strong className="text-white">Your listing</strong>
+            <div className="flex items-center gap-2 text-sm" style={{ color: "var(--text-2)" }}>
+              <Settings className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-3)" }} />
+              <span style={{ color: "var(--text-2)" }}>
+                <strong style={{ color: "var(--text-1)" }}>Your listing</strong>
                 {job.active && job.expiresAt && !isExpired && (
                   <> · Active until {formatDate(job.expiresAt)}</>
                 )}
-                {isExpired && <> · <span className="text-red-400">Expired</span></>}
-                {!job.active && !isExpired && <> · <span className="text-amber-400">Pending activation</span></>}
+                {isExpired && <> · <span style={{ color: "var(--video-fg)" }}>Expired</span></>}
+                {!job.active && !isExpired && <> · <span style={{ color: "var(--book-fg)" }}>Pending activation</span></>}
                 {job.viewCount > 0 && <> · {job.viewCount} view{job.viewCount !== 1 ? "s" : ""}</>}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <a href={`/jobs/${job.id}`} className="text-xs text-brand-gray-400 hover:text-white transition-colors">
+              <a
+                href={`/jobs/${job.id}`}
+                className="text-xs transition-colors duration-[120ms]"
+                style={{ color: "var(--text-3)" }}
+              >
                 Public view
               </a>
               {job.active && (
                 <a
                   href={manageUrl}
-                  className="inline-flex items-center h-8 px-3 text-xs font-medium bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                  className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md transition-colors duration-[120ms]"
+                  style={{ background: "rgba(224,75,75,0.15)", color: "var(--video-fg)" }}
                 >
                   Mark as filled
                 </a>
@@ -81,8 +86,8 @@ export default async function JobDetailPage({
 
       {/* Payment pending banner */}
       {!job.active && !isOwner && (
-        <div className="bg-amber-50 border-b border-amber-200">
-          <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-2 text-sm text-amber-800">
+        <div style={{ background: "var(--book-bg)", borderBottom: "1px solid var(--divider)" }}>
+          <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-2 text-sm" style={{ color: "var(--book-fg)" }}>
             <Clock className="w-4 h-4 flex-shrink-0" />
             <span><strong>Payment pending.</strong> This listing will go live once payment is confirmed.</span>
           </div>
@@ -90,13 +95,17 @@ export default async function JobDetailPage({
       )}
 
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <Link href="/jobs" className="inline-flex items-center gap-2 text-sm text-brand-gray-500 hover:text-brand-black transition-colors mb-8">
+        <Link
+          href="/jobs"
+          className="inline-flex items-center gap-2 text-sm transition-colors duration-[120ms] mb-8"
+          style={{ color: "var(--text-3)" }}
+        >
           <ArrowLeft className="w-4 h-4" /> Back to jobs
         </Link>
 
         {/* Hero */}
-        <div className="bg-brand-black rounded-xl p-8 mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-red/10 rounded-full translate-x-32 -translate-y-32" />
+        <div data-theme="dark" className="p-8 mb-8 relative overflow-hidden" style={{ background: "#0A0A0A" }}>
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full translate-x-32 -translate-y-32" style={{ background: "rgba(255,71,37,0.1)" }} />
           <div className="relative">
             {job.featured && (
               <div className="mb-4">
@@ -104,38 +113,39 @@ export default async function JobDetailPage({
               </div>
             )}
             <div className="flex items-center gap-4 mb-4">
-              <CompanyLogo companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} size={52} className="border-white/20" />
+              <CompanyLogo companyLogoUrl={job.companyLogoUrl} company={job.company} size={52} />
               <div>
-                <h1 className="font-display text-display-sm font-bold text-white leading-tight">{job.title}</h1>
+                <h1 className="font-display text-display-sm font-bold leading-tight" style={{ color: "var(--text-1)" }}>{job.title}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   {job.companyUrl ? (
                     <a
                       href={job.companyUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-brand-gray-300 text-lg font-medium hover:text-white transition-colors flex items-center gap-1.5"
+                      className="text-lg font-medium transition-colors duration-[120ms] flex items-center gap-1.5 hover:text-[var(--text-1)]"
+                      style={{ color: "var(--text-2)" }}
                     >
                       {job.company}
                       <Globe className="w-3.5 h-3.5 opacity-60" />
                     </a>
                   ) : (
-                    <p className="text-brand-gray-300 text-lg font-medium">{job.company}</p>
+                    <p className="text-lg font-medium" style={{ color: "var(--text-2)" }}>{job.company}</p>
                   )}
                 </div>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 mt-5">
-              <div className="flex items-center gap-1.5 text-brand-gray-400 text-sm">
+              <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-3)" }}>
                 <MapPin className="w-4 h-4" />
                 {job.location}{job.remote ? " · Remote OK" : ""}
               </div>
-              <div className="flex items-center gap-1.5 text-brand-gray-400 text-sm">
+              <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-3)" }}>
                 <Building2 className="w-4 h-4" />
                 {job.companySize ? `${job.companySize} employees` : "Company size not listed"}
               </div>
               {job.compensation && (
-                <div className="flex items-center gap-1.5 text-brand-gray-400 text-sm">
+                <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-3)" }}>
                   <DollarSign className="w-4 h-4" />
                   {job.compensation}
                 </div>
@@ -156,17 +166,17 @@ export default async function JobDetailPage({
           {/* Description */}
           <div className="md:col-span-2 flex flex-col gap-6">
             {job.description && (
-              <div className="bg-white border border-brand-gray-100 rounded-xl p-6">
-                <h2 className="font-display font-bold text-brand-black mb-4">About this role</h2>
-                <div className="text-brand-gray-600 leading-relaxed preserve-formatting text-sm">
+              <div className="p-6" style={{ background: "var(--surface-1)" }}>
+                <h2 className="font-display font-bold mb-4" style={{ color: "var(--text-1)" }}>About this role</h2>
+                <div className="leading-relaxed preserve-formatting text-sm" style={{ color: "var(--text-2)" }}>
                   {job.description}
                 </div>
               </div>
             )}
 
             {job.jobUrl && (
-              <div className="bg-brand-gray-50 border border-brand-gray-100 rounded-xl p-6">
-                <p className="text-sm text-brand-gray-500 mb-4">
+              <div className="p-6" style={{ background: "var(--surface-1)" }}>
+                <p className="text-sm mb-4" style={{ color: "var(--text-2)" }}>
                   For full details and to apply, visit the official job listing:
                 </p>
                 <a href={job.jobUrl} target="_blank" rel="noreferrer">
@@ -182,8 +192,8 @@ export default async function JobDetailPage({
           <div className="flex flex-col gap-4">
             {/* Apply */}
             {job.jobUrl && (
-              <div className="bg-white border border-brand-gray-100 rounded-xl p-5">
-                <p className="font-semibold text-brand-black mb-3">Ready to apply?</p>
+              <div className="p-5" style={{ background: "var(--surface-1)" }}>
+                <p className="font-bold mb-3" style={{ color: "var(--text-1)" }}>Ready to apply?</p>
                 <a href={job.jobUrl} target="_blank" rel="noreferrer">
                   <Button size="sm" className="w-full gap-2">
                     View Full Listing <ExternalLink className="w-3.5 h-3.5" />
@@ -193,48 +203,49 @@ export default async function JobDetailPage({
             )}
 
             {/* Details */}
-            <div className="bg-white border border-brand-gray-100 rounded-xl p-5">
-              <h3 className="font-semibold text-brand-black mb-4">Job details</h3>
+            <div className="p-5" style={{ background: "var(--surface-1)" }}>
+              <h3 className="font-bold mb-4" style={{ color: "var(--text-1)" }}>Job details</h3>
               <div className="flex flex-col gap-3 text-sm">
                 <div>
-                  <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Role type</p>
-                  <p className="text-brand-black">{job.typeOfRole}</p>
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Role type</p>
+                  <p style={{ color: "var(--text-1)" }}>{job.typeOfRole}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Experience level</p>
-                  <p className="text-brand-black">{job.experienceLevel}</p>
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Experience level</p>
+                  <p style={{ color: "var(--text-1)" }}>{job.experienceLevel}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Category</p>
-                  <p className="text-brand-black">{job.role}</p>
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Category</p>
+                  <p style={{ color: "var(--text-1)" }}>{job.role}</p>
                 </div>
                 {job.compensation && (
                   <div>
-                    <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Compensation</p>
-                    <p className="text-brand-black">{job.compensation}</p>
+                    <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Compensation</p>
+                    <p style={{ color: "var(--text-1)" }}>{job.compensation}</p>
                   </div>
                 )}
                 {job.companyUrl && (
                   <div>
-                    <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Company</p>
+                    <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Company</p>
                     <a
                       href={job.companyUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-brand-red hover:underline text-sm flex items-center gap-1"
+                      className="text-sm flex items-center gap-1 transition-colors duration-[120ms]"
+                      style={{ color: "var(--signal-text)" }}
                     >
                       Visit website <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Posted</p>
-                  <p className="text-brand-black">{formatDate(job.createdAt)}</p>
+                  <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Posted</p>
+                  <p style={{ color: "var(--text-1)" }}>{formatDate(job.createdAt)}</p>
                 </div>
                 {job.expiresAt && (
                   <div>
-                    <p className="text-xs text-brand-gray-400 uppercase tracking-wide font-medium mb-1">Active until</p>
-                    <p className={isExpired ? "text-red-600" : "text-brand-black"}>{formatDate(job.expiresAt)}</p>
+                    <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mb-1" style={{ color: "var(--text-3)" }}>Active until</p>
+                    <p style={{ color: isExpired ? "var(--video-fg)" : "var(--text-1)" }}>{formatDate(job.expiresAt)}</p>
                   </div>
                 )}
               </div>
@@ -242,9 +253,9 @@ export default async function JobDetailPage({
 
             {/* Owner manage card — only shown with valid token */}
             {isOwner && (
-              <div className="bg-brand-gray-50 border border-brand-gray-200 rounded-xl p-5">
-                <p className="font-semibold text-brand-black mb-1 text-sm">Manage this listing</p>
-                <p className="text-xs text-brand-gray-500 mb-4">Role filled or no longer hiring? Remove it from the board.</p>
+              <div className="p-5" style={{ background: "var(--surface-1)" }}>
+                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-1)" }}>Manage this listing</p>
+                <p className="text-xs mb-4" style={{ color: "var(--text-2)" }}>Role filled or no longer hiring? Remove it from the board.</p>
                 {job.active ? (
                   <a href={manageUrl}>
                     <Button size="sm" variant="secondary" className="w-full">
@@ -252,11 +263,15 @@ export default async function JobDetailPage({
                     </Button>
                   </a>
                 ) : (
-                  <p className="text-xs text-brand-gray-400">This listing is not currently active.</p>
+                  <p className="text-xs" style={{ color: "var(--text-3)" }}>This listing is not currently active.</p>
                 )}
-                <p className="text-xs text-brand-gray-400 mt-3">
+                <p className="text-xs mt-3" style={{ color: "var(--text-3)" }}>
                   Questions? Email{" "}
-                  <a href="mailto:careers@thecuriositydepartment.com" className="underline hover:text-brand-black">
+                  <a
+                    href="mailto:careers@thecuriositydepartment.com"
+                    className="underline transition-colors duration-[120ms]"
+                    style={{ color: "var(--text-2)" }}
+                  >
                     careers@thecuriositydepartment.com
                   </a>
                 </p>
@@ -264,9 +279,9 @@ export default async function JobDetailPage({
             )}
 
             {/* Browse talent CTA */}
-            <div className="bg-brand-gray-50 border border-brand-gray-100 rounded-xl p-5">
-              <p className="text-sm font-semibold text-brand-black mb-2">Browse our talent pool</p>
-              <p className="text-xs text-brand-gray-500 mb-3">200+ senior designers actively looking for their next role.</p>
+            <div className="p-5" style={{ background: "var(--surface-1)" }}>
+              <p className="text-sm font-bold mb-2" style={{ color: "var(--text-1)" }}>Browse our talent pool</p>
+              <p className="text-xs mb-3" style={{ color: "var(--text-2)" }}>200+ senior designers actively looking for their next role.</p>
               <Link href="/talent">
                 <Button size="sm" variant="secondary" className="w-full">Browse Designers</Button>
               </Link>
