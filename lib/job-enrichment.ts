@@ -372,7 +372,25 @@ async function politeFetch(
   return null;
 }
 
+/** Inline SVG logos are carried as data: URIs so they flow through unchanged. */
+function decodeDataUri(url: string): { buf: ArrayBuffer; contentType: string } | null {
+  const m = /^data:([^;,]+)(;base64)?,([\s\S]*)$/.exec(url);
+  if (!m) return null;
+  try {
+    const [, contentType, isB64, payload] = m;
+    const bytes = isB64
+      ? Buffer.from(payload, "base64")
+      : Buffer.from(decodeURIComponent(payload), "utf8");
+    const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    return { buf, contentType };
+  } catch { return null; }
+}
+
 async function fetchImage(url: string, timeoutMs = 10000): Promise<{ buf: ArrayBuffer; contentType: string } | null> {
+  if (url.startsWith("data:")) {
+    const decoded = decodeDataUri(url);
+    return decoded && decoded.buf.byteLength >= 80 ? decoded : null;
+  }
   const res = await politeFetch(url, { timeoutMs, accept: "image/*,*/*" });
   if (!res || !res.ok) return null;
   const contentType = res.headers.get("content-type") ?? "";
@@ -403,6 +421,41 @@ function unwrapImageProxy(url: string): string {
  * Requires the company's own name to appear in the tag, so a "trusted by"
  * strip of client logos can't hand us somebody else's mark.
  */
+/**
+ * Many modern sites render their logo as an inline <svg> rather than an image
+ * file, leaving nothing fetchable (Luma AI ships only a 48px .ico otherwise).
+ * Lift the markup out and carry it as a data: URI.
+ */
+function inlineSvgCandidates(html: string, company: string): Candidate[] {
+  const out: Candidate[] = [];
+  const tokens = company.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 3);
+
+  for (const m of html.matchAll(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi)) {
+    const svg = m[0];
+    const open = svg.slice(0, svg.indexOf(">") + 1);
+    // "logo" in the attributes is what separates a brand mark from the dozens
+    // of decorative icons a page inlines.
+    if (!/logo|wordmark|brand/i.test(open)) continue;
+    if (svg.length > 120_000 || svg.length < 80) continue;
+    // A nested <svg> would have truncated the match; skip those.
+    if (/<svg\b/i.test(svg.slice(open.length))) continue;
+
+    const withNs = /xmlns=/i.test(open)
+      ? svg
+      : svg.replace(/^<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+    const named = tokens.some((t) => open.toLowerCase().includes(t));
+
+    out.push({
+      url: `data:image/svg+xml;base64,${Buffer.from(withNs, "utf8").toString("base64")}`,
+      hint: named ? 950 : 400,
+      src: named ? "inline-svg(named)" : "inline-svg",
+      authentic: true,
+    });
+    if (out.length >= 3) break;
+  }
+  return out.sort((a, b) => b.hint - a.hint);
+}
+
 function markupLogoCandidates(html: string, base: string, company: string): Candidate[] {
   const out: Candidate[] = [];
   const tokens = company.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 3);
@@ -498,7 +551,10 @@ async function siteIconCandidates(domain: string, company?: string | null): Prom
         } catch { /* manifest optional */ }
       }
     }
-    if (company) out.push(...markupLogoCandidates(html, base, company));
+    if (company) {
+      out.push(...markupLogoCandidates(html, base, company));
+      out.push(...inlineSvgCandidates(html, company));
+    }
     if (out.length) break;
   }
 
@@ -565,8 +621,8 @@ export async function resolveBestLogo(
   //     only decent asset on sites that ship nothing but a 32px favicon
   //  4. small declared icons, then favicon services as a last resort
   const siteIcons = domain ? await siteIconCandidates(domain, company) : [];
-  const markup = siteIcons.filter((c) => c.src === "markup-logo");
-  const declared = siteIcons.filter((c) => c.src !== "markup-logo");
+  const markup = siteIcons.filter((c) => c.src === "markup-logo" || c.src.startsWith("inline-svg"));
+  const declared = siteIcons.filter((c) => !(c.src === "markup-logo" || c.src.startsWith("inline-svg")));
   const strong = declared.filter((c) => c.hint >= 192);
   const weak = declared.filter((c) => c.hint < 192);
 
@@ -1145,13 +1201,10 @@ export async function resolveAndStoreLogo(
     const best = await resolveBestLogo(domain, hint, company);
     if (!best) return null;
     try {
-      const res = await fetch(best.url, {
-        redirect: "follow",
-        signal: AbortSignal.timeout(15000),
-        headers: { "User-Agent": UA },
-      });
-      if (!res.ok) return null;
-      const body = await res.arrayBuffer();
+      // Handles http(s) and the data: URIs used for inline SVG logos.
+      const got = await fetchImage(best.url, 15000);
+      if (!got) return null;
+      const body = got.buf;
       const { put } = await import("@vercel/blob");
       // Deterministic path + no random suffix means re-runs replace the old
       // file in place rather than piling up copies. (@vercel/blob 0.27 permits
