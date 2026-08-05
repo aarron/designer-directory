@@ -21,27 +21,30 @@ function getDomain(url: string | null | undefined): string | null {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return null; }
 }
 
-type SquareStage = "explicit" | "clearbit" | "favicon" | "initials";
+// Clearbit's free logo API was retired, so it is no longer in the chain.
+// `explicit` is the high-resolution logo mirrored into Blob at ingest
+// (see lib/job-enrichment.ts); `unavatar` is a live fallback for older rows
+// that never got one. A blurry upscaled favicon looks worse than a clean
+// lettermark, so there is no favicon-service tier here.
+type SquareStage = "explicit" | "unavatar" | "initials";
 
 function CompanySquare({ companyUrl, companyLogoUrl, company }: {
   companyUrl?: string | null;
   companyLogoUrl?: string | null;
   company: string;
 }) {
-  const initialStage: SquareStage = companyLogoUrl ? "explicit" : "clearbit";
-  const [stage, setStage] = useState<SquareStage>(initialStage);
   const domain = getDomain(companyUrl);
+  const initialStage: SquareStage = companyLogoUrl ? "explicit" : domain ? "unavatar" : "initials";
+  const [stage, setStage] = useState<SquareStage>(initialStage);
   const bg = companyBg(company);
   const initial = company.trim()[0]?.toUpperCase() ?? "?";
 
   const src =
     stage === "explicit" ? companyLogoUrl!
-    : stage === "clearbit" ? `https://logo.clearbit.com/${domain}`
-    : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+    : `https://unavatar.io/${domain}?fallback=false`;
 
   const handleError = () => {
-    if (stage === "explicit") setStage(domain ? "clearbit" : "initials");
-    else if (stage === "clearbit") setStage("favicon");
+    if (stage === "explicit" && domain) setStage("unavatar");
     else setStage("initials");
   };
 
