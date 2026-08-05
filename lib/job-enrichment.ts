@@ -397,6 +397,9 @@ async function siteIconCandidates(domain: string): Promise<Candidate[]> {
       } else if (/^icon$|shortcut icon/.test(rel)) {
         const u = absolutize(href, base);
         if (u) out.push({ url: u, hint: dim || (/\.svg($|\?)/i.test(href) ? 1024 : 1), src: `rel=icon${dim ? ` ${dim}` : ""}`, authentic: true });
+      } else if (/^(og:)?logo$/.test(rel)) {
+        const u = absolutize(href, base);
+        if (u) out.push({ url: u, hint: 900, src: "rel=logo", authentic: true });
       } else if (/manifest/.test(rel)) {
         const mUrl = absolutize(href, base);
         if (!mUrl) continue;
@@ -415,7 +418,36 @@ async function siteIconCandidates(domain: string): Promise<Candidate[]> {
     }
     if (out.length) break;
   }
+
+  // Plenty of sites ship these at the conventional path without declaring them.
+  for (const [path, hint] of [
+    ["/apple-touch-icon.png", 180],
+    ["/apple-touch-icon-precomposed.png", 180],
+    ["/favicon.svg", 1024],
+    ["/logo.svg", 1024],
+  ] as const) {
+    out.push({ url: `https://${domain}${path}`, hint, src: `conventional ${path}`, authentic: true });
+  }
+
   return out.sort((a, b) => b.hint - a.hint);
+}
+
+/**
+ * Simple Icons ships hand-drawn SVG marks for a few thousand well-known
+ * brands, served in the brand's own color. Only consulted when a company's own
+ * site fails to offer anything decent, and only for names that map cleanly to
+ * a slug — the CDN 404s on unknown slugs, so a hit is effectively name-exact.
+ */
+function simpleIconsCandidate(company: string): Candidate | null {
+  const slug = company.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (slug.length < 3 || slug.length > 24) return null;
+  // The bare form already serves the mark in the brand's own color.
+  return {
+    url: `https://cdn.simpleicons.org/${slug}`,
+    hint: 800,
+    src: "simple-icons",
+    authentic: true,
+  };
 }
 
 export type ResolvedLogo = { url: string; contentType: string; ext: string; quality: number; src: string };
@@ -437,11 +469,17 @@ function extFor(contentType: string, type: string): string {
 export async function resolveBestLogo(
   domain: string | null | undefined,
   provided?: string | null,
+  company?: string | null,
 ): Promise<ResolvedLogo | null> {
   const tiers: Candidate[] = [];
   if (provided) tiers.push({ url: provided, hint: 512, src: "source-provided", authentic: true });
+  if (domain) tiers.push(...(await siteIconCandidates(domain)).slice(0, 8));
+  // Brand-accurate vector art, tried only after the company's own assets.
+  if (company) {
+    const si = simpleIconsCandidate(company);
+    if (si) tiers.push(si);
+  }
   if (domain) {
-    tiers.push(...(await siteIconCandidates(domain)).slice(0, 6));
     tiers.push({ url: `https://unavatar.io/${domain}?fallback=false`, hint: 256, src: "unavatar", authentic: false });
     tiers.push({ url: `https://icons.duckduckgo.com/ip3/${domain}.ico`, hint: 64, src: "duckduckgo", authentic: false });
     tiers.push({ url: `https://www.google.com/s2/favicons?domain=${domain}&sz=256`, hint: 32, src: "google-favicon", authentic: false });
@@ -878,7 +916,7 @@ export async function resolveAndStoreLogo(
   if (cached) return cached;
 
   const task = (async () => {
-    const best = await resolveBestLogo(domain, hint);
+    const best = await resolveBestLogo(domain, hint, company);
     if (!best) return null;
     try {
       const res = await fetch(best.url, {
