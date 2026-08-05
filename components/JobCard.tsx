@@ -5,7 +5,6 @@ import { useState } from "react";
 import { formatDate } from "@/lib/utils";
 import type { Job } from "@prisma/client";
 
-// Derive a stable light background color from the company name
 const LOGO_PALETTES = [
   "#F2EDE4", "#A8D3EB", "#C7C3E7", "#F1B7C5",
   "#E7C451", "#8DD8C3", "#D3E749", "#E7833A",
@@ -24,7 +23,11 @@ function getDomain(url: string | null | undefined): string | null {
 
 type SquareStage = "explicit" | "clearbit" | "favicon" | "initials";
 
-function CompanySquare({ companyUrl, companyLogoUrl, company }: { companyUrl?: string | null; companyLogoUrl?: string | null; company: string }) {
+function CompanySquare({ companyUrl, companyLogoUrl, company }: {
+  companyUrl?: string | null;
+  companyLogoUrl?: string | null;
+  company: string;
+}) {
   const initialStage: SquareStage = companyLogoUrl ? "explicit" : "clearbit";
   const [stage, setStage] = useState<SquareStage>(initialStage);
   const domain = getDomain(companyUrl);
@@ -32,11 +35,9 @@ function CompanySquare({ companyUrl, companyLogoUrl, company }: { companyUrl?: s
   const initial = company.trim()[0]?.toUpperCase() ?? "?";
 
   const src =
-    stage === "explicit"
-      ? companyLogoUrl!
-      : stage === "clearbit"
-      ? `https://logo.clearbit.com/${domain}`
-      : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+    stage === "explicit" ? companyLogoUrl!
+    : stage === "clearbit" ? `https://logo.clearbit.com/${domain}`
+    : `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
 
   const handleError = () => {
     if (stage === "explicit") setStage(domain ? "clearbit" : "initials");
@@ -48,19 +49,9 @@ function CompanySquare({ companyUrl, companyLogoUrl, company }: { companyUrl?: s
     <div className="absolute inset-0 flex items-center justify-center p-6" style={{ backgroundColor: bg }}>
       {stage !== "initials" && (domain || companyLogoUrl) ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={`${company} logo`}
-          width={72}
-          height={72}
-          onError={handleError}
-          className="object-contain w-full h-full"
-        />
+        <img src={src} alt={`${company} logo`} width={72} height={72} onError={handleError} className="object-contain w-full h-full" />
       ) : (
-        <span
-          className="font-display font-bold leading-none select-none"
-          style={{ fontSize: "clamp(2.5rem, 8cqi, 5rem)", color: "rgba(0,0,0,0.18)" }}
-        >
+        <span className="font-display font-bold leading-none select-none" style={{ fontSize: "clamp(2.5rem, 8cqi, 5rem)", color: "rgba(0,0,0,0.18)" }}>
           {initial}
         </span>
       )}
@@ -68,13 +59,64 @@ function CompanySquare({ companyUrl, companyLogoUrl, company }: { companyUrl?: s
   );
 }
 
-export function JobCard({ job }: { job: Job }) {
+export function JobCard({ job, variant = "grid" }: { job: Job; variant?: "grid" | "list" }) {
+  if (variant === "list") {
+    return (
+      <Link
+        href={`/jobs/${job.id}`}
+        className="group flex items-center gap-3 px-4 py-3 animate-fade-in transition-colors duration-[120ms]"
+        style={{ background: "var(--surface-1)" }}
+      >
+        {/* Small logo square */}
+        <div className="w-9 h-9 flex-shrink-0 relative overflow-hidden rounded-sm container-type-inline">
+          <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} />
+        </div>
+
+        {/* Title + company */}
+        <div className="flex-1 min-w-0">
+          <p className="font-display font-bold text-[15px] leading-tight truncate transition-colors duration-[120ms] group-hover:text-[#FF4725]" style={{ color: "var(--text-1)" }}>
+            {job.title}<span style={{ color: "#FF4725" }}>.</span>
+          </p>
+          <p className="text-[12px] italic leading-snug truncate mt-0.5" style={{ color: "var(--text-3)" }}>
+            {job.company}
+            {job.location && (
+              <span className="not-italic font-semibold" style={{ color: "var(--text-2)" }}> · {job.location}</span>
+            )}
+          </p>
+        </div>
+
+        {/* Role pill */}
+        <span className="hidden sm:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: "var(--surface-2)", color: "#FF4725" }}>
+          {job.role}
+        </span>
+
+        {/* Remote pill */}
+        {job.remote && (
+          <span className="hidden md:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] rounded-full px-2.5 py-1 flex-shrink-0" style={{ border: "1px solid var(--divider-strong)", color: "var(--text-2)" }}>
+            Remote
+          </span>
+        )}
+
+        {/* Featured */}
+        {job.featured && (
+          <span className="hidden sm:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] flex-shrink-0" style={{ color: "#FF4725" }}>★</span>
+        )}
+
+        {/* Date */}
+        <span className="font-mono text-[11px] font-normal flex-shrink-0" style={{ color: "var(--text-3)" }}>
+          {formatDate(job.createdAt)}
+        </span>
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className="bg-white border border-brand-gray-100 hover:border-brand-gray-300 hover:shadow-md transition-all group flex items-start overflow-hidden animate-fade-in"
+      className="group flex items-start overflow-hidden animate-fade-in transition-all duration-[240ms] hover:-translate-y-[2px]"
+      style={{ background: "var(--surface-1)", boxShadow: "var(--shadow-1)" }}
     >
-      {/* Company square — same proportion as DesignerCard photo */}
+      {/* Company square */}
       <div className="w-[28%] flex-shrink-0 aspect-square relative overflow-hidden container-type-inline">
         <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} />
       </div>
@@ -84,53 +126,49 @@ export function JobCard({ job }: { job: Job }) {
 
         {/* Title + company/location */}
         <div>
-          <p className="font-display font-bold text-[22px] leading-tight text-brand-black group-hover:text-brand-red transition-colors">
-            {job.title}<span className="text-brand-red">.</span>
+          <p className="font-display font-bold text-[22px] leading-tight transition-colors duration-[120ms] group-hover:text-[#FF4725]" style={{ color: "var(--text-1)" }}>
+            {job.title}<span style={{ color: "#FF4725" }}>.</span>
           </p>
-          <p className="text-[13px] italic text-brand-gray-500 mt-1 leading-snug truncate">
+          <p className="text-[13px] italic mt-1 leading-snug truncate" style={{ color: "var(--text-3)" }}>
             {job.company}
             {job.location && (
-              <span className="not-italic font-semibold text-brand-gray-600"> · {job.location}</span>
+              <span className="not-italic font-semibold" style={{ color: "var(--text-2)" }}> · {job.location}</span>
             )}
           </p>
         </div>
 
-        {/* Role / Type grid — mirrors DesignerCard's Role / Level */}
-        <div className="grid grid-cols-2 border border-brand-gray-100">
-          <div className="px-2.5 py-2 border-r border-brand-gray-100">
-            <p className="text-[8px] uppercase tracking-widest text-brand-gray-400 font-semibold">Role</p>
-            <p className="text-[13px] font-bold text-brand-red leading-tight mt-0.5 truncate">{job.role}</p>
+        {/* Role / Type — gap-px trick: colored parent + surface-1 children = hairline divider, no CSS border */}
+        <div className="grid grid-cols-2" style={{ background: "var(--divider)", gap: "1px" }}>
+          <div className="px-2.5 py-2" style={{ background: "var(--surface-1)" }}>
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>Role</p>
+            <p className="text-[13px] font-bold leading-tight mt-0.5 truncate" style={{ color: "#FF4725" }}>{job.role}</p>
           </div>
-          <div className="px-2.5 py-2">
-            <p className="text-[8px] uppercase tracking-widest text-brand-gray-400 font-semibold">Type</p>
-            <p className="text-[13px] font-bold text-brand-black leading-tight mt-0.5 truncate">{job.typeOfRole}</p>
+          <div className="px-2.5 py-2" style={{ background: "var(--surface-1)" }}>
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>Type</p>
+            <p className="text-[13px] font-bold leading-tight mt-0.5 truncate" style={{ color: "var(--text-1)" }}>{job.typeOfRole}</p>
           </div>
         </div>
 
-        {/* Level */}
+        {/* Level + Remote — DS tagPill: mono 11px, pill, divider-strong border */}
         {job.experienceLevel && (
           <div className="flex flex-wrap gap-1">
-            <span className="text-[9px] px-1.5 py-0.5 bg-brand-gray-50 border border-brand-gray-100 text-brand-gray-600 uppercase tracking-wide font-semibold">
+            <span className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] rounded-full px-3 py-0.5" style={{ border: "1px solid var(--divider-strong)", color: "var(--text-2)" }}>
               {job.experienceLevel}
             </span>
             {job.remote && (
-              <span className="text-[9px] px-1.5 py-0.5 bg-brand-gray-50 border border-brand-gray-100 text-brand-gray-600 uppercase tracking-wide font-semibold">
+              <span className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] rounded-full px-3 py-0.5" style={{ border: "1px solid var(--divider-strong)", color: "var(--text-2)" }}>
                 Remote OK
               </span>
             )}
           </div>
         )}
 
-        {/* Footer — featured + date */}
+        {/* Footer */}
         <div className="mt-auto pt-1 flex items-center justify-between gap-2">
           {job.featured ? (
-            <span className="text-[9px] font-bold tracking-widest uppercase text-brand-red">
-              ★ Featured
-            </span>
-          ) : (
-            <span />
-          )}
-          <span className="text-[9px] text-brand-gray-400">
+            <span className="font-mono text-[11px] font-normal uppercase tracking-[0.12em]" style={{ color: "#FF4725" }}>★ Featured</span>
+          ) : <span />}
+          <span className="font-mono text-[11px] font-normal" style={{ color: "var(--text-3)" }}>
             {formatDate(job.createdAt)}
           </span>
         </div>

@@ -181,6 +181,12 @@ export default async function JobsPage({
               </Link>
             )}
           </div>
+        ) : view === "list" ? (
+          <div className="flex flex-col gap-px" style={{ background: "var(--divider)" }}>
+            {jobs.map((job) => (
+              <JobCard key={job.id} job={job} variant="list" />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {jobs.map((job) => (

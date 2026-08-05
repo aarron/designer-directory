@@ -225,6 +225,56 @@ async function fetchAshby(slug) {
   }));
 }
 
+// ── External job board fetchers ─────────────────────────────────────────────
+
+async function fetchRemotive() {
+  const res = await fetch("https://remotive.com/api/remote-jobs?category=Design&limit=100");
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.jobs || [])
+    .filter((j) => isDesignRole(j.title))
+    .map((j) => ({
+      source: { name: j.company_name, url: "", domain: "", ats: "remotive" },
+      job: { title: j.title, location: j.candidate_required_location || "Remote", applyUrl: j.url },
+    }));
+}
+
+async function fetchRemoteOK() {
+  const res = await fetch("https://remoteok.com/api?tags=design", {
+    headers: { "User-Agent": "DesignBetterCareers/1.0" },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data
+    .filter((j) => j && j.position && isDesignRole(j.position))
+    .map((j) => ({
+      source: { name: j.company || "", url: "", domain: "", ats: "remoteok" },
+      job: { title: j.position, location: j.location || "Remote", applyUrl: j.apply_url || j.url || "" },
+    }))
+    .filter((x) => x.job.applyUrl);
+}
+
+async function fetchWeworkRemotely() {
+  const res = await fetch("https://weworkremotely.com/categories/remote-design-jobs.rss");
+  if (!res.ok) return [];
+  const xml = await res.text();
+  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+  return items.flatMap((m) => {
+    const raw = m[1];
+    const titleMatch = raw.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/s);
+    const linkMatch = raw.match(/<link>(.*?)<\/link>/s);
+    const regionMatch = raw.match(/<region>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/region>/s);
+    const rawTitle = titleMatch?.[1]?.trim() ?? "";
+    const link = linkMatch?.[1]?.trim() ?? "";
+    if (!rawTitle || !link) return [];
+    const colonIdx = rawTitle.indexOf(": ");
+    const company = colonIdx > 0 ? rawTitle.slice(0, colonIdx).trim() : "";
+    const title = colonIdx > 0 ? rawTitle.slice(colonIdx + 2).trim() : rawTitle;
+    if (!isDesignRole(title)) return [];
+    return [{ source: { name: company, url: "", domain: "", ats: "wwr" }, job: { title, location: regionMatch?.[1]?.trim() || "Remote", applyUrl: link } }];
+  });
+}
+
 // ── Admin API helpers ───────────────────────────────────────────────────────
 
 async function adminFetch(method, path, body) {
@@ -236,9 +286,28 @@ async function adminFetch(method, path, body) {
   return res.json();
 }
 
-async function getExistingJobUrls() {
+async function getExistingJobs() {
   const jobs = await adminFetch("GET", "/jobs");
-  return new Set((jobs || []).map((j) => j.jobUrl).filter(Boolean));
+  const urls = new Set((jobs || []).map((j) => j.jobUrl).filter(Boolean));
+  const keys = new Set((jobs || []).map((j) => `${j.company?.toLowerCase()}|${j.title?.toLowerCase()}`).filter(Boolean));
+  return { urls, keys };
+}
+
+async function pruneExpiredJobs() {
+  const jobs = await adminFetch("GET", "/jobs");
+  const withUrls = (jobs || []).filter((j) => j.jobUrl);
+  let pruned = 0;
+  for (const job of withUrls) {
+    try {
+      const res = await fetch(job.jobUrl, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(6000) });
+      if (res.status === 404 || res.status === 410) {
+        await adminFetch("PATCH", "/jobs", { id: job.id, active: false });
+        console.log(`  🗑  Pruned (${res.status}): ${job.company} — ${job.title}`);
+        pruned++;
+      }
+    } catch {}
+  }
+  console.log(`  Pruned ${pruned} expired jobs from ${withUrls.length} checked\n`);
 }
 
 const logoCache = new Map();
@@ -278,10 +347,12 @@ async function createJob(source, job) {
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
+const PRUNE = process.argv.includes("--prune") || (!DRY_RUN && !SOURCE_FILTER && !COMPANY_FILTER);
+
 async function main() {
   console.log(`\n🔍 Design Better Careers — Job Fetcher${DRY_RUN ? " [DRY RUN]" : ""}\n`);
 
-  const existingUrls = await getExistingJobUrls();
+  const { urls: existingUrls, keys: existingKeys } = await getExistingJobs();
   console.log(`  Existing jobs in DB: ${existingUrls.size}\n`);
 
   let sources = SOURCES;
@@ -291,6 +362,7 @@ async function main() {
   const stats = { scanned: 0, found: 0, added: 0, skipped: 0, errors: 0 };
   const newJobs = [];
 
+  // ── ATS companies ────────────────────────────────────────────────────────
   for (const source of sources) {
     let jobs = [];
     try {
@@ -319,8 +391,28 @@ async function main() {
       console.log(`      + ${job.title} — ${job.location}`);
       newJobs.push({ source, job });
     }
-    // small delay to avoid rate limiting
     await new Promise((r) => setTimeout(r, 200));
+  }
+
+  // ── External boards (skip when filtering by company/source) ─────────────
+  if (!SOURCE_FILTER && !COMPANY_FILTER) {
+    const [remotive, remoteOK, wwr] = await Promise.all([
+      fetchRemotive(),
+      fetchRemoteOK(),
+      fetchWeworkRemotely(),
+    ]);
+    const external = [...remotive, ...remoteOK, ...wwr];
+    let extNew = 0;
+    for (const { source, job } of external) {
+      if (existingUrls.has(job.applyUrl)) continue;
+      const key = `${source.name?.toLowerCase()}|${job.title?.toLowerCase()}`;
+      if (existingKeys.has(key)) continue;
+      newJobs.push({ source, job });
+      existingKeys.add(key);
+      extNew++;
+    }
+    if (extNew > 0) console.log(`\n  ✦ External boards (Remotive / RemoteOK / WWR): ${extNew} new`);
+    else console.log(`  · External boards (Remotive / RemoteOK / WWR): 0 new`);
   }
 
   console.log(`\n──────────────────────────────────────────────`);
@@ -329,6 +421,10 @@ async function main() {
 
   if (DRY_RUN || newJobs.length === 0) {
     if (DRY_RUN) console.log("\n  [Dry run — no jobs written]\n");
+    if (PRUNE && !DRY_RUN) {
+      console.log("\n  Checking for expired jobs...\n");
+      await pruneExpiredJobs();
+    }
     return;
   }
 
@@ -339,6 +435,7 @@ async function main() {
       if (result?.ok) {
         console.log(`  ✓ ${source.name}: ${job.title}`);
         stats.added++;
+        existingUrls.add(job.applyUrl);
       } else {
         console.log(`  ✗ ${source.name}: ${job.title} — ${JSON.stringify(result)}`);
         stats.errors++;
@@ -351,6 +448,11 @@ async function main() {
   }
 
   console.log(`\n  Done. Added ${stats.added} jobs, ${stats.errors} errors.\n`);
+
+  if (PRUNE) {
+    console.log("  Checking for expired jobs...\n");
+    await pruneExpiredJobs();
+  }
 }
 
 main().catch(console.error);
