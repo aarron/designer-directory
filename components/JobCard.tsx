@@ -28,10 +28,12 @@ function getDomain(url: string | null | undefined): string | null {
 // lettermark, so there is no favicon-service tier here.
 type SquareStage = "explicit" | "unavatar" | "initials";
 
-function CompanySquare({ companyUrl, companyLogoUrl, company }: {
+function CompanySquare({ companyUrl, companyLogoUrl, company, compact = false }: {
   companyUrl?: string | null;
   companyLogoUrl?: string | null;
   company: string;
+  /** Tighter padding + smaller lettermark for the 36px list-view square. */
+  compact?: boolean;
 }) {
   const domain = getDomain(companyUrl);
   const initialStage: SquareStage = companyLogoUrl ? "explicit" : domain ? "unavatar" : "initials";
@@ -49,12 +51,21 @@ function CompanySquare({ companyUrl, companyLogoUrl, company }: {
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center p-6" style={{ backgroundColor: bg }}>
+    <div
+      className={`absolute inset-0 flex items-center justify-center ${compact ? "p-1" : "p-6"}`}
+      style={{ backgroundColor: bg }}
+    >
       {stage !== "initials" && (domain || companyLogoUrl) ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={`${company} logo`} width={72} height={72} onError={handleError} className="object-contain w-full h-full" />
       ) : (
-        <span className="font-display font-bold leading-none select-none" style={{ fontSize: "clamp(2.5rem, 8cqi, 5rem)", color: "rgba(0,0,0,0.18)" }}>
+        <span
+          className="font-display font-bold leading-none select-none"
+          style={{
+            fontSize: compact ? "1rem" : "clamp(2.5rem, 8cqi, 5rem)",
+            color: "rgba(0,0,0,0.28)",
+          }}
+        >
           {initial}
         </span>
       )}
@@ -72,7 +83,7 @@ export function JobCard({ job, variant = "grid" }: { job: Job; variant?: "grid" 
       >
         {/* Small logo square */}
         <div className="w-9 h-9 flex-shrink-0 relative overflow-hidden rounded-sm container-type-inline">
-          <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} />
+          <CompanySquare companyUrl={job.companyUrl} companyLogoUrl={job.companyLogoUrl} company={job.company} compact />
         </div>
 
         {/* Title + company */}
