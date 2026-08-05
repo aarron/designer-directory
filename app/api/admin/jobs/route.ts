@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       active:           true,
       expiresAt:        body.expiresAt ? new Date(String(body.expiresAt)) : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
       stripePaymentStatus: "paid",
-      matchFrequency:   body.matchFrequency ? String(body.matchFrequency) : "once",
+      matchFrequency:   body.matchFrequency ? String(body.matchFrequency) : null,
     },
   });
 
