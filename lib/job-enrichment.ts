@@ -942,5 +942,9 @@ export async function resolveAndStoreLogo(
   })();
 
   logoMemo.set(key, task);
+  // Module state survives between invocations on a warm instance, so a failed
+  // lookup must not be cached — otherwise one transient error would keep that
+  // company logo-less for the life of the container.
+  task.then((url) => { if (!url) logoMemo.delete(key); }).catch(() => logoMemo.delete(key));
   return task;
 }
