@@ -537,7 +537,20 @@ type Candidate = { url: string; hint: number; src: string; authentic: boolean };
  * (often 512px) and apple-touch-icons (usually >=180px). These are real
  * artwork, unlike anything a favicon service synthesizes.
  */
-async function siteIconCandidates(domain: string, company?: string | null): Promise<Candidate[]> {
+// Scanning a company's site is the expensive step and its result never varies
+// per posting, so it is cached separately from the per-posting resolution.
+const siteScanMemo = new Map<string, Promise<Candidate[]>>();
+
+function siteIconCandidates(domain: string, company?: string | null): Promise<Candidate[]> {
+  const key = `${domain}|${company ?? ""}`;
+  const hit = siteScanMemo.get(key);
+  if (hit) return hit;
+  const task = scanSiteIcons(domain, company).catch(() => [] as Candidate[]);
+  siteScanMemo.set(key, task);
+  return task;
+}
+
+async function scanSiteIcons(domain: string, company?: string | null): Promise<Candidate[]> {
   const out: Candidate[] = [];
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
     const res = await politeFetch(base, { timeoutMs: 12000, accept: "text/html,*/*" });
@@ -1278,9 +1291,11 @@ export async function resolveAndStoreLogo(
   hint?: string | null,
   jobUrl?: string | null,
 ): Promise<string | null> {
-  // jobUrl is intentionally not part of the key: it varies per posting but
-  // yields the same employer logo, and including it would defeat the memo.
-  const key = `${slugify(company)}|${domain ?? ""}|${hint ?? ""}`;
+  // jobUrl belongs in the key: postings for one employer don't all display a
+  // logo (a closed listing may show none), so sharing a single result across
+  // them let one bad page starve the rest. The expensive site scan is cached
+  // separately by domain, so per-posting resolution stays cheap.
+  const key = `${slugify(company)}|${domain ?? ""}|${hint ?? ""}|${jobUrl ?? ""}`;
   const cached = logoMemo.get(key);
   if (cached) return cached;
 
