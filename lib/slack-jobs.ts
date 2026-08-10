@@ -74,6 +74,28 @@ export function interleaveByRole<T extends { role: string }>(jobs: T[]): T[] {
   return out;
 }
 
+/**
+ * Keeps any single employer from taking several of the few visible slots.
+ * Excess roles are deferred rather than dropped, so they still get posted —
+ * just later in the list or in the thread.
+ */
+export function capPerCompany<T extends { company: string }>(jobs: T[], max: number): T[] {
+  const seen = new Map<string, number>();
+  const kept: T[] = [];
+  const deferred: T[] = [];
+  for (const j of jobs) {
+    const key = j.company.trim().toLowerCase();
+    const n = seen.get(key) ?? 0;
+    if (n < max) {
+      kept.push(j);
+      seen.set(key, n + 1);
+    } else {
+      deferred.push(j);
+    }
+  }
+  return [...kept, ...deferred];
+}
+
 function escapeMrkdwn(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -216,7 +238,9 @@ export async function sendJobsDigest(opts: {
     };
   }
 
-  const selected = interleaveByRole(candidates).slice(0, cap);
+  // Spread across role categories first, then keep one employer from filling
+  // the handful of visible slots.
+  const selected = capPerCompany(interleaveByRole(candidates), 1).slice(0, cap);
   const shown = selected.slice(0, DIGEST_LIMIT);
   const overflow = selected.slice(DIGEST_LIMIT);
   const digest = buildDigest(shown, overflow, { kickoff, totalOnBoard });
