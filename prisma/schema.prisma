@@ -150,6 +150,9 @@ model Job {
   matchFrequency    String?   // "once" | "weekly" | "biweekly"
   lastMatchSentAt   DateTime?
   repostNudgeSentAt DateTime?
+  // Set once this job has appeared in the #hiring Slack digest, so it is never
+  // posted twice. Written only after Slack confirms the message was sent.
+  slackPostedAt     DateTime?
 
   @@index([active, createdAt])
   @@map("jobs")
