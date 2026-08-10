@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isOwnerEmail } from "@/lib/owner-emails";
 
 /**
  * GET /api/admin/jobs
@@ -74,7 +75,13 @@ export async function POST(req: NextRequest) {
       active:           true,
       expiresAt:        body.expiresAt ? new Date(String(body.expiresAt)) : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
       stripePaymentStatus: "paid",
-      matchFrequency:   body.matchFrequency ? String(body.matchFrequency) : null,
+      // Admin-created jobs are ours, so they default to no talent matching.
+      // Note this was the source of ~150 unwanted digests: the old default was
+      // "once", and because an explicit null is falsy a caller passing
+      // matchFrequency: null still fell through to it.
+      matchFrequency:   isOwnerEmail(String(body.posterEmail ?? ""))
+                          ? null
+                          : (body.matchFrequency ? String(body.matchFrequency) : null),
     },
   });
 

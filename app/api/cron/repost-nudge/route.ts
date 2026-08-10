@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getResend, getFrom } from "@/lib/resend";
+import { excludeOwnerPosters } from "@/lib/owner-emails";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://designbetter.careers";
 
@@ -27,6 +28,10 @@ export async function GET(req: NextRequest) {
       stripePaymentStatus: "paid",
       repostNudgeSentAt: null,
       active: false,
+      // Our own seeded listings are marked "paid" and get deactivated when the
+      // source posting closes, so without this we'd nudge ourselves to repost
+      // every job the ingest has ever added.
+      ...excludeOwnerPosters(),
       createdAt: { gte: tooOld },
       expiresAt: {
         gte: windowStart,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getResend, getFrom } from "@/lib/resend";
 import { rankDesigners, type DesignerForMatching } from "@/lib/matching";
+import { excludeOwnerPosters } from "@/lib/owner-emails";
 
 export async function GET(req: NextRequest) {
   if (req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -11,11 +12,16 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
 
-  // Fetch all active jobs that have opted into matching
+  // Fetch all active jobs that have opted into matching.
+  // Jobs we posted ourselves are excluded outright: the board is largely seeded
+  // by our own ingest, so matching on them just mails us about our own
+  // listings. Enforced here rather than relying on matchFrequency alone, so no
+  // future code path that sets a frequency can start it up again.
   const jobs = await db.job.findMany({
     where: {
       active: true,
       matchFrequency: { not: null },
+      ...excludeOwnerPosters(),
     },
   });
 
