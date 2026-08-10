@@ -196,6 +196,8 @@ export interface DigestResult {
   ts?: string;
   skippedReason?: string;
   preview?: DigestBlocks;
+  /** Backlog rows marked as posted after a kickoff, so they aren't re-queued. */
+  backlogSuppressed?: number;
 }
 
 /**
@@ -289,10 +291,18 @@ export async function sendJobsDigest(opts: {
     data: { slackPostedAt: now },
   });
 
+  // The kickoff is a curated introduction, not the start of a queue. Without
+  // this, the couple hundred jobs already on the board would each still count
+  // as "new" and the weekly digest would spend months draining the backlog
+  // instead of posting what actually just came in.
+  let backlogSuppressed = 0;
+  if (kickoff) backlogSuppressed = await suppressBacklog();
+
   return {
     ok: true, posted: selected.length, shown: shown.length,
     inThread: overflow.length, eligible: candidates.length,
     kickoff, dryRun: false, ts: main.ts,
+    ...(kickoff ? { backlogSuppressed } : {}),
   };
 }
 
