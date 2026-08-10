@@ -851,6 +851,20 @@ export const SOURCES: Source[] = [
   { ats: "greenhouse", slug: "vercel",         name: "Vercel",        domain: "vercel.com",       url: "https://vercel.com" },
   { ats: "greenhouse", slug: "runway",         name: "Runway",        domain: "runwayml.com",     url: "https://runwayml.com" },
   { ats: "greenhouse", slug: "midjourney",     name: "Midjourney",    domain: "midjourney.com",   url: "https://midjourney.com" },
+  // Added after probing candidate boards for live design roles (see
+  // scripts/probe-job-boards.mjs) — each of these had at least one when added.
+  { ats: "greenhouse", slug: "datadog",        name: "Datadog",       domain: "datadoghq.com",    url: "https://datadoghq.com" },
+  { ats: "greenhouse", slug: "affirm",         name: "Affirm",        domain: "affirm.com",       url: "https://affirm.com" },
+  { ats: "greenhouse", slug: "instacart",      name: "Instacart",     domain: "instacart.com",    url: "https://instacart.com" },
+  { ats: "greenhouse", slug: "peloton",        name: "Peloton",       domain: "onepeloton.com",   url: "https://onepeloton.com" },
+  { ats: "greenhouse", slug: "discord",        name: "Discord",       domain: "discord.com",      url: "https://discord.com" },
+  { ats: "greenhouse", slug: "pinterest",      name: "Pinterest",     domain: "pinterest.com",    url: "https://pinterest.com" },
+  { ats: "greenhouse", slug: "chime",          name: "Chime",         domain: "chime.com",        url: "https://chime.com" },
+  { ats: "greenhouse", slug: "databricks",     name: "Databricks",    domain: "databricks.com",   url: "https://databricks.com" },
+  { ats: "greenhouse", slug: "coursera",       name: "Coursera",      domain: "coursera.org",     url: "https://coursera.org" },
+  { ats: "greenhouse", slug: "airbnb",         name: "Airbnb",        domain: "airbnb.com",       url: "https://airbnb.com" },
+  { ats: "greenhouse", slug: "faire",          name: "Faire",         domain: "faire.com",        url: "https://faire.com" },
+  { ats: "greenhouse", slug: "amplitude",      name: "Amplitude",     domain: "amplitude.com",    url: "https://amplitude.com" },
   { ats: "lever", slug: "netflix",       name: "Netflix",      domain: "netflix.com",      url: "https://netflix.com" },
   { ats: "lever", slug: "squareup",      name: "Square",       domain: "squareup.com",     url: "https://squareup.com" },
   { ats: "lever", slug: "shopify",       name: "Shopify",      domain: "shopify.com",      url: "https://shopify.com" },
@@ -872,6 +886,7 @@ export const SOURCES: Source[] = [
   { ats: "lever", slug: "perplexity",    name: "Perplexity",   domain: "perplexity.ai",    url: "https://perplexity.ai" },
   { ats: "lever", slug: "cursor",        name: "Cursor",       domain: "cursor.com",       url: "https://cursor.com" },
   { ats: "lever", slug: "pointclickcare", name: "PointClickCare", domain: "pointclickcare.com", url: "https://pointclickcare.com" },
+  { ats: "lever", slug: "spotify",       name: "Spotify",      domain: "spotify.com",      url: "https://spotify.com" },
   { ats: "ashby", slug: "lumaai",        name: "Luma AI",      domain: "lumalabs.ai",      url: "https://lumalabs.ai" },
   { ats: "ashby", slug: "arc-browser",   name: "Arc Browser",  domain: "arc.net",          url: "https://arc.net" },
   { ats: "ashby", slug: "elevenlabs",    name: "ElevenLabs",   domain: "elevenlabs.io",    url: "https://elevenlabs.io" },
@@ -885,6 +900,14 @@ export const SOURCES: Source[] = [
   { ats: "ashby", slug: "clerk",         name: "Clerk",        domain: "clerk.com",        url: "https://clerk.com" },
   { ats: "ashby", slug: "ambiencehealthcare", name: "Ambience Healthcare", domain: "ambiencehealthcare.com", url: "https://ambiencehealthcare.com" },
   { ats: "ashby", slug: "hingehealth",   name: "Hinge Health", domain: "hingehealth.com",  url: "https://hingehealth.com" },
+  { ats: "ashby", slug: "whoop",         name: "WHOOP",        domain: "whoop.com",        url: "https://whoop.com" },
+  { ats: "ashby", slug: "eightsleep",    name: "Eight Sleep",  domain: "eightsleep.com",   url: "https://eightsleep.com" },
+  { ats: "ashby", slug: "snowflake",     name: "Snowflake",    domain: "snowflake.com",    url: "https://snowflake.com" },
+  { ats: "ashby", slug: "render",        name: "Render",       domain: "render.com",       url: "https://render.com" },
+  { ats: "ashby", slug: "strava",        name: "Strava",       domain: "strava.com",       url: "https://strava.com" },
+  { ats: "ashby", slug: "replit",        name: "Replit",       domain: "replit.com",       url: "https://replit.com" },
+  { ats: "ashby", slug: "plaid",         name: "Plaid",        domain: "plaid.com",        url: "https://plaid.com" },
+  { ats: "ashby", slug: "patreon",       name: "Patreon",      domain: "patreon.com",      url: "https://patreon.com" },
 ];
 
 // ── Candidate shape ──────────────────────────────────────────────────────
