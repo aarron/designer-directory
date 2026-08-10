@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendJobsDigest, suppressBacklog } from "@/lib/slack-jobs";
+import { sendJobsDigest, suppressBacklog, verifySlackSetup } from "@/lib/slack-jobs";
 
 /**
  * POST /api/admin/slack-jobs — manual control over the #hiring digest.
  * Auth: x-admin-secret.
  *
  * Body: { mode, dryRun?, limit? }
+ *   "verify"   check the token/channel wiring and report any problems
  *   "preview"  (default) render the digest and return the Block Kit payload
  *              without posting — paste into Slack's Block Kit Builder to check
  *              how it will look
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
   const mode = body.mode ?? "preview";
 
   try {
+    if (mode === "verify") {
+      return NextResponse.json(await verifySlackSetup());
+    }
     if (mode === "preview") {
       return NextResponse.json(await sendJobsDigest({ dryRun: true, limit: body.limit }));
     }

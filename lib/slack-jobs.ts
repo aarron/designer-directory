@@ -307,6 +307,65 @@ export async function sendJobsDigest(opts: {
 }
 
 /**
+ * Confirms the Slack side is wired up correctly, without ever returning the
+ * token: which workspace it belongs to, whether the channel resolves, and
+ * whether the bot is actually in it (Slack rejects posts to channels the bot
+ * hasn't joined, with `not_in_channel`).
+ */
+export async function verifySlackSetup(): Promise<{
+  ok: boolean;
+  tokenPresent: boolean;
+  channelPresent: boolean;
+  workspace?: string;
+  botUser?: string;
+  channel?: string;
+  botInChannel?: boolean;
+  canPost?: boolean;
+  problems: string[];
+}> {
+  const problems: string[] = [];
+  const tokenPresent = Boolean(botToken());
+  const channelPresent = Boolean(channelId());
+  if (!tokenPresent) problems.push("SLACK_JOBS_BOT_TOKEN is not set");
+  if (!channelPresent) problems.push("SLACK_JOBS_CHANNEL_ID is not set");
+  if (!tokenPresent || !channelPresent) {
+    return { ok: false, tokenPresent, channelPresent, problems };
+  }
+
+  let workspace: string | undefined;
+  let botUser: string | undefined;
+  try {
+    const auth = await slackPost("auth.test", {}) as unknown as { team?: string; user?: string };
+    workspace = auth.team;
+    botUser = auth.user;
+  } catch (err) {
+    problems.push(`token rejected by Slack: ${String(err).replace(/^Error:\s*/, "")}`);
+    return { ok: false, tokenPresent, channelPresent, problems };
+  }
+
+  let channel: string | undefined;
+  let botInChannel: boolean | undefined;
+  try {
+    const info = await slackPost("conversations.info", { channel: channelId() }) as unknown as {
+      channel?: { name?: string; is_member?: boolean };
+    };
+    channel = info.channel?.name;
+    botInChannel = info.channel?.is_member;
+    if (botInChannel === false) {
+      problems.push(`bot is not in #${channel ?? "the channel"} — invite it with /invite @${botUser ?? "bot"}`);
+    }
+  } catch (err) {
+    problems.push(`channel lookup failed: ${String(err).replace(/^Error:\s*/, "")}`);
+  }
+
+  const canPost = problems.length === 0;
+  return {
+    ok: canPost, tokenPresent, channelPresent,
+    workspace, botUser, channel, botInChannel, canPost, problems,
+  };
+}
+
+/**
  * Marks every currently-listed job as already posted. Run once before the first
  * weekly digest so the 200+ job backlog can't land in the channel at once.
  */

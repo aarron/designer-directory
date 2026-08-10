@@ -50,7 +50,9 @@ export default async function JobsPage({
   ]);
   const subscriberLabel = formatSubscribers(corpusStats?.subscribers);
 
-  const view = params.view === "list" ? "list" : "grid";
+  // Jobs default to the compact list: it fits far more roles on screen, which
+  // matters now the board carries a few hundred. `?view=grid` opts back in.
+  const view = params.view === "grid" ? "grid" : "list";
   const activeFilters = Object.entries(params)
     .filter(([k]) => !["sort", "view"].includes(k))
     .filter(([, v]) => Boolean(v)).length;
@@ -159,6 +161,7 @@ export default async function JobsPage({
             showing={jobs.length}
             total={total}
             sortOptions={SORT_OPTIONS}
+            defaultView="list"
           />
         </Suspense>
 
