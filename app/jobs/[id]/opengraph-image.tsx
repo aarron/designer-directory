@@ -48,9 +48,10 @@ async function loadFont(file: string): Promise<ArrayBuffer | null> {
 }
 
 /**
- * Satori renders raster images from data URIs reliably. Roughly half our logos
- * are SVG, which it handles far less predictably, so those fall back to a
- * lettermark rather than risking an empty box on the card.
+ * Logos are inlined as data URIs. Satori renders SVG this way as well as
+ * raster, which matters — roughly half our stored logos are SVG (brand marks
+ * from Simple Icons, and vectors lifted out of company sites). Anything it
+ * can't decode falls back to the same coloured lettermark the job cards use.
  */
 async function loadLogo(url: string | null): Promise<string | null> {
   if (!url) return null;
