@@ -133,7 +133,7 @@ export function buildDigest(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `We now post new design roles from <${appUrl()}|Design Better Careers> here weekly — one digest, no spam. Here are ${n} to start; there are *${opts.totalOnBoard}* open on the board right now.`,
+        text: `From <${appUrl()}|Design Better Careers>, weekly. Here are ${n} to start; there are *${opts.totalOnBoard}* open on the board right now.`,
       },
     });
   }
