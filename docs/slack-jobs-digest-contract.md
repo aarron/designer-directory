@@ -116,3 +116,15 @@ Repeating so the consumer doesn't re-solve them: max 8 in the body, hard cap of
 283 active roles are Product Design, so "newest 8" would read as eight
 near-identical listings), and only roles that have both a description and a
 logo.
+
+## Backlog retired 2026-08-20
+
+After the first two live digests (60 roles across batches `dgk_…6qeacl5a` and
+`dg_…0i263aov`), the remaining 277 unposted rows were retired by hand, because
+the kickoff-ack path that should have done it did not exist yet. Retired rows
+have `slackPostedAt` set and `slackBatchId` null, so they stay distinguishable
+from roles actually sent to Slack.
+
+Net effect: the weekly digest now carries only roles ingested from that date
+onward. Expect small digests — a quiet week returning `count: 0` is normal and
+the consumer should post nothing.
