@@ -1,0 +1,7 @@
+# Local build output and dependencies — Vercel builds these itself. Without
+# this a local `next build` leaves ~190MB of .next that the CLI uploads, and
+# `vercel --prod` stalls with no output.
+.next
+node_modules
+.git
+.env.local
