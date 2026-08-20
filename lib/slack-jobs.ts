@@ -200,6 +200,110 @@ export interface DigestResult {
   backlogSuppressed?: number;
 }
 
+/** How long a fetched-but-unacked claim blocks a job from being served again. */
+const CLAIM_TTL_MS = 4 * 60 * 60 * 1000;
+
+/**
+ * Roles eligible for a digest: still listed, never posted, presentable enough
+ * to represent us, and not already claimed by an in-flight run.
+ */
+async function selectCandidates(cap: number) {
+  const claimCutoff = new Date(Date.now() - CLAIM_TTL_MS);
+  return db.job.findMany({
+    where: {
+      active: true,
+      slackPostedAt: null,
+      description: { not: null },
+      companyLogoUrl: { not: null },
+      OR: [{ slackClaimedAt: null }, { slackClaimedAt: { lt: claimCutoff } }],
+    },
+    select: {
+      id: true, company: true, title: true, location: true, role: true,
+      remote: true, compensation: true, experienceLevel: true,
+      featured: true, createdAt: true,
+    },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take: cap * 3,
+  });
+}
+
+/** Spread across categories, then across employers, then trim to the cap. */
+function prioritise<T extends { role: string; company: string }>(jobs: T[], cap: number): T[] {
+  return capPerCompany(interleaveByRole(jobs), 1).slice(0, cap);
+}
+
+export interface DigestPayload {
+  batchId: string | null;
+  count: number;
+  shown: number;
+  inThread: number;
+  totalOnBoard: number;
+  text: string;
+  blocks: unknown[];
+  threadBlocks: unknown[] | null;
+  jobIds: string[];
+  claimed: boolean;
+}
+
+/**
+ * Build a digest for another service to post (db-community owns the Slack
+ * transport). Claims the rows and returns a batchId; the caller acks with that
+ * id once Slack has accepted the message, and only then are they marked posted.
+ *
+ * `claim: false` renders the same payload without touching any row, so the
+ * consumer can develop against it without consuming roles.
+ */
+export async function buildDigestPayload(opts: {
+  claim?: boolean;
+  kickoff?: boolean;
+  limit?: number;
+} = {}): Promise<DigestPayload> {
+  const claim = opts.claim !== false;
+  const kickoff = Boolean(opts.kickoff);
+  const cap = Math.min(opts.limit ?? MAX_PER_RUN, MAX_PER_RUN);
+
+  const totalOnBoard = await db.job.count({ where: { active: true } });
+  const candidates = await selectCandidates(cap);
+  const selected = prioritise(candidates, cap);
+
+  const shown = selected.slice(0, DIGEST_LIMIT);
+  const overflow = selected.slice(DIGEST_LIMIT);
+  const digest = buildDigest(shown, overflow, { kickoff, totalOnBoard });
+
+  let batchId: string | null = null;
+  if (claim && selected.length) {
+    batchId = `dg_${new Date().toISOString().slice(0, 10)}_${Math.random().toString(36).slice(2, 10)}`;
+    await db.job.updateMany({
+      where: { id: { in: selected.map((j) => j.id) } },
+      data: { slackBatchId: batchId, slackClaimedAt: new Date() },
+    });
+  }
+
+  return {
+    batchId,
+    count: selected.length,
+    shown: shown.length,
+    inThread: overflow.length,
+    totalOnBoard,
+    text: digest.text,
+    blocks: digest.blocks,
+    threadBlocks: digest.threadBlocks,
+    jobIds: selected.map((j) => j.id),
+    claimed: Boolean(batchId),
+  };
+}
+
+/**
+ * Confirm a batch reached Slack. Idempotent: re-acking marks nothing further.
+ */
+export async function ackDigest(batchId: string): Promise<{ marked: number }> {
+  const r = await db.job.updateMany({
+    where: { slackBatchId: batchId, slackPostedAt: null },
+    data: { slackPostedAt: new Date() },
+  });
+  return { marked: r.count };
+}
+
 /**
  * Select, post and mark. `kickoff` sends the introductory message and is meant
  * to be run once by hand; the weekly cron uses the default path.
@@ -214,24 +318,7 @@ export async function sendJobsDigest(opts: {
   const cap = Math.min(opts.limit ?? MAX_PER_RUN, MAX_PER_RUN);
 
   const totalOnBoard = await db.job.count({ where: { active: true } });
-
-  // Only roles good enough to represent us: a description to read and a logo,
-  // and never one already sent.
-  const candidates = await db.job.findMany({
-    where: {
-      active: true,
-      slackPostedAt: null,
-      description: { not: null },
-      companyLogoUrl: { not: null },
-    },
-    select: {
-      id: true, company: true, title: true, location: true, role: true,
-      remote: true, compensation: true, experienceLevel: true,
-      featured: true, createdAt: true,
-    },
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-    take: cap * 3,
-  });
+  const candidates = await selectCandidates(cap);
 
   if (candidates.length === 0) {
     return {
@@ -240,9 +327,7 @@ export async function sendJobsDigest(opts: {
     };
   }
 
-  // Spread across role categories first, then keep one employer from filling
-  // the handful of visible slots.
-  const selected = capPerCompany(interleaveByRole(candidates), 1).slice(0, cap);
+  const selected = prioritise(candidates, cap);
   const shown = selected.slice(0, DIGEST_LIMIT);
   const overflow = selected.slice(DIGEST_LIMIT);
   const digest = buildDigest(shown, overflow, { kickoff, totalOnBoard });

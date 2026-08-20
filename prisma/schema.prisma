@@ -153,7 +153,14 @@ model Job {
   // Set once this job has appeared in the #hiring Slack digest, so it is never
   // posted twice. Written only after Slack confirms the message was sent.
   slackPostedAt     DateTime?
+  // When another service (db-community) fetches a digest it *claims* these rows
+  // rather than marking them posted, then acks once Slack accepted the message.
+  // A claim that is never acked lapses, so a failed run retries instead of
+  // silently swallowing the roles.
+  slackBatchId      String?
+  slackClaimedAt    DateTime?
 
   @@index([active, createdAt])
+  @@index([slackBatchId])
   @@map("jobs")
 }
