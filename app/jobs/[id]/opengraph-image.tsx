@@ -58,7 +58,7 @@ async function loadLogo(url: string | null): Promise<string | null> {
     const res = await fetch(url, { next: { revalidate: 86400 } });
     if (!res.ok) return null;
     const type = (res.headers.get("content-type") ?? "").toLowerCase();
-    if (!/image\/(png|jpe?g|webp)/.test(type)) return null;
+    if (!/image\/(png|jpe?g|webp|svg\+xml)/.test(type)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.byteLength < 200) return null;
     return `data:${type.split(";")[0]};base64,${buf.toString("base64")}`;
