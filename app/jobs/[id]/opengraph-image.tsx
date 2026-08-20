@@ -67,6 +67,39 @@ async function loadLogo(url: string | null): Promise<string | null> {
   }
 }
 
+/**
+ * Renders text with the brand's trailing accent period.
+ *
+ * Satori requires an explicit `display` on any element with more than one
+ * child, and mixing a wrapping text node with a sibling span puts the period
+ * after the whole block rather than after the last word. Emitting one flex item
+ * per word keeps the period attached to the final word and lets long titles
+ * wrap normally.
+ */
+function AccentedText({ text, size, color }: { text: string; size: number; color: string }) {
+  const words = text.split(/\s+/).filter(Boolean);
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", maxWidth: 1040 }}>
+      {words.map((word, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            fontSize: size,
+            fontWeight: 700,
+            color,
+            lineHeight: 1.1,
+            marginRight: size * 0.24,
+          }}
+        >
+          {word}
+          {i === words.length - 1 ? <span style={{ color: ACCENT }}>.</span> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const job = await db.job.findUnique({
@@ -91,9 +124,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
     return new ImageResponse(
       (
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: BG, fontFamily: font }}>
-          <div style={{ fontSize: 64, fontWeight: 700, color: INK }}>
-            Design Better Careers<span style={{ color: ACCENT }}>.</span>
-          </div>
+          <AccentedText text="Design Better Careers" size={64} color={INK} />
         </div>
       ),
       { ...size, fonts: fonts.length ? fonts : undefined },
@@ -151,15 +182,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
         {/* the role */}
         <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>
-          <div
-            style={{
-              fontSize: titleSize, fontWeight: 700, color: INK, lineHeight: 1.08,
-              display: "block", maxWidth: 1030,
-            }}
-          >
-            {job.title}
-            <span style={{ color: ACCENT }}>.</span>
-          </div>
+          <AccentedText text={job.title} size={titleSize} color={INK} />
 
           <div style={{ display: "flex", marginTop: 28 }}>
             {chips.slice(0, 4).map((c, i) => (
@@ -181,9 +204,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
         {/* footer */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 26, fontWeight: 700, color: INK, display: "flex" }}>
-            Design Better Careers<span style={{ color: ACCENT }}>.</span>
-          </div>
+          <AccentedText text="Design Better Careers" size={26} color={INK} />
           <div style={{ fontSize: 22, color: MUTED, display: "flex" }}>{job.experienceLevel}</div>
         </div>
       </div>
