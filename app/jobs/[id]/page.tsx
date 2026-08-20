@@ -12,9 +12,31 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const job = await db.job.findUnique({ where: { id } });
   if (!job) return {};
+
+  const title = `${job.title} at ${job.company}`;
+  const bits = [job.location, job.remote ? "Remote OK" : null, job.compensation]
+    .filter(Boolean)
+    .join(" · ");
+  const description = `${job.typeOfRole} · ${job.experienceLevel}${bits ? ` · ${bits}` : ""}. Apply via Design Better Careers.`;
+
+  // openGraph must be set explicitly: without it Next merges the root layout's
+  // block, so every job unfurled as the same generic site card. The image comes
+  // from opengraph-image.tsx in this folder and is injected automatically.
   return {
-    title: `${job.title} at ${job.company} | Design Better Careers`,
-    description: `${job.title} — ${job.typeOfRole} role at ${job.company} in ${job.location}. Browse and apply on Design Better Careers.`,
+    title: `${title} | Design Better Careers`,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url: `/jobs/${job.id}`,
+      siteName: "Design Better Careers",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 
