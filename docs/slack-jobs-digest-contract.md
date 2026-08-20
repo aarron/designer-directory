@@ -26,8 +26,8 @@ GET https://designbetter.careers/api/slack/jobs-digest
 | Query | Meaning |
 | --- | --- |
 | `dryRun=1` | render without claiming any rows — use while developing |
-| `kickoff=1` | one-off introductory wording, for the first ever post |
-| `limit=N` | cap the batch (default and max 30) |
+| `kickoff=1` | one-off introductory wording; acking it also retires the backlog |
+| `limit=N` | batch size (default 12, max 30) |
 
 Response:
 
@@ -55,7 +55,36 @@ POST https://designbetter.careers/api/slack/jobs-digest/ack
 { "batchId": "dg_2026-08-20_a1b2c3d4" }
 ```
 
-Returns `{ ok: true, marked: N }`. Idempotent — re-acking marks 0.
+```jsonc
+{
+  "ok": true,
+  "marked": 12,          // rows newly recorded as posted
+  "batchSize": 12,       // rows carrying this batchId
+  "known": true,
+  "alreadyAcked": false, // true on an idempotent repeat
+  "backlogRetired": 0    // non-zero only when acking a kickoff
+}
+```
+
+Status codes are meaningful so a consumer checking only the status can't mistake
+a no-op for success:
+
+| Status | Meaning |
+| --- | --- |
+| `200`, `marked > 0` | recorded |
+| `200`, `alreadyAcked: true` | safe idempotent repeat |
+| `404` | unknown `batchId` — nothing was marked, treat as failure |
+
+A dry run returns `batchId: null`; acking that will 404.
+
+### The kickoff retires the backlog
+
+A batch id beginning `dgk_` is the kickoff. Acking it marks the batch **and**
+retires every remaining unposted role, because the kickoff is a curated
+introduction rather than the head of a queue. Without that, the couple hundred
+roles already listed each stay "new" and the weekly digest spends months
+draining the backlog instead of posting what actually just arrived. It happens
+on ack, not on fetch, so a failed post loses nothing.
 
 ## Why the two steps
 

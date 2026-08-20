@@ -21,8 +21,16 @@ const SLACK_API = "https://slack.com/api";
 
 /** Roles shown in the message body; the rest go into a thread reply. */
 export const DIGEST_LIMIT = 8;
+/** Normal batch size: DIGEST_LIMIT visible plus a short thread. */
+export const DEFAULT_BATCH = 12;
 /** Upper bound on a single run, so an ingest spike can't post hundreds. */
 export const MAX_PER_RUN = 30;
+/**
+ * A kickoff batch carries this prefix so the ack can tell that acknowledging it
+ * should also retire the remaining backlog. Encoding it in the id keeps the
+ * decision with the batch instead of needing extra state.
+ */
+const KICKOFF_PREFIX = "dgk_";
 
 export interface DigestJob {
   id: string;
@@ -260,7 +268,9 @@ export async function buildDigestPayload(opts: {
 } = {}): Promise<DigestPayload> {
   const claim = opts.claim !== false;
   const kickoff = Boolean(opts.kickoff);
-  const cap = Math.min(opts.limit ?? MAX_PER_RUN, MAX_PER_RUN);
+  // MAX_PER_RUN is a safety ceiling, not a target. Defaulting to it meant a
+  // weekly digest carried 30 roles — 8 visible and 22 buried in a thread.
+  const cap = Math.min(opts.limit ?? DEFAULT_BATCH, MAX_PER_RUN);
 
   const totalOnBoard = await db.job.count({ where: { active: true } });
   const candidates = await selectCandidates(cap);
@@ -272,7 +282,8 @@ export async function buildDigestPayload(opts: {
 
   let batchId: string | null = null;
   if (claim && selected.length) {
-    batchId = `dg_${new Date().toISOString().slice(0, 10)}_${Math.random().toString(36).slice(2, 10)}`;
+    const prefix = kickoff ? KICKOFF_PREFIX : "dg_";
+    batchId = `${prefix}${new Date().toISOString().slice(0, 10)}_${Math.random().toString(36).slice(2, 10)}`;
     await db.job.updateMany({
       where: { id: { in: selected.map((j) => j.id) } },
       data: { slackBatchId: batchId, slackClaimedAt: new Date() },
@@ -293,15 +304,43 @@ export async function buildDigestPayload(opts: {
   };
 }
 
+export interface AckResult {
+  marked: number;
+  batchSize: number;
+  known: boolean;
+  alreadyAcked: boolean;
+  /** Rows retired because this was the kickoff batch. */
+  backlogRetired: number;
+}
+
 /**
  * Confirm a batch reached Slack. Idempotent: re-acking marks nothing further.
+ *
+ * Acking a kickoff batch also retires whatever is still unposted. The kickoff is
+ * a curated introduction, not the head of a queue — without this the couple
+ * hundred roles already on the board each stay "new" and the weekly digest
+ * spends months draining the backlog instead of posting what just came in. It
+ * happens here rather than at fetch time so a failed post loses nothing.
  */
-export async function ackDigest(batchId: string): Promise<{ marked: number }> {
+export async function ackDigest(batchId: string): Promise<AckResult> {
+  const batchSize = await db.job.count({ where: { slackBatchId: batchId } });
   const r = await db.job.updateMany({
     where: { slackBatchId: batchId, slackPostedAt: null },
     data: { slackPostedAt: new Date() },
   });
-  return { marked: r.count };
+
+  let backlogRetired = 0;
+  if (batchId.startsWith(KICKOFF_PREFIX) && r.count > 0) {
+    backlogRetired = await suppressBacklog();
+  }
+
+  return {
+    marked: r.count,
+    batchSize,
+    known: batchSize > 0,
+    alreadyAcked: batchSize > 0 && r.count === 0,
+    backlogRetired,
+  };
 }
 
 /**
