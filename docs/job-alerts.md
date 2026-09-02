@@ -71,6 +71,13 @@ ten-role alert today. Invitation eligible: 319.
 
 ## Funnel report
 
+**Emailed every Friday 13:00 UTC** to `ALERTS_REPORT_TO` (default aarron@aarronwalter.com)
+by `/api/cron/alerts-report`. Two columns: this week (last 7 days, distinct
+designers) and all time since the invitation. Send it now with
+`{"mode":"report","email":true}` on the admin endpoint; `"to"` overrides the recipient.
+
+On demand as JSON:
+
 ```bash
 curl -s -X POST https://designbetter.careers/api/admin/job-alerts \
   -H "x-admin-secret: …" -H "content-type: application/json" -d '{"mode":"report"}'

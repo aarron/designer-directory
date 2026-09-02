@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendJobAlerts, sendAlertsInvite } from "@/lib/job-alerts";
-import { alertFunnel } from "@/lib/alert-events";
-import { db } from "@/lib/db";
+import { buildAlertReport, sendAlertReport } from "@/lib/alert-report";
 
 export const maxDuration = 300;
 
@@ -21,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
   const body = await req.json().catch(() => ({})) as {
     mode?: string; dryRun?: boolean; limit?: number; offset?: number;
-    cohort?: "all" | "visible" | "hidden"; emails?: string[];
+    cohort?: "all" | "visible" | "hidden"; emails?: string[]; email?: boolean; to?: string;
   };
   const dryRun = Boolean(body.dryRun);
   const build = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
@@ -35,28 +34,13 @@ export async function POST(req: NextRequest) {
       ...(await sendAlertsInvite({ dryRun, offset: body.offset, limit: body.limit, cohort: body.cohort, emails: body.emails })),
     });
   }
-  // Funnel report: invited → clicked → saved prefs → viewed a job → clicked apply.
-  // The owner's preview row is excluded so test clicks don't count.
+  // Funnel report (same one the Friday cron emails). email:true sends it now.
   if (body.mode === "report") {
-    const preview = await db.designer.findMany({ where: { email: { in: ["aarron@aarronwalter.com"] } }, select: { id: true } });
-    const exclude = preview.map((p) => p.id);
-    const [invited, optedIn, notLooking, stopped, funnel] = await Promise.all([
-      db.designer.count({ where: { alertInviteSentAt: { not: null }, id: { notIn: exclude } } }),
-      db.designer.groupBy({ by: ["alertFrequency"], where: { alertFrequency: { not: "NONE" }, id: { notIn: exclude } }, _count: { _all: true } }),
-      db.designer.count({ where: { alertInviteSentAt: { not: null }, openToWork: "NOT_LOOKING", id: { notIn: exclude } } }),
-      // Saved the form since the invitation but chose no emails. Raw SQL because
-      // Prisma can't compare two columns of the same row.
-      db.$queryRaw<Array<{ n: bigint }>>`SELECT COUNT(*)::bigint AS n FROM designers WHERE "alertInviteSentAt" IS NOT NULL AND "alertFrequency" = 'NONE' AND "lastConfirmedAt" >= "alertInviteSentAt" AND NOT (id = ANY(${exclude}::text[]))`.then((r) => Number(r[0]?.n ?? 0)),
-      alertFunnel({ excludeDesignerIds: exclude }),
-    ]);
-    return NextResponse.json({
-      ok: true, mode: "report", build,
-      invited,
-      optedIn: Object.fromEntries(optedIn.map((r) => [r.alertFrequency, r._count._all])),
-      nowNotLooking: notLooking,
-      confirmedWithoutAlerts: stopped,
-      ...funnel,
-    });
+    if (body.email) {
+      const { to, subject, report } = await sendAlertReport(typeof body.to === "string" ? body.to : undefined);
+      return NextResponse.json({ ok: true, mode: "report", build, emailed: to, subject, ...report });
+    }
+    return NextResponse.json({ ok: true, mode: "report", build, ...(await buildAlertReport()) });
   }
   return NextResponse.json({ error: `Unknown mode "${body.mode}"` }, { status: 400 });
 }
