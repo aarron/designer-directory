@@ -5,6 +5,7 @@ import type { Job } from "@prisma/client";
 import { JobCard } from "@/components/JobCard";
 import { JobTable } from "@/components/JobTable";
 import { ResultsBar } from "@/components/ResultsBar";
+import { LoadMoreButton } from "@/components/LoadMoreButton";
 import { PRIMARY_ROLES, EXPERIENCE_LEVELS } from "@/lib/utils";
 import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
 import { getCorpusStats, formatSubscribers } from "@/lib/corpus";
@@ -113,10 +114,13 @@ export default async function JobsPage({
   }
   const hiddenByCap = matching.length - ordered.length;
 
+  // ?page=N shows the first N pages, not just the Nth: "Load more" is a soft
+  // navigation to page N+1 that appends rows in place, and a shared ?page=3
+  // link shows the same 120 rows the sharer was looking at.
   const pageCount = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE));
   const page = Math.min(pageCount, Math.max(1, parseInt(params.page ?? "1", 10) || 1));
-  const from = (page - 1) * PAGE_SIZE;
-  const jobs = ordered.slice(from, from + PAGE_SIZE);
+  const jobs = ordered.slice(0, page * PAGE_SIZE);
+  const remaining = ordered.length - jobs.length;
 
   // Jobs default to the compact list: it fits far more roles on screen, which
   // matters now the board carries several hundred. `?view=grid` opts back in.
@@ -255,7 +259,7 @@ export default async function JobsPage({
           <ResultsBar
             showing={jobs.length}
             total={ordered.length}
-            from={from + 1}
+            from={1}
             sortOptions={SORT_OPTIONS}
             defaultView="list"
           />
@@ -297,24 +301,16 @@ export default async function JobsPage({
           </div>
         )}
 
-        {/* Pagination + note about capped employers */}
-        {(pageCount > 1 || hiddenByCap > 0) && (
-          <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-[11px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
-            <p>
-              {hiddenByCap > 0 && (
-                <>Showing up to {BROWSE_CAP_PER_EMPLOYER} roles per employer · {hiddenByCap} more via employer pages</>
-              )}
-            </p>
-            {pageCount > 1 && (
-              <div className="flex items-center gap-4">
-                {page > 1 ? (
-                  <Link href={href({ page: String(page - 1) })} style={{ color: "var(--text-1)" }}>← Previous</Link>
-                ) : <span style={{ opacity: 0.4 }}>← Previous</span>}
-                <span>Page {page} of {pageCount}</span>
-                {page < pageCount ? (
-                  <Link href={href({ page: String(page + 1) })} style={{ color: "var(--text-1)" }}>Next →</Link>
-                ) : <span style={{ opacity: 0.4 }}>Next →</span>}
-              </div>
+        {/* Load more + note about capped employers */}
+        {(remaining > 0 || hiddenByCap > 0) && (
+          <div className="mt-8 flex flex-col items-center gap-4">
+            {remaining > 0 && (
+              <LoadMoreButton href={href({ page: String(page + 1) })} remaining={remaining} step={PAGE_SIZE} />
+            )}
+            {hiddenByCap > 0 && (
+              <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] text-center" style={{ color: "var(--text-3)" }}>
+                Showing up to {BROWSE_CAP_PER_EMPLOYER} roles per employer · {hiddenByCap} more via employer pages
+              </p>
             )}
           </div>
         )}

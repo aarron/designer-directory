@@ -32,7 +32,7 @@ function useNavHeight(fallback = 69) {
   return h;
 }
 
-const TH = "font-mono text-[9px] font-normal uppercase tracking-[0.12em] text-left px-3 py-2.5 whitespace-nowrap";
+const TH = "font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-left px-3 py-3 whitespace-nowrap";
 const TD = "px-3 py-3 align-middle";
 
 /**
@@ -54,8 +54,8 @@ export function JobTable({ rows, showCompanyCount = true }: {
         className="sticky z-10"
         style={{ top: navHeight, background: "var(--bg)", boxShadow: "inset 0 -1px 0 var(--divider)" }}
       >
-        <tr style={{ color: "var(--text-3)" }}>
-          <th className={TH} colSpan={2}>Role</th>
+        <tr style={{ color: "var(--text-2)" }}>
+          <th className={TH}>Role</th>
           <th className={TH}>Company</th>
           {showCompanyCount && <th className={`${TH} hidden sm:table-cell text-right`}>Open roles</th>}
           <th className={`${TH} hidden lg:table-cell`}>Category</th>
@@ -72,13 +72,6 @@ export function JobTable({ rows, showCompanyCount = true }: {
               className="animate-fade-in transition-colors duration-[120ms] hover:bg-[var(--surface-2)]"
               style={{ borderBottom: "1px solid var(--divider)" }}
             >
-              {/* Logo */}
-              <td className={`${TD} w-12 pr-0`}>
-                <Link href={jobHref} className="block w-9 h-9 relative overflow-hidden rounded-sm container-type-inline">
-                  <CompanySquare companyLogoUrl={job.companyLogoUrl} company={job.company} compact />
-                </Link>
-              </td>
-
               {/* Title */}
               <td className={`${TD} min-w-0`}>
                 <Link href={jobHref} className="group block">
@@ -95,10 +88,13 @@ export function JobTable({ rows, showCompanyCount = true }: {
               <td className={`${TD} hidden sm:table-cell whitespace-nowrap`}>
                 <Link
                   href={companyHref}
-                  className="text-[13px] font-semibold hover:underline transition-colors duration-[120ms]"
+                  className="group inline-flex items-center gap-2.5 text-[13px] font-semibold transition-colors duration-[120ms]"
                   style={{ color: "var(--text-2)" }}
                 >
-                  {job.company}
+                  <span className="block w-7 h-7 flex-shrink-0 relative overflow-hidden rounded-sm container-type-inline">
+                    <CompanySquare companyLogoUrl={job.companyLogoUrl} company={job.company} compact />
+                  </span>
+                  <span className="group-hover:underline">{job.company}</span>
                 </Link>
               </td>
 
