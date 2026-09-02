@@ -43,6 +43,10 @@ const DESIGN_EXCLUSIONS = [
   /\b(?<!design\s)(?<!creative\s)brand\s+manager\b/i, /\btalent brand\b/i,
   /\b(precast|civil|structural|hvac|mechanical|electrical|plumbing)\s+design\b/i, /\bprecast\b/i,
   /\b(instructor|teacher|tutor|professor|lecturer)\b/i,
+  /\b(learning|instructional)\s+(experience\s+)?design/i, /\bchip\s+design\b/i,
+  /\b(asic|rtl|fpga|vlsi|soc|silicon|analog|mixed[- ]signal|circuit|dft|synthesis|semiconductor|firmware|pcb)\b/i,
+  /\bphysical design\b/i, /\bsystems?\s+design\s*(?:\/|engineer|architect)/i,
+  /\b(apparel|fashion|footwear|textile|garment|jewel)/i, /\b(landscape|interior|architectural)\s+design/i,
 ];
 
 const D =
@@ -65,7 +69,7 @@ const NOT_LEAD = [
   /\bconstruction\b/i, /\bfacilities\b/i, /\breal estate\b/i,
   /\b(?<!design\s)(?<!creative\s)brand\s+manager\b/i, /\btalent brand\b/i,
   /\bcompensation\b/i, /\bincentive design\b/i,
-  /\bcourse director\b/i, /\bcurriculum\b/i, /\btechnical game design\b/i,
+  /\bcourse director\b/i, /\bcurriculum\b/i, /\btechnical game design\b/i, /\bindividual contributor\b/i,
 ];
 
 const isLeadership = (t) => {
@@ -94,6 +98,10 @@ const FIXTURES = [
   ["Brand Design Manager", true, true],
   ["Precast Design Engineer", false, false], ["Graphic Design instructor - Project Base", false, false],
   ["Design Engineer", true, false],
+  ["Principal Associate, Learning Experience Designer", false, false],
+  ["Chip Design Manager", false, false],
+  ["Senior Manager, Individual Contributor - Product Design", true, false],
+  ["Senior Manager, People Leader - Product Design", true, true],
   ["Senior Product Designer", true, false],
   ["Staff Product Designer", true, false],
 ];

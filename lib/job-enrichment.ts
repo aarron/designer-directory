@@ -136,7 +136,8 @@ const NON_DESIGN_TITLES: RegExp[] = [
   /\bphysical design\b/i,
   /\bsystems?\s+design\s*(?:\/|engineer|architect)/i, // "System Design Engineer"; "Design Systems" is fine
   // Learning & development, not product.
-  /\b(learning|instructional)\s+design/i,
+  /\b(learning|instructional)\s+(experience\s+)?design/i,
+  /\bchip\s+design\b/i,
   // Design fields outside this board's audience.
   /\b(apparel|fashion|footwear|textile|garment|jewel)/i,
   /\b(landscape|interior|architectural)\s+design/i,
@@ -193,6 +194,7 @@ const LEADERSHIP_EXCLUSIONS: RegExp[] = [
   /\bmarketing director\b/i,
   /\bsales\b/i,
   /\btechnical game design\b/i, // game engineering dressed as design
+  /\bindividual contributor\b/i, // Capital One titles senior ICs "Senior Manager, Individual Contributor"
   ...NON_DESIGN_TITLES,
 ];
 
@@ -1300,13 +1302,15 @@ export const WORKDAY_SOURCES: WorkdaySource[] = [
   { ats: "workday", tenant: "salesforce", host: "wd12", site: "External_Career_Site",        name: "Salesforce",  domain: "salesforce.com",  url: "https://salesforce.com" },
   { ats: "workday", tenant: "autodesk",   host: "wd1",  site: "Ext",                         name: "Autodesk",    domain: "autodesk.com",    url: "https://autodesk.com" },
   { ats: "workday", tenant: "ebay",       host: "wd5",  site: "apply",                       name: "eBay",        domain: "ebay.com",        url: "https://ebay.com" },
-  { ats: "workday", tenant: "target",     host: "wd5",  site: "targetcareers",               name: "Target",      domain: "target.com",      url: "https://target.com" },
+  // Target's design org is mostly apparel and home goods, named after product lines.
+  { ats: "workday", tenant: "target",     host: "wd5",  site: "targetcareers",               name: "Target",      domain: "target.com",      url: "https://target.com",
+    exclude: [/sweater|sleepwear|swim|denim|intimate|accessor|softlines|hardlines|home\s+d[eé]cor|owned\s+brands?|\b(kids|girls|boys|toddler|baby|men'?s|women'?s|infant)\b/i] },
   { ats: "workday", tenant: "disney",     host: "wd5",  site: "disneycareer",                name: "Disney",      domain: "disney.com",      url: "https://disney.com" },
   { ats: "workday", tenant: "workday",    host: "wd5",  site: "Workday",                     name: "Workday",     domain: "workday.com",     url: "https://workday.com" },
   { ats: "workday", tenant: "cvshealth",  host: "wd1",  site: "cvs_health_careers",          name: "CVS Health",  domain: "cvshealth.com",   url: "https://cvshealth.com" },
   // ~2,000 postings, overwhelmingly chip design; "design engineer" there is hardware.
   { ats: "workday", tenant: "nvidia",     host: "wd5",  site: "NVIDIAExternalCareerSite",    name: "NVIDIA",      domain: "nvidia.com",      url: "https://nvidia.com",
-    exclude: [/\bhardware\b/i, /\bdesign engineer\b/i, /\bsystem design\b/i] },
+    exclude: [/\bhardware\b/i, /\bdesign engineer\b/i, /\bsystems?\b/i, /\bchip\b/i, /co-design/i] },
 ];
 
 /**
