@@ -35,6 +35,27 @@ const EXCLUDE = [
   /linux.*engineer/i, /security\s+engineer/i, /full\s+stack\s+engineer/i,
   /\bdata\s+cent(er|re)\b/i, /\bmechanical\s+engineer\b/i, /\bdesign\s+verification\b/i,
 ];
+
+// Mirrors isLeadershipRole() in lib/job-enrichment.ts, so the probe can report
+// which boards carry design *leadership* openings — those are ~8% of listings,
+// so expanding coverage for them needs targeting rather than luck.
+const LD='(?:product\\s+design|experience\\s+design|design\\s+systems|design\\s+operations|user\\s+experience|user\\s+research|content\\s+design|design|ux|ui|brand|creative|art|visual|motion|graphic)';
+const LR='(?:head|vp|vice\\s+president|svp|evp|chief|director|manager)';
+const LQ='(?:[a-z]+\\s+){0,2}';
+const LEAD=[
+  new RegExp('\\b'+LR+'\\b[^,]{0,18}\\bof\\b\\s+'+LQ+LD+'\\b','i'),
+  new RegExp('\\b'+LR+'\\b\\s*,?\\s+'+LQ+LD+'\\b','i'),
+  new RegExp('\\b'+LD+'\\s+'+LQ+LR+'\\b','i'),
+  /\bcreative director\b/i, /\bart director\b/i, /\bchief design officer\b/i,
+];
+const NOT_LEAD=[
+  /\b(customer|employee|candidate|patient|client|partner|developer|seller|merchant)\s+experience\b/i,
+  /\bsoftware engineering\b/i, /\bengineering manager\b/i,
+  /\b(product|program|project|technical|account|marketing|community|sales|engineering)\s+manager\b/i,
+  /\bpolicy design\b/i, /\baccount director\b/i, /\bmarketing director\b/i, /\bsales\b/i,
+];
+const isLeadership=t=>{const s=(t||'').toLowerCase();if(NOT_LEAD.some(r=>r.test(s)))return false;return LEAD.some(r=>r.test(s));};
+
 const isDesign = (t) => {
   const s = (t || "").toLowerCase();
   if (EXCLUDE.some((r) => r.test(s))) return false;
@@ -85,7 +106,8 @@ async function probe(slug) {
       const titles = await fn(slug);
       if (!titles) continue;
       const design = titles.filter(isDesign);
-      if (titles.length) results.push({ ats, total: titles.length, design: design.length, sample: design.slice(0, 2) });
+      const lead = design.filter(isLeadership);
+      if (titles.length) results.push({ ats, total: titles.length, design: design.length, lead: lead.length, sample: (lead.length ? lead : design).slice(0, 2) });
     } catch {}
   }
   return results;
@@ -101,12 +123,13 @@ await Promise.all(Array.from({ length: CONC }, async () => {
     for (const r of res) {
       if (r.design > 0) {
         found.push({ slug, ...r });
-        console.log(`  ✦ ${slug.padEnd(22)} ${r.ats.padEnd(11)} ${String(r.design).padStart(3)} design / ${String(r.total).padStart(4)} roles   ${r.sample.join(" | ").slice(0, 60)}`);
+        const badge = r.lead ? `${String(r.lead).padStart(2)} LEAD` : "      ";
+        console.log(`  ✦ ${slug.padEnd(20)} ${r.ats.padEnd(11)} ${String(r.design).padStart(3)} design ${badge}  ${r.sample.join(" | ").slice(0, 52)}`);
       }
     }
   }
 }));
 
-console.log(`\n${found.length} board(s) with live design roles; ${found.reduce((a, b) => a + b.design, 0)} design roles total`);
+console.log(`\n${found.length} board(s) with live design roles; ${found.reduce((a, b) => a + b.design, 0)} design roles, ${found.reduce((a, b) => a + (b.lead || 0), 0)} of them leadership`);
 console.log("\nslug,ats,design");
 for (const f of found.sort((a, b) => b.design - a.design)) console.log(`${f.slug},${f.ats},${f.design}`);

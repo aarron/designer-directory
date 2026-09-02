@@ -912,6 +912,20 @@ export const SOURCES: Source[] = [
   { ats: "greenhouse", slug: "airbnb",         name: "Airbnb",        domain: "airbnb.com",       url: "https://airbnb.com" },
   { ats: "greenhouse", slug: "faire",          name: "Faire",         domain: "faire.com",        url: "https://faire.com" },
   { ats: "greenhouse", slug: "amplitude",      name: "Amplitude",     domain: "amplitude.com",    url: "https://amplitude.com" },
+  // Added by probing larger orgs specifically for design leadership openings,
+  // which are only ~8% of listings and so need targeting rather than luck.
+  { ats: "greenhouse", slug: "epicgames",      name: "Epic Games",    domain: "epicgames.com",    url: "https://epicgames.com" },
+  { ats: "greenhouse", slug: "riotgames",      name: "Riot Games",    domain: "riotgames.com",    url: "https://riotgames.com" },
+  { ats: "greenhouse", slug: "roblox",         name: "Roblox",        domain: "roblox.com",       url: "https://roblox.com" },
+  { ats: "greenhouse", slug: "okta",           name: "Okta",          domain: "okta.com",         url: "https://okta.com" },
+  { ats: "greenhouse", slug: "zocdoc",         name: "Zocdoc",        domain: "zocdoc.com",       url: "https://zocdoc.com" },
+  { ats: "greenhouse", slug: "block",          name: "Block",         domain: "block.xyz",        url: "https://block.xyz" },
+  { ats: "greenhouse", slug: "sofi",           name: "SoFi",          domain: "sofi.com",         url: "https://sofi.com" },
+  { ats: "greenhouse", slug: "justworks",      name: "Justworks",     domain: "justworks.com",    url: "https://justworks.com" },
+  { ats: "greenhouse", slug: "cloudflare",     name: "Cloudflare",    domain: "cloudflare.com",   url: "https://cloudflare.com" },
+  { ats: "greenhouse", slug: "udemy",          name: "Udemy",         domain: "udemy.com",        url: "https://udemy.com" },
+  { ats: "greenhouse", slug: "remotecom",      name: "Remote",        domain: "remote.com",       url: "https://remote.com" },
+  { ats: "greenhouse", slug: "carvana",        name: "Carvana",       domain: "carvana.com",      url: "https://carvana.com" },
   { ats: "lever", slug: "netflix",       name: "Netflix",      domain: "netflix.com",      url: "https://netflix.com" },
   { ats: "lever", slug: "squareup",      name: "Square",       domain: "squareup.com",     url: "https://squareup.com" },
   { ats: "lever", slug: "shopify",       name: "Shopify",      domain: "shopify.com",      url: "https://shopify.com" },
@@ -955,6 +969,8 @@ export const SOURCES: Source[] = [
   { ats: "ashby", slug: "replit",        name: "Replit",       domain: "replit.com",       url: "https://replit.com" },
   { ats: "ashby", slug: "plaid",         name: "Plaid",        domain: "plaid.com",        url: "https://plaid.com" },
   { ats: "ashby", slug: "patreon",       name: "Patreon",      domain: "patreon.com",      url: "https://patreon.com" },
+  { ats: "ashby", slug: "nubank",        name: "Nubank",       domain: "nubank.com.br",    url: "https://nubank.com.br" },
+  { ats: "ashby", slug: "headway",       name: "Headway",      domain: "headway.co",       url: "https://headway.co" },
 ];
 
 // ── Candidate shape ──────────────────────────────────────────────────────
