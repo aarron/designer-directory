@@ -125,6 +125,11 @@ const NON_DESIGN_TITLES: RegExp[] = [
   // "Creative Director, Brand" designs it. Only the bare marketing form goes.
   /\b(?<!design\s)(?<!creative\s)brand\s+manager\b/i,
   /\btalent brand\b/i,
+  // Engineering disciplines that happen to contain "design engineer".
+  /\b(precast|civil|structural|hvac|mechanical|electrical|plumbing)\s+design\b/i,
+  /\bprecast\b/i,
+  // Teaching design isn't a design job.
+  /\b(instructor|teacher|tutor|professor|lecturer)\b/i,
 ];
 
 const DESIGN_EXCLUSIONS = [

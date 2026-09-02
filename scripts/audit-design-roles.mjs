@@ -41,6 +41,8 @@ const DESIGN_EXCLUSIONS = [
   /\bcompensation\s+(?:strategy|manager|analyst|partner)\b/i, /\bpolicy design\b/i,
   /\bcourse director\b/i, /\bcurriculum\b/i,
   /\b(?<!design\s)(?<!creative\s)brand\s+manager\b/i, /\btalent brand\b/i,
+  /\b(precast|civil|structural|hvac|mechanical|electrical|plumbing)\s+design\b/i, /\bprecast\b/i,
+  /\b(instructor|teacher|tutor|professor|lecturer)\b/i,
 ];
 
 const D =
@@ -90,6 +92,8 @@ const FIXTURES = [
   ["GTM Compensation Strategy & Incentive Design Manager", false, false],
   ["Course Director UX UI and AI", false, false],
   ["Brand Design Manager", true, true],
+  ["Precast Design Engineer", false, false], ["Graphic Design instructor - Project Base", false, false],
+  ["Design Engineer", true, false],
   ["Senior Product Designer", true, false],
   ["Staff Product Designer", true, false],
 ];
