@@ -128,3 +128,11 @@ from roles actually sent to Slack.
 Net effect: the weekly digest now carries only roles ingested from that date
 onward. Expect small digests — a quiet week returning `count: 0` is normal and
 the consumer should post nothing.
+
+## Second retirement 2026-09-02
+
+The Workday fetcher and 40 new ATS boards added ~300 roles in one day, all of
+which counted as "new" to the digest — a 29-week queue at 12 per week. Retired
+by hand again (342 rows), by decision, so Monday's digest is drawn from roles
+that arrived this week rather than a five-month backlog. Same marker as before:
+`slackPostedAt` set, `slackBatchId` null.
