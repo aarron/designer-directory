@@ -10,29 +10,68 @@ export function HeaderNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-brand-gray-200">
-      <div className="flex items-center justify-between px-6 py-5 md:px-12">
-        <Link href="/" className="hover:opacity-80 transition-opacity py-1">
-          <Image src="/DesignBetterCareers.png" alt="Design Better Careers" width={160} height={57} style={{ width: 160, height: "auto" }} />
+    <header
+      data-theme="dark"
+      className="sticky top-0 z-50 border-b backdrop-blur-[12px] backdrop-saturate-[180%]"
+      style={{
+        background: "rgba(10,10,10,0.92)",
+        borderColor: "var(--divider)",
+        WebkitBackdropFilter: "saturate(180%) blur(12px)",
+      }}
+    >
+      <div className="flex items-center justify-between px-6 py-4 md:px-12">
+        <Link href="/" className="hover:opacity-75 transition-opacity duration-[120ms] py-1">
+          <Image
+            src="/DesignBetterCareers.png"
+            alt="Design Better Careers"
+            width={148}
+            height={52}
+            style={{ width: 148, height: "auto" }}
+          />
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
-          <Link href="/talent" className="text-xs font-bold uppercase tracking-widest text-brand-gray-500 transition-colors hover:text-black">
-            Browse Talent
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-7">
+          <Link
+            href="/talent"
+            className="text-[14px] font-medium transition-colors duration-[120ms]"
+            style={{ color: "var(--text-2)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-2)")}
+          >
+            Designers
           </Link>
-          <Link href="/jobs" className="text-xs font-bold uppercase tracking-widest text-brand-gray-500 transition-colors hover:text-black">
+          <Link
+            href="/jobs"
+            className="text-[14px] font-medium transition-colors duration-[120ms]"
+            style={{ color: "var(--text-2)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-2)")}
+          >
             Jobs
           </Link>
-          <Link href="/join" className="text-xs font-bold uppercase tracking-widest text-brand-gray-500 transition-colors hover:text-black">
-            Add Your Profile
+          <Link
+            href="/join"
+            className="text-[14px] font-medium transition-colors duration-[120ms]"
+            style={{ color: "var(--text-2)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-2)")}
+          >
+            Create profile
           </Link>
-          <Link href="/post-a-job" className="rounded bg-brand-red px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-90">
+          {/* CTA — rounded-md, signal bg, DARK text (never white on orange) */}
+          <Link
+            href="/post-a-job"
+            className="rounded-md bg-[#FF4725] px-5 py-2 text-[14px] font-semibold text-[#0A0A0A] hover:bg-[#e03d1e] transition-colors duration-[120ms] whitespace-nowrap"
+          >
             Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
           </Link>
         </div>
 
+        {/* Mobile hamburger */}
         <button
-          className="md:hidden text-brand-black p-1"
+          className="md:hidden p-1 transition-opacity duration-[120ms] hover:opacity-60"
+          style={{ color: "var(--text-1)" }}
           onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
         >
@@ -40,18 +79,44 @@ export function HeaderNav() {
         </button>
       </div>
 
+      {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-white border-t border-brand-gray-200 px-6 py-4 flex flex-col gap-4">
-          <Link href="/talent" className="text-xs font-bold uppercase tracking-widest text-brand-gray-500 py-1" onClick={() => setOpen(false)}>
-            Browse Talent
+        <div
+          className="md:hidden border-t px-6 py-5 flex flex-col gap-5"
+          style={{
+            background: "rgba(10,10,10,0.97)",
+            borderColor: "var(--divider)",
+          }}
+        >
+          <Link
+            href="/talent"
+            className="text-[15px] font-medium"
+            style={{ color: "var(--text-2)" }}
+            onClick={() => setOpen(false)}
+          >
+            Designers
           </Link>
-          <Link href="/jobs" className="text-xs font-bold uppercase tracking-widest text-brand-gray-500 py-1" onClick={() => setOpen(false)}>
+          <Link
+            href="/jobs"
+            className="text-[15px] font-medium"
+            style={{ color: "var(--text-2)" }}
+            onClick={() => setOpen(false)}
+          >
             Jobs
           </Link>
-          <Link href="/join" className="text-xs font-bold uppercase tracking-widest text-brand-gray-500 py-1" onClick={() => setOpen(false)}>
-            Add Your Profile
+          <Link
+            href="/join"
+            className="text-[15px] font-medium"
+            style={{ color: "var(--text-2)" }}
+            onClick={() => setOpen(false)}
+          >
+            Create profile
           </Link>
-          <Link href="/post-a-job" className="rounded bg-brand-red px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white text-center transition-opacity hover:opacity-90" onClick={() => setOpen(false)}>
+          <Link
+            href="/post-a-job"
+            className="rounded-md bg-[#FF4725] px-5 py-2.5 text-[14px] font-semibold text-[#0A0A0A] text-center hover:bg-[#e03d1e] transition-colors duration-[120ms]"
+            onClick={() => setOpen(false)}
+          >
             Post a Job — ${JOB_POSTING_PRICE_DOLLARS}
           </Link>
         </div>

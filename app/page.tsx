@@ -3,6 +3,7 @@ import { HeroCollage } from "@/components/HeroCollage";
 import { DesignerCard } from "@/components/DesignerCard";
 import { JobCard } from "@/components/JobCard";
 import { db } from "@/lib/db";
+import { getDirectoryCount } from "@/lib/directory";
 import { Button } from "@/components/ui/Button";
 import { ROLE_SEO } from "@/lib/seo";
 import { ArrowRight, Users, Briefcase, Mail, Zap } from "lucide-react";
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 async function getStats() {
   const [designerCount, jobCount] = await Promise.all([
-    db.designer.count({ where: { publicProfile: true, openToWork: { not: "NOT_LOOKING" } } }),
+    getDirectoryCount(),
     db.job.count({ where: { active: true } }),
   ]);
   return { designerCount, jobCount };
@@ -107,7 +108,7 @@ export default async function HomePage() {
               </div>
             )}
             <div>
-              <p className="font-display text-display-md font-bold" style={{ color: "#FF4725" }}>{stats.designerCount}+</p>
+              <p className="font-display text-display-md font-bold" style={{ color: "#FF4725" }}>{stats.designerCount}</p>
               <p className="text-sm mt-1" style={{ color: "var(--text-3)" }}>Designers available</p>
             </div>
             <div>

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getDirectoryCount } from "@/lib/directory";
 import Link from "next/link";
 import { Suspense } from "react";
 import { DesignerCard } from "@/components/DesignerCard";
@@ -74,7 +75,6 @@ async function getDesigners(params: SearchParams) {
     orderBy: sortByRecent ? [{ createdAt: "desc" }] : undefined,
   });
 
-  // Default order is random — shuffle server-side on every request
   if (!sortByRecent) {
     for (let i = designers.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -85,9 +85,6 @@ async function getDesigners(params: SearchParams) {
   return designers;
 }
 
-const SELECT_BASE =
-  "h-8 pl-2 pr-7 text-[11px] border border-brand-gray-200 bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer uppercase tracking-wide font-medium";
-
 export default async function TalentPage({
   searchParams,
 }: {
@@ -95,7 +92,7 @@ export default async function TalentPage({
 }) {
   const params = await searchParams;
   const designers = await getDesigners(params);
-  const total = await db.designer.count({ where: { publicProfile: true, hidden: false, NOT: { openToWork: "NOT_LOOKING" } } });
+  const total = await getDirectoryCount();
 
   const view = params.view === "list" ? "list" : "grid";
   const activeFilters = Object.entries(params)
@@ -103,29 +100,35 @@ export default async function TalentPage({
     .filter(([, v]) => Boolean(v)).length;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <div className="max-w-6xl mx-auto px-6 pt-16 pb-24">
 
         {/* Hero */}
-        <div className="flex items-end justify-between mb-10 border-b border-brand-gray-100 pb-10">
+        <div className="flex items-end justify-between mb-10 pb-10" style={{ borderBottom: "1px solid var(--divider)" }}>
           <div>
-            <h1 className="font-display text-display-lg md:text-display-xl font-bold text-brand-black leading-none">
-              Design talent directory<span className="text-brand-red">.</span>
+            <h1 className="font-display text-display-lg md:text-display-xl font-bold leading-none" style={{ color: "var(--text-1)" }}>
+              Design talent directory<span style={{ color: "#FF4725" }}>.</span>
             </h1>
-            <p className="text-[11px] uppercase tracking-widest text-brand-gray-400 font-semibold mt-3">
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mt-3" style={{ color: "var(--text-3)" }}>
               Designers · Open to work
             </p>
           </div>
           <div className="text-right flex-shrink-0 ml-8">
-            <p className="font-display font-bold text-display-md text-brand-red leading-none">{total}</p>
-            <p className="text-[11px] uppercase tracking-widest text-brand-gray-400 font-semibold mt-1">In directory</p>
+            <p className="font-display font-bold text-display-md leading-none" style={{ color: "#FF4725" }}>{total}</p>
+            <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em] mt-1" style={{ color: "var(--text-3)" }}>In directory</p>
           </div>
         </div>
 
         {/* Search bar */}
         <form className="mb-8">
-          <div className="flex items-stretch border border-brand-gray-200 bg-white hover:border-brand-gray-400 transition-colors focus-within:border-brand-black">
-            <span className="flex items-center px-4 text-[11px] uppercase tracking-widest text-brand-gray-400 font-semibold border-r border-brand-gray-200 bg-brand-gray-50 flex-shrink-0">
+          <div
+            className="flex items-stretch transition-colors duration-[120ms] focus-within:border-[#0A0A0A]"
+            style={{ border: "1px solid var(--input-border)", background: "var(--surface-1)" }}
+          >
+            <span
+              className="flex items-center px-4 font-mono text-[11px] font-normal uppercase tracking-[0.12em] flex-shrink-0"
+              style={{ color: "var(--text-3)", borderRight: "1px solid var(--divider)", background: "var(--surface-alt)" }}
+            >
               Search
             </span>
             <input
@@ -133,9 +136,9 @@ export default async function TalentPage({
               name="q"
               defaultValue={params.q || ""}
               placeholder="Name, title, or company..."
-              className="flex-1 h-12 px-4 text-sm text-brand-black placeholder:text-brand-gray-300 bg-transparent focus:outline-none"
+              className="flex-1 h-12 px-4 text-sm bg-transparent focus:outline-none"
+              style={{ color: "var(--text-1)" }}
             />
-            {/* Preserve other params */}
             {params.role && <input type="hidden" name="role" value={params.role} />}
             {params.level && <input type="hidden" name="level" value={params.level} />}
             {params.status && <input type="hidden" name="status" value={params.status} />}
@@ -149,7 +152,7 @@ export default async function TalentPage({
             {params.view && <input type="hidden" name="view" value={params.view} />}
             <button
               type="submit"
-              className="px-6 text-[11px] uppercase tracking-widest font-bold text-white bg-brand-black hover:bg-brand-gray-800 transition-colors flex-shrink-0"
+              className="px-6 font-mono text-[11px] font-normal uppercase tracking-[0.12em] flex-shrink-0 transition-colors duration-[120ms] bg-[#0A0A0A] text-[#F5F2EC] hover:bg-[#1a1a1a]"
             >
               Search →
             </button>
@@ -187,14 +190,15 @@ export default async function TalentPage({
             </FilterSelect>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[9px] uppercase tracking-widest text-brand-gray-400 font-semibold">Location</label>
+              <label className="font-mono text-[9px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>Location</label>
               <input
                 type="text"
                 name="location"
                 defaultValue={params.location || ""}
                 placeholder="Any"
                 list="location-suggestions"
-                className="h-8 px-2 text-[11px] border border-brand-gray-200 bg-white text-brand-black focus:border-brand-black focus:outline-none w-28 uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal placeholder:text-brand-gray-300"
+                className="h-8 px-2 text-[11px] focus:outline-none w-28 uppercase tracking-wide"
+                style={{ border: "1px solid var(--input-border)", background: "var(--surface-1)", color: "var(--text-1)" }}
               />
               <datalist id="location-suggestions">
                 {LOCATIONS.filter((l) => l !== "Other").map((loc) => (
@@ -226,14 +230,14 @@ export default async function TalentPage({
             <div className="flex items-end gap-2 pb-0">
               <button
                 type="submit"
-                className="h-8 px-4 text-[11px] uppercase tracking-widest font-bold text-white bg-brand-black hover:bg-brand-gray-800 transition-colors"
+                className="h-8 px-4 font-mono text-[11px] font-normal uppercase tracking-[0.12em] transition-colors duration-[120ms] bg-[#0A0A0A] text-[#F5F2EC] hover:bg-[#1a1a1a]"
               >
                 Filter
               </button>
               {activeFilters > 0 && (
                 <Link
                   href="/talent"
-                  className="h-8 px-3 text-[11px] uppercase tracking-widest font-medium border border-brand-gray-200 text-brand-gray-500 hover:border-brand-black hover:text-brand-black transition-colors flex items-center"
+                  className="h-8 px-3 font-mono text-[11px] font-normal uppercase tracking-[0.12em] transition-colors duration-[120ms] flex items-center text-[var(--text-3)] hover:text-[var(--text-1)]"
                 >
                   Clear
                 </Link>
@@ -242,33 +246,30 @@ export default async function TalentPage({
           </div>
         </form>
 
-        {/* Results bar (client — sort + view toggle) */}
+        {/* Results bar */}
         <Suspense>
-          <ResultsBar
-            showing={designers.length}
-            total={total}
-            sortOptions={SORT_OPTIONS}
-          />
+          <ResultsBar showing={designers.length} total={total} sortOptions={SORT_OPTIONS} />
         </Suspense>
 
         {/* Grid / List */}
         {designers.length === 0 ? (
           <div className="py-24 text-center">
-            <p className="font-display font-bold text-display-sm text-brand-black">
-              No designers match<span className="text-brand-red">.</span>
+            <p className="font-display font-bold text-display-sm" style={{ color: "var(--text-1)" }}>
+              No designers match<span style={{ color: "#FF4725" }}>.</span>
             </p>
-            <p className="text-brand-gray-500 text-sm mt-3">Try adjusting or clearing your filters.</p>
+            <p className="text-sm mt-3" style={{ color: "var(--text-2)" }}>Try adjusting or clearing your filters.</p>
             {activeFilters > 0 && (
               <Link
                 href="/talent"
-                className="inline-block mt-6 text-[11px] uppercase tracking-widest font-bold border border-brand-gray-200 px-5 py-2.5 hover:border-brand-black transition-colors"
+                className="inline-block mt-6 font-mono text-[11px] font-normal uppercase tracking-[0.12em] px-5 py-2.5 rounded-md transition-colors duration-[120ms]"
+                style={{ background: "var(--surface-1)", color: "var(--text-2)" }}
               >
                 Clear filters
               </Link>
             )}
           </div>
         ) : view === "list" ? (
-          <div className="border border-brand-gray-100 overflow-hidden">
+          <div className="overflow-hidden">
             {designers.map((designer) => (
               <DesignerCard key={designer.id} designer={designer} view="list" />
             ))}
@@ -282,18 +283,18 @@ export default async function TalentPage({
         )}
 
         {/* Join CTA */}
-        <div className="mt-20 border-t border-brand-gray-100 pt-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="mt-20 pt-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6" style={{ borderTop: "1px solid var(--divider)" }}>
           <div>
-            <p className="font-display font-bold text-display-sm text-brand-black">
-              Are you a designer?<span className="text-brand-red">.</span>
+            <p className="font-display font-bold text-display-sm" style={{ color: "var(--text-1)" }}>
+              Are you a designer?<span style={{ color: "#FF4725" }}>.</span>
             </p>
-            <p className="text-brand-gray-500 text-sm mt-2 max-w-md">
+            <p className="text-sm mt-2 max-w-md" style={{ color: "var(--text-2)" }}>
               Join the directory and get discovered by teams hiring for design roles.
             </p>
           </div>
           <Link
             href="/join"
-            className="flex-shrink-0 inline-flex items-center gap-2 bg-brand-black text-white text-[11px] uppercase tracking-widest font-bold px-6 py-3.5 rounded hover:bg-brand-gray-800 transition-colors"
+            className="flex-shrink-0 inline-flex items-center gap-2 font-mono text-[11px] font-normal uppercase tracking-[0.12em] px-6 py-3.5 rounded-md transition-colors duration-[120ms] bg-[#0A0A0A] text-[#F5F2EC] hover:bg-[#1a1a1a]"
           >
             Join the Directory →
           </Link>
@@ -316,18 +317,19 @@ function FilterSelect({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[9px] uppercase tracking-widest text-brand-gray-400 font-semibold">
+      <label className="font-mono text-[9px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
         {label}
       </label>
       <div className="relative">
         <select
           name={name}
           defaultValue={value}
-          className={`h-8 pl-2 pr-6 text-[11px] border border-brand-gray-200 bg-white text-brand-black focus:border-brand-black focus:outline-none appearance-none cursor-pointer uppercase tracking-wide font-medium ${value ? "border-brand-black text-brand-black" : ""}`}
+          className="h-8 pl-2 pr-6 text-[11px] focus:outline-none appearance-none cursor-pointer uppercase tracking-wide font-medium focus:border-[#0A0A0A]"
+          style={{ border: "1px solid var(--input-border)", background: "var(--surface-1)", color: "var(--text-1)" }}
         >
           {children}
         </select>
-        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-brand-gray-400 text-[10px]">▾</span>
+        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: "var(--text-3)" }}>▾</span>
       </div>
     </div>
   );

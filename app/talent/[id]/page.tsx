@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getDirectoryCount } from "@/lib/directory";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import Image from "next/image";
@@ -82,7 +83,7 @@ const STAGE_MAP = [
 
 export default async function DesignerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const designer = await getDesigner(id);
+  const [designer, directoryCount] = await Promise.all([getDesigner(id), getDirectoryCount()]);
 
   if (!designer || !designer.publicProfile || designer.hidden) notFound();
 
@@ -525,7 +526,7 @@ export default async function DesignerProfilePage({ params }: { params: Promise<
               Interested in hiring {designer.firstName}?
             </p>
             <p className="text-sm mb-4" style={{ color: "var(--text-2)" }}>
-              Post a job to reach {designer.firstName} and 300+ other senior designers actively looking.
+              Post a job to reach {designer.firstName} and {Math.max(directoryCount - 1, 0)} other designers actively looking.
             </p>
             <Link
               href="/post-a-job"
