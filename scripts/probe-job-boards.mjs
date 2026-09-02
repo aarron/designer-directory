@@ -47,6 +47,7 @@ const LEAD=[
   new RegExp('\\b'+LR+'\\b\\s*,?\\s+'+LQ+LD+'\\b','i'),
   new RegExp('\\b'+LD+'\\s+'+LQ+LR+'\\b','i'),
   /\bcreative director\b/i, /\bart director\b/i, /\bchief design officer\b/i,
+  /\bdesign\s+lead(?:er)?\b/i, // "Product Design Lead" is a team lead; "Lead Product Designer" (no match) is a senior IC
 ];
 const NOT_LEAD=[
   /\b(customer|employee|candidate|patient|client|partner|developer|seller|merchant)\s+experience\b/i,

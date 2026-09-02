@@ -21,6 +21,7 @@ const LEAD = [
   /\bcreative director\b/i,
   /\bart director\b/i,
   /\bchief design officer\b/i,
+  /\bdesign\s+lead(?:er)?\b/i, // "Product Design Lead" is a team lead; "Lead Product Designer" (no match) is a senior IC
 ];
 
 const NOT_LEAD = [
@@ -42,7 +43,9 @@ const isLeadership = (title) => {
 
 // Guard against this copy drifting from the library version.
 const FIXTURES = [
-  ["Head of Design", true], ["VP of Design", true], ["Creative Director", true],
+  ["Head of Design", true], ["VP of Design", true],
+  ["Design Lead, Growth", true], ["Product Design Lead", true], ["Design Leader, Software Design", true],
+  ["Lead Product Designer", false], ["Design Leadership Coach", false], ["Creative Director", true],
   ["Director, User Experience", true], ["Head of UX", true], ["UX Director", true],
   ["Product Design Manager", true], ["Director of Product Design", true],
   ["Senior Product Designer", false], ["Staff Product Designer", false],

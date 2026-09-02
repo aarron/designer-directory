@@ -53,6 +53,7 @@ const LEAD = [
   new RegExp(`\\b${R}\\b\\s*,?\\s+${Q}${D}\\b`, "i"),
   new RegExp(`\\b${D}\\s+${Q}${R}\\b`, "i"),
   /\bcreative director\b/i, /\bart director\b/i, /\bchief design officer\b/i,
+  /\bdesign\s+lead(?:er)?\b/i, // "Product Design Lead" is a team lead; "Lead Product Designer" (no match) is a senior IC
 ];
 const NOT_LEAD = [
   /\b(customer|employee|candidate|patient|client|partner|developer|seller|merchant)\s+experience\b/i,
@@ -81,6 +82,8 @@ const isDesign = (t) => {
 // Fixtures guard this copy against drifting from the library.
 const FIXTURES = [
   ["Head of UX", true, true], ["Creative Director", true, true],
+  ["Product Design Lead", true, true], ["Design Leader, Software Design", true, true],
+  ["Lead Product Designer", true, false],
   ["Director, Global Design & Construction", false, false],
   ["Associate Brand Manager", false, false],
   ["Talent Brand Manager", false, false],

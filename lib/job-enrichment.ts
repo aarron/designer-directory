@@ -159,6 +159,7 @@ const LEADERSHIP_PATTERNS: RegExp[] = [
   /\bcreative director\b/i,
   /\bart director\b/i,
   /\bchief design officer\b/i,
+  /\bdesign\s+lead(?:er)?\b/i, // "Product Design Lead" is a team lead; "Lead Product Designer" (no match) is a senior IC
 ];
 
 /**
@@ -952,6 +953,15 @@ export const SOURCES: Source[] = [
   { ats: "greenhouse", slug: "udemy",          name: "Udemy",         domain: "udemy.com",        url: "https://udemy.com" },
   { ats: "greenhouse", slug: "remotecom",      name: "Remote",        domain: "remote.com",       url: "https://remote.com" },
   { ats: "greenhouse", slug: "carvana",        name: "Carvana",       domain: "carvana.com",      url: "https://carvana.com" },
+  { ats: "greenhouse", slug: "oura",           name: "Oura",          domain: "ouraring.com",     url: "https://ouraring.com" },
+  { ats: "greenhouse", slug: "samsara",        name: "Samsara",       domain: "samsara.com",      url: "https://samsara.com" },
+  { ats: "greenhouse", slug: "waymo",          name: "Waymo",         domain: "waymo.com",        url: "https://waymo.com" },
+  { ats: "greenhouse", slug: "fivetran",       name: "Fivetran",      domain: "fivetran.com",     url: "https://fivetran.com" },
+  { ats: "greenhouse", slug: "gemini",         name: "Gemini",        domain: "gemini.com",       url: "https://gemini.com" },
+  { ats: "greenhouse", slug: "adyen",          name: "Adyen",         domain: "adyen.com",        url: "https://adyen.com" },
+  { ats: "greenhouse", slug: "iterable",       name: "Iterable",      domain: "iterable.com",     url: "https://iterable.com" },
+  { ats: "greenhouse", slug: "sigmacomputing", name: "Sigma",         domain: "sigmacomputing.com", url: "https://sigmacomputing.com" },
+  { ats: "greenhouse", slug: "mixpanel",       name: "Mixpanel",      domain: "mixpanel.com",     url: "https://mixpanel.com" },
   { ats: "lever", slug: "netflix",       name: "Netflix",      domain: "netflix.com",      url: "https://netflix.com" },
   { ats: "lever", slug: "squareup",      name: "Square",       domain: "squareup.com",     url: "https://squareup.com" },
   { ats: "lever", slug: "shopify",       name: "Shopify",      domain: "shopify.com",      url: "https://shopify.com" },
@@ -974,6 +984,8 @@ export const SOURCES: Source[] = [
   { ats: "lever", slug: "cursor",        name: "Cursor",       domain: "cursor.com",       url: "https://cursor.com" },
   { ats: "lever", slug: "pointclickcare", name: "PointClickCare", domain: "pointclickcare.com", url: "https://pointclickcare.com" },
   { ats: "lever", slug: "spotify",       name: "Spotify",      domain: "spotify.com",      url: "https://spotify.com" },
+  { ats: "lever", slug: "palantir",      name: "Palantir",     domain: "palantir.com",     url: "https://palantir.com" },
+  { ats: "lever", slug: "wealthfront",   name: "Wealthfront",  domain: "wealthfront.com",  url: "https://wealthfront.com" },
   { ats: "ashby", slug: "lumaai",        name: "Luma AI",      domain: "lumalabs.ai",      url: "https://lumalabs.ai" },
   { ats: "ashby", slug: "arc-browser",   name: "Arc Browser",  domain: "arc.net",          url: "https://arc.net" },
   { ats: "ashby", slug: "elevenlabs",    name: "ElevenLabs",   domain: "elevenlabs.io",    url: "https://elevenlabs.io" },
@@ -997,6 +1009,14 @@ export const SOURCES: Source[] = [
   { ats: "ashby", slug: "patreon",       name: "Patreon",      domain: "patreon.com",      url: "https://patreon.com" },
   { ats: "ashby", slug: "nubank",        name: "Nubank",       domain: "nubank.com.br",    url: "https://nubank.com.br" },
   { ats: "ashby", slug: "headway",       name: "Headway",      domain: "headway.co",       url: "https://headway.co" },
+  { ats: "ashby", slug: "clickup",       name: "ClickUp",      domain: "clickup.com",      url: "https://clickup.com" },
+  { ats: "ashby", slug: "mural",         name: "Mural",        domain: "mural.co",         url: "https://mural.co" },
+  { ats: "ashby", slug: "gamma",         name: "Gamma",        domain: "gamma.app",        url: "https://gamma.app" },
+  { ats: "ashby", slug: "nerdwallet",    name: "NerdWallet",   domain: "nerdwallet.com",   url: "https://nerdwallet.com" },
+  { ats: "ashby", slug: "acorns",        name: "Acorns",       domain: "acorns.com",       url: "https://acorns.com" },
+  { ats: "ashby", slug: "alchemy",       name: "Alchemy",      domain: "alchemy.com",      url: "https://alchemy.com" },
+  { ats: "ashby", slug: "hex",           name: "Hex",          domain: "hex.tech",         url: "https://hex.tech" },
+  { ats: "ashby", slug: "uniswap",       name: "Uniswap",      domain: "uniswap.org",      url: "https://uniswap.org" },
 ];
 
 // ── Candidate shape ──────────────────────────────────────────────────────
