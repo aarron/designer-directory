@@ -53,7 +53,7 @@ const D =
   "(?:product\\s+design|experience\\s+design|design\\s+systems|design\\s+operations|" +
   "user\\s+experience|user\\s+research|content\\s+design|design|ux|ui|brand|creative|art|visual|motion|graphic)";
 const R = "(?:head|vp|vice\\s+president|svp|evp|chief|director|manager)";
-const Q = "(?:[a-z]+\\s+){0,2}";
+const Q = "(?:[a-z]+\\s*[-–—,]?\\s+){0,3}";
 const LEAD = [
   new RegExp(`\\b${R}\\b[^,]{0,18}\\bof\\b\\s+${Q}${D}\\b`, "i"),
   new RegExp(`\\b${R}\\b\\s*,?\\s+${Q}${D}\\b`, "i"),
@@ -74,6 +74,8 @@ const NOT_LEAD = [
 
 const isLeadership = (t) => {
   const s = (t ?? "").toLowerCase();
+  // Mirrors the lib: a title that isn't design work can't be design leadership.
+  if (DESIGN_EXCLUSIONS.some((r) => r.test(s))) return false;
   if (NOT_LEAD.some((r) => r.test(s))) return false;
   return LEAD.some((r) => r.test(s));
 };

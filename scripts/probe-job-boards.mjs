@@ -41,7 +41,7 @@ const EXCLUDE = [
 // so expanding coverage for them needs targeting rather than luck.
 const LD='(?:product\\s+design|experience\\s+design|design\\s+systems|design\\s+operations|user\\s+experience|user\\s+research|content\\s+design|design|ux|ui|brand|creative|art|visual|motion|graphic)';
 const LR='(?:head|vp|vice\\s+president|svp|evp|chief|director|manager)';
-const LQ='(?:[a-z]+\\s+){0,2}';
+const LQ='(?:[a-z]+\\s*[-–—,]?\\s+){0,3}';
 const LEAD=[
   new RegExp('\\b'+LR+'\\b[^,]{0,18}\\bof\\b\\s+'+LQ+LD+'\\b','i'),
   new RegExp('\\b'+LR+'\\b\\s*,?\\s+'+LQ+LD+'\\b','i'),

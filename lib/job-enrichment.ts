@@ -167,7 +167,7 @@ const LEAD_DISCIPLINE =
   "user\\s+experience|user\\s+research|content\\s+design|design|ux|ui|brand|creative|art|visual|motion|graphic)";
 const LEAD_RANK = "(?:head|vp|vice\\s+president|svp|evp|chief|director|manager)";
 /** Up to two qualifier words, so "Director of Global Product Design" still matches. */
-const LEAD_QUALIFIER = "(?:[a-z]+\\s+){0,2}";
+const LEAD_QUALIFIER = "(?:[a-z]+\\s*[-–—,]?\\s+){0,3}"; // "Manager, People Leader - Product Design"
 
 const LEADERSHIP_PATTERNS: RegExp[] = [
   new RegExp(`\\b${LEAD_RANK}\\b[^,]{0,18}\\bof\\b\\s+${LEAD_QUALIFIER}${LEAD_DISCIPLINE}\\b`, "i"),
