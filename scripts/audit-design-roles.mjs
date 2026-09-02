@@ -81,6 +81,7 @@ const isLeadership = (t) => {
 };
 const isDesign = (t) => {
   const s = (t ?? "").toLowerCase();
+  if (/\bcmf\b/.test(s)) return true; // industrial design, even with "apparel" in the title
   if (DESIGN_EXCLUSIONS.some((r) => r.test(s))) return false;
   if (DESIGN_KEYWORDS.some((k) => s.includes(k))) return true;
   if (DESIGN_ROLE_PATTERNS.some((r) => r.test(s))) return true;
@@ -100,6 +101,9 @@ const FIXTURES = [
   ["Brand Design Manager", true, true],
   ["Precast Design Engineer", false, false], ["Graphic Design instructor - Project Base", false, false],
   ["Design Engineer", true, false],
+  ["CMF Designer II (Accessories & Apparel)", true, false],
+  ["Sr. Learning Experience Designer, Global LXD Studio", false, false],
+  ["Staff SoC Design Engineer", false, false],
   ["Principal Associate, Learning Experience Designer", false, false],
   ["Chip Design Manager", false, false],
   ["Senior Manager, Individual Contributor - Product Design", true, false],

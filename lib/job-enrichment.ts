@@ -207,6 +207,9 @@ export function isLeadershipRole(title: string): boolean {
 
 export function isDesignRole(title: string): boolean {
   const lower = title.toLowerCase();
+  // CMF (colour, material, finish) is industrial design; the apparel rule would
+  // otherwise reject "CMF Designer II (Accessories & Apparel)".
+  if (/\bcmf\b/.test(lower)) return true;
   if (DESIGN_EXCLUSIONS.some((re) => re.test(lower))) return false;
   if (DESIGN_KEYWORDS.some((kw) => lower.includes(kw))) return true;
   if (DESIGN_ROLE_PATTERNS.some((re) => re.test(lower))) return true;
