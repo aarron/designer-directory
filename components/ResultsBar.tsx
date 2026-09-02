@@ -12,9 +12,11 @@ interface ResultsBarProps {
    * jobs defaults to list, talent to grid.
    */
   defaultView?: "grid" | "list";
+  /** 1-based index of the first row on this page; when set, renders a range ("1–40 of 645"). */
+  from?: number;
 }
 
-export function ResultsBar({ showing, total, sortOptions, defaultView = "grid" }: ResultsBarProps) {
+export function ResultsBar({ showing, total, sortOptions, defaultView = "grid", from }: ResultsBarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -38,7 +40,9 @@ export function ResultsBar({ showing, total, sortOptions, defaultView = "grid" }
       style={{ borderTop: "1px solid var(--divider)", borderBottom: "1px solid var(--divider)" }}
     >
       <p className="font-mono text-[11px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
-        Showing {showing} of {total}
+        {from !== undefined && total > showing
+          ? <>Showing {from}–{from + showing - 1} of {total}</>
+          : <>Showing {showing} of {total}</>}
       </p>
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-1.5">
