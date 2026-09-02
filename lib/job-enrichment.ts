@@ -102,6 +102,29 @@ const DESIGN_ROLE_PATTERNS = [
   /\buser\s+(experience|research)\s+design/,
   /\binteraction\s+design(er)?\b/,
   /\bdesign\s+researcher\b/,
+  /\bindustrial design\b/,
+  /\b(creative|brand|art)\s+(?:and\s+\w+\s+)?lead\b/,
+];
+
+/**
+ * Titles containing a design word that are not design work. Drawn from live
+ * false positives, and consulted by BOTH isDesignRole and isLeadershipRole:
+ * "Incentive Design Manager" matches the plain "design manager" keyword, so a
+ * leadership-only exclusion never gets a say. Deliberately narrow, so real
+ * roles like "Product Designer, Compensation" at an HR product company survive.
+ */
+const NON_DESIGN_TITLES: RegExp[] = [
+  /\bdesign\s*(?:&|and)\s*construction\b/i, // facilities, not design
+  /\bfacilities\b/i,
+  /\bincentive design\b/i,
+  /\bcompensation\s+(?:strategy|manager|analyst|partner)\b/i,
+  /\bpolicy design\b/i,
+  /\bcourse director\b/i,
+  /\bcurriculum\b/i,
+  // A "Brand Manager" markets the brand; a "Brand Design Manager" or
+  // "Creative Director, Brand" designs it. Only the bare marketing form goes.
+  /\b(?<!design\s)(?<!creative\s)brand\s+manager\b/i,
+  /\btalent brand\b/i,
 ];
 
 const DESIGN_EXCLUSIONS = [
@@ -115,6 +138,7 @@ const DESIGN_EXCLUSIONS = [
   /\bdata\s+cent(er|re)\b/i,
   /\bmechanical\s+engineer\b/i,
   /\bdesign\s+verification\b/i,
+  ...NON_DESIGN_TITLES,
 ];
 
 // ── Design leadership ─────────────────────────────────────────────────────
@@ -151,6 +175,8 @@ const LEADERSHIP_EXCLUSIONS: RegExp[] = [
   /\baccount director\b/i,
   /\bmarketing director\b/i,
   /\bsales\b/i,
+  /\btechnical game design\b/i, // game engineering dressed as design
+  ...NON_DESIGN_TITLES,
 ];
 
 /** True for roles that lead a design function (people or org), not senior ICs. */
