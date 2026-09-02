@@ -62,8 +62,38 @@ model Designer {
   magicToken       String?   @unique
   magicTokenExpiry DateTime?
 
+  // Job alerts: designers opt in from /alerts (reached by editToken from email)
+  // and pick a cadence; the weekly cron sends roles scored against their
+  // profile and logs each one so nothing is sent twice.
+  alertFrequency    AlertFrequency @default(NONE)
+  alertOptInAt      DateTime?
+  alertLastSentAt   DateTime?
+  alertInviteSentAt DateTime?  // the one-off "still looking?" campaign
+  wantsLeadership   Boolean    @default(false)
+  jobAlertLogs      JobAlertLog[]
+
   @@index([publicProfile, hidden, openToWork])
+  @@index([alertFrequency])
   @@map("designers")
+}
+
+enum AlertFrequency {
+  NONE
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+model JobAlertLog {
+  id         String   @id @default(cuid())
+  designerId String
+  jobId      String
+  sentAt     DateTime @default(now())
+  designer   Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
+
+  @@unique([designerId, jobId])
+  @@index([designerId])
+  @@map("job_alert_logs")
 }
 
 enum WorkStatus {

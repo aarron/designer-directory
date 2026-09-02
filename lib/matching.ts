@@ -48,6 +48,8 @@ export type DesignerForMatching = {
   openToWork: string;
   companySize: string[];
   photoUrl: string | null;
+  /** Set by the alerts flow; undefined for callers that never asked. */
+  wantsLeadership?: boolean;
 };
 
 export type JobForMatching = {
@@ -57,6 +59,8 @@ export type JobForMatching = {
   remote: boolean;
   location: string;
   companySize: string | null;
+  /** Job.leadership — undefined for callers that don't load it. */
+  leadership?: boolean;
 };
 
 export type MatchResult = {
@@ -127,6 +131,18 @@ function scoreAvailability(status: string): number {
   return 0;
 }
 
+/**
+ * Leadership is a preference the profile only knows if the designer told the
+ * alerts flow. A leadership role for someone who didn't ask for one is a poor
+ * send even when the discipline matches, so it costs points; wanting one is
+ * a small bonus. Neutral when either side is unknown.
+ */
+function scoreLeadership(wants: boolean | undefined, jobIsLeadership: boolean | undefined): number {
+  if (wants === undefined || jobIsLeadership === undefined) return 0;
+  if (jobIsLeadership) return wants ? 5 : -10;
+  return 0;
+}
+
 function scoreCompanySize(designerSizes: string[], jobSize: string | null): number {
   if (!jobSize || designerSizes.length === 0) return 3; // unknown = neutral
   if (designerSizes.includes(jobSize)) return 5;
@@ -140,7 +156,8 @@ export function scoreDesigner(designer: DesignerForMatching, job: JobForMatching
     scoreTypeOfRole(designer.typeOfRole, job.typeOfRole) +
     scoreRemoteLocation(designer.location, designer.remotePreference, job.remote, job.location) +
     scoreAvailability(designer.openToWork) +
-    scoreCompanySize(designer.companySize, job.companySize)
+    scoreCompanySize(designer.companySize, job.companySize) +
+    scoreLeadership(designer.wantsLeadership, job.leadership)
   );
 }
 

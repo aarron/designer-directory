@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     where: {
       hidden: false,
       openToWork: { not: "NOT_LOOKING" },
+      alertFrequency: "NONE", // alert subscribers are handled by the alerts flow
       confirmSentAt: { lte: cutoff7 },
       OR: [
         { lastConfirmedAt: null },
@@ -66,6 +67,7 @@ export async function GET(req: NextRequest) {
       hidden: false,
       publicProfile: true,
       openToWork: { not: "NOT_LOOKING" },
+      alertFrequency: "NONE",
       confirmSentAt: null,
       OR: [
         { lastConfirmedAt: null },
