@@ -37,6 +37,19 @@ function Choice({ name, value, label, hint, defaultChecked }: {
   );
 }
 
+/**
+ * Older profiles carry values the current option lists no longer include
+ * ("Design Leadership", "Chief of Staff"). A <select> whose value matches no
+ * option silently falls back to the first one, and saving would then rewrite
+ * the designer's role behind their back — so the stored value is always an
+ * option, marked as current.
+ */
+function withCurrent(options: readonly string[], current: string | null | undefined): Array<{ value: string; label: string }> {
+  const list = options.map((o) => ({ value: o, label: o }));
+  if (current && !options.includes(current)) list.unshift({ value: current, label: `${current} (current)` });
+  return list;
+}
+
 function Section({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
   return (
     <section className="pt-8 mt-8" style={{ borderTop: "1px solid var(--divider)" }}>
@@ -92,13 +105,13 @@ export function AlertsForm({ designer, token, initialStatus }: {
               <div className="flex flex-col gap-1.5">
                 <label className={LABEL} style={{ color: "var(--text-3)" }}>Primary role</label>
                 <select name="primaryRole" defaultValue={designer.primaryRole} className={INPUT} style={INPUT_STYLE}>
-                  {PRIMARY_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                  {withCurrent(PRIMARY_ROLES, designer.primaryRole).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={LABEL} style={{ color: "var(--text-3)" }}>Experience</label>
                 <select name="experienceLevel" defaultValue={designer.experienceLevel} className={INPUT} style={INPUT_STYLE}>
-                  {EXPERIENCE_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                  {withCurrent(EXPERIENCE_LEVELS, designer.experienceLevel).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
@@ -110,7 +123,7 @@ export function AlertsForm({ designer, token, initialStatus }: {
                 <label className={LABEL} style={{ color: "var(--text-3)" }}>Remote</label>
                 <select name="remotePreference" defaultValue={designer.remotePreference ?? ""} className={INPUT} style={INPUT_STYLE}>
                   <option value="">No preference</option>
-                  {REMOTE_PREFERENCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                  {withCurrent(REMOTE_PREFERENCES, designer.remotePreference).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
             </div>

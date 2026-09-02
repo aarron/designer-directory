@@ -21,7 +21,10 @@ function pick<T extends string>(value: unknown, allowed: readonly T[]): T | unde
 export async function saveAlertPreferences(formData: FormData) {
   const token = String(formData.get("token") ?? "");
   const designer = token
-    ? await db.designer.findUnique({ where: { editToken: token }, select: { id: true, alertOptInAt: true } })
+    ? await db.designer.findUnique({
+        where: { editToken: token },
+        select: { id: true, alertOptInAt: true, primaryRole: true, experienceLevel: true, remotePreference: true },
+      })
     : null;
   if (!designer) redirect("/alerts?error=notfound");
 
@@ -43,9 +46,11 @@ export async function saveAlertPreferences(formData: FormData) {
   }
 
   const frequency = pick(formData.get("frequency"), FREQUENCIES) ?? "NONE";
-  const primaryRole = pick(formData.get("primaryRole"), PRIMARY_ROLES);
-  const experienceLevel = pick(formData.get("experienceLevel"), EXPERIENCE_LEVELS);
-  const remotePreference = pick(formData.get("remotePreference"), REMOTE_PREFERENCES);
+  // Accept list members or the designer's existing value (legacy options the
+  // form shows as "(current)"); anything else is ignored and the field kept.
+  const primaryRole = pick(formData.get("primaryRole"), [...PRIMARY_ROLES, designer.primaryRole]);
+  const experienceLevel = pick(formData.get("experienceLevel"), [...EXPERIENCE_LEVELS, designer.experienceLevel]);
+  const remotePreference = pick(formData.get("remotePreference"), [...REMOTE_PREFERENCES, ...(designer.remotePreference ? [designer.remotePreference] : [])]);
   const location = String(formData.get("location") ?? "").trim().slice(0, 120);
   const typeOfRole = formData.getAll("typeOfRole").filter((v): v is string => typeof v === "string" && (ROLE_TYPES as readonly string[]).includes(v));
 
