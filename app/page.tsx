@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HeroCollage } from "@/components/HeroCollage";
 import { DesignerCard } from "@/components/DesignerCard";
-import { JobCard } from "@/components/JobCard";
+import { JobTable } from "@/components/JobTable";
 import { db } from "@/lib/db";
 import { getDirectoryCount } from "@/lib/directory";
 import { Button } from "@/components/ui/Button";
@@ -21,12 +21,29 @@ async function getStats() {
   return { designerCount, jobCount };
 }
 
+const HOME_JOB_ROWS = 10;
+
+/**
+ * Newest roles, one per employer, featured first. The board ingests whole
+ * career pages at once, so "newest ten" would often be ten rows from one
+ * company; taking each employer's newest role keeps the sample varied.
+ */
 async function getRecentJobs() {
-  return db.job.findMany({
+  const recent = await db.job.findMany({
     where: { active: true },
-    orderBy: { createdAt: "desc" },
-    take: 4,
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take: 120,
   });
+  const seen = new Set<string>();
+  const out: typeof recent = [];
+  for (const job of recent) {
+    const key = job.company.trim().toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(job);
+    if (out.length >= HOME_JOB_ROWS) break;
+  }
+  return out;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -149,23 +166,35 @@ export default async function HomePage() {
       {recentJobs.length > 0 && (
         <section className="py-20 px-6" style={{ background: "var(--bg)" }}>
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-end justify-between mb-8">
               <div>
                 <h2 className="font-display text-display-sm font-bold" style={{ color: "var(--text-1)" }}>
-                  Latest open roles
+                  {stats.jobCount} open design roles<span style={{ color: "#FF4725" }}>.</span>
                 </h2>
                 <p className="text-sm mt-1" style={{ color: "var(--text-2)" }}>
-                  New opportunities from design-forward teams
+                  Pulled daily from company career pages. The newest from {recentJobs.length} employers:
                 </p>
               </div>
-              <Link href="/jobs" className="text-sm font-medium flex items-center gap-1 transition-colors duration-[120ms] hover:text-[#FF4725]" style={{ color: "var(--text-1)" }}>
+              <Link href="/jobs" className="hidden sm:flex text-sm font-medium items-center gap-1 transition-colors duration-[120ms] hover:text-[#FF4725]" style={{ color: "var(--text-1)" }}>
                 View all <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {recentJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
-              ))}
+
+            <JobTable
+              sticky={false}
+              showCompanyCount={false}
+              rows={recentJobs.map((job) => ({ job, companyHref: `/jobs?company=${encodeURIComponent(job.company)}` }))}
+            />
+
+            <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4">
+              <Link href="/jobs">
+                <Button size="lg" variant="secondary" className="gap-2">
+                  View all {stats.jobCount} open roles <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/jobs?role=leadership" className="text-sm font-medium transition-colors duration-[120ms] hover:text-[#FF4725]" style={{ color: "var(--text-2)" }}>
+                Or just the design leadership roles →
+              </Link>
             </div>
           </div>
         </section>

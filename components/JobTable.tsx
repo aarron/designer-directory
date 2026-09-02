@@ -42,17 +42,19 @@ const TD = "px-3 py-3 align-middle";
  * than the table scrolling sideways, because a sticky header inside an
  * overflow container stops sticking.
  */
-export function JobTable({ rows, showCompanyCount = true }: {
+export function JobTable({ rows, showCompanyCount = true, sticky = true }: {
   rows: JobRow[];
   /** Hidden on an employer's own page, where every row would say the same number. */
   showCompanyCount?: boolean;
+  /** Pin the header under the nav while scrolling. Off for short embedded tables (home page). */
+  sticky?: boolean;
 }) {
   const navHeight = useNavHeight();
   return (
     <table className="w-full border-collapse" style={{ background: "var(--surface-1)" }}>
       <thead
-        className="sticky z-10"
-        style={{ top: navHeight, background: "var(--bg)", boxShadow: "inset 0 -1px 0 var(--divider)" }}
+        className={sticky ? "sticky z-10" : undefined}
+        style={{ top: sticky ? navHeight : undefined, background: "var(--bg)", boxShadow: "inset 0 -1px 0 var(--divider)" }}
       >
         <tr style={{ color: "var(--text-2)" }}>
           <th className={TH}>Role</th>
