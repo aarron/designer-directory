@@ -159,8 +159,13 @@ model Job {
   // silently swallowing the roles.
   slackBatchId      String?
   slackClaimedAt    DateTime?
+  // Leads a design function (Head of / VP / Director / design manager) as
+  // opposed to a senior IC. Kept separate from `role` because leadership is
+  // orthogonal to discipline — you can lead product design or brand.
+  leadership        Boolean   @default(false)
 
   @@index([active, createdAt])
+  @@index([active, leadership])
   @@index([slackBatchId])
   @@map("jobs")
 }

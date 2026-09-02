@@ -12,6 +12,7 @@ interface SearchParams {
   level?: string;
   type?: string;
   remote?: string;
+  leadership?: string;
   sort?: string;
   view?: string;
 }
@@ -30,6 +31,7 @@ async function getJobs(params: SearchParams) {
       ...(params.level ? { experienceLevel: params.level } : {}),
       ...(params.type ? { typeOfRole: params.type } : {}),
       ...(params.remote === "true" ? { remote: true } : {}),
+      ...(params.leadership === "true" ? { leadership: true } : {}),
     },
     orderBy: sortFeatured
       ? [{ featured: "desc" }, { createdAt: "desc" }]
@@ -131,6 +133,23 @@ export default async function JobsPage({
                   className="rounded"
                 />
                 Remote only
+              </label>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="font-mono text-[9px] font-normal uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>Leadership</label>
+              <label
+                className="h-8 px-3 flex items-center gap-2 text-[11px] cursor-pointer uppercase tracking-wide font-medium transition-colors duration-[120ms] whitespace-nowrap"
+                style={{ border: "1px solid var(--input-border)", background: "var(--surface-1)", color: "var(--text-1)" }}
+              >
+                <input
+                  type="checkbox"
+                  name="leadership"
+                  value="true"
+                  defaultChecked={params.leadership === "true"}
+                  className="rounded"
+                />
+                Design leadership
               </label>
             </div>
 

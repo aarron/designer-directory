@@ -117,11 +117,58 @@ const DESIGN_EXCLUSIONS = [
   /\bdesign\s+verification\b/i,
 ];
 
+// ── Design leadership ─────────────────────────────────────────────────────
+// Leadership is orthogonal to discipline — you can lead product design or
+// brand — so it lives in its own flag rather than in the role category.
+
+const LEAD_DISCIPLINE =
+  "(?:product\\s+design|experience\\s+design|design\\s+systems|design\\s+operations|" +
+  "user\\s+experience|user\\s+research|content\\s+design|design|ux|ui|brand|creative|art|visual|motion|graphic)";
+const LEAD_RANK = "(?:head|vp|vice\\s+president|svp|evp|chief|director|manager)";
+/** Up to two qualifier words, so "Director of Global Product Design" still matches. */
+const LEAD_QUALIFIER = "(?:[a-z]+\\s+){0,2}";
+
+const LEADERSHIP_PATTERNS: RegExp[] = [
+  new RegExp(`\\b${LEAD_RANK}\\b[^,]{0,18}\\bof\\b\\s+${LEAD_QUALIFIER}${LEAD_DISCIPLINE}\\b`, "i"),
+  new RegExp(`\\b${LEAD_RANK}\\b\\s*,?\\s+${LEAD_QUALIFIER}${LEAD_DISCIPLINE}\\b`, "i"),
+  new RegExp(`\\b${LEAD_DISCIPLINE}\\s+${LEAD_QUALIFIER}${LEAD_RANK}\\b`, "i"),
+  /\bcreative director\b/i,
+  /\bart director\b/i,
+  /\bchief design officer\b/i,
+];
+
+/**
+ * Titles that carry a leadership word but aren't design leadership. Without
+ * these, "Manager, Software Engineering", "Founding Growth Product Manager" and
+ * "Director of Customer Experience" all read as design leaders.
+ */
+const LEADERSHIP_EXCLUSIONS: RegExp[] = [
+  /\b(customer|employee|candidate|patient|client|partner|developer|seller|merchant)\s+experience\b/i,
+  /\bsoftware engineering\b/i,
+  /\bengineering manager\b/i,
+  /\b(product|program|project|technical|account|marketing|community|sales|engineering)\s+manager\b/i,
+  /\bpolicy design\b/i,
+  /\baccount director\b/i,
+  /\bmarketing director\b/i,
+  /\bsales\b/i,
+];
+
+/** True for roles that lead a design function (people or org), not senior ICs. */
+export function isLeadershipRole(title: string): boolean {
+  const lower = title.toLowerCase();
+  if (LEADERSHIP_EXCLUSIONS.some((re) => re.test(lower))) return false;
+  return LEADERSHIP_PATTERNS.some((re) => re.test(lower));
+}
+
 export function isDesignRole(title: string): boolean {
   const lower = title.toLowerCase();
   if (DESIGN_EXCLUSIONS.some((re) => re.test(lower))) return false;
   if (DESIGN_KEYWORDS.some((kw) => lower.includes(kw))) return true;
-  return DESIGN_ROLE_PATTERNS.some((re) => re.test(lower));
+  if (DESIGN_ROLE_PATTERNS.some((re) => re.test(lower))) return true;
+  // Leadership titles frequently omit the literal word "design" — "Head of UX",
+  // "Creative Director", "Director, User Experience". Twelve of twenty-five
+  // realistic leadership titles were being dropped at ingest before this.
+  return isLeadershipRole(title);
 }
 
 const VALID_ROLES = new Set<string>(PRIMARY_ROLES as readonly string[]);
@@ -1222,6 +1269,7 @@ export async function ingestNewJobs(): Promise<IngestResult> {
           companyLogoUrl: logoUrl,
           title: job.title,
           role: mapRole(job.title),
+          leadership: isLeadershipRole(job.title),
           location: job.location || "Not specified",
           remote: job.remote,
           typeOfRole: job.typeOfRole,
