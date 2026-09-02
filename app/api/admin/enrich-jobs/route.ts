@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({})) as {
     mode?: string; offset?: number; limit?: number; dryRun?: boolean; companies?: string[];
-    jobId?: string; company?: string;
+    jobId?: string; company?: string; origin?: string;
   };
   const mode = body.mode ?? "data";
   const dryRun = Boolean(body.dryRun);
@@ -71,6 +71,21 @@ export async function POST(req: NextRequest) {
       domainOf(job.companyUrl), null, job.company, job.jobUrl, trace,
     );
     return NextResponse.json({ ok: true, mode, job, best, trace });
+  }
+  // Lists what the fetchers would return right now, optionally for one origin
+  // (e.g. "workday:nvidia"), so a new source can be eyeballed before ingest.
+  if (mode === "candidates") {
+    const all = await fetchAllCandidates();
+    const items = body.origin ? all.filter((c) => c.origin.startsWith(body.origin!)) : all;
+    const byOrigin: Record<string, number> = {};
+    for (const c of all) byOrigin[c.origin.split(":")[0]] = (byOrigin[c.origin.split(":")[0]] ?? 0) + 1;
+    return NextResponse.json({
+      ok: true, mode, total: all.length, matching: items.length, byOrigin,
+      items: items.slice(0, 300).map((c) => ({
+        company: c.company, title: c.title, location: c.location,
+        compensation: c.compensation, hasDescription: Boolean(c.description), jobUrl: c.jobUrl,
+      })),
+    });
   }
   return NextResponse.json({ error: `Unknown mode "${mode}"` }, { status: 400 });
 }

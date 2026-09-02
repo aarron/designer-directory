@@ -130,6 +130,17 @@ const NON_DESIGN_TITLES: RegExp[] = [
   /\bprecast\b/i,
   // Teaching design isn't a design job.
   /\b(instructor|teacher|tutor|professor|lecturer)\b/i,
+  // Chip and systems engineering. Workday searches at hardware companies return
+  // hundreds of these, and "design engineer" alone can't tell them apart.
+  /\b(asic|rtl|fpga|vlsi|soc|silicon|analog|mixed[- ]signal|circuit|dft|synthesis|semiconductor|firmware|pcb)\b/i,
+  /\bphysical design\b/i,
+  /\bsystems?\s+design\s*(?:\/|engineer|architect)/i, // "System Design Engineer"; "Design Systems" is fine
+  // Learning & development, not product.
+  /\b(learning|instructional)\s+design/i,
+  // Design fields outside this board's audience.
+  /\b(apparel|fashion|footwear|textile|garment|jewel)/i,
+  /\b(landscape|interior|architectural)\s+design/i,
+  /\barchitecture\s*(?:&|and)\s*engineering\b/i,
 ];
 
 const DESIGN_EXCLUSIONS = [
@@ -302,7 +313,7 @@ export function formatSalaryRange(r: {
  */
 export function extractCompensation(text: string | null | undefined): string | null {
   if (!text) return null;
-  const rx = /([$£€])\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])\s*(?:-|–|—|\bto\b)\s*([$£€])?\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])/;
+  const rx = /([$£€])\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])\s*(?:-{1,2}|–|—|\bto\b)\s*([$£€])?\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])/;
   const m = rx.exec(text);
   if (!m) return null;
 
@@ -1265,17 +1276,137 @@ export async function fetchWeWorkRemotely(): Promise<CandidateJob[]> {
   } catch { return []; }
 }
 
-/** Fetch every configured source concurrently and return all design roles. */
-export async function fetchAllCandidates(): Promise<CandidateJob[]> {
-  const atsResults = await mapLimit(SOURCES, 8, (src) =>
-    src.ats === "greenhouse" ? fetchGreenhouse(src)
-    : src.ats === "lever" ? fetchLever(src)
-    : fetchAshby(src),
+// ── Workday ──────────────────────────────────────────────────────────────
+// Most of the Fortune 500 hires through Workday, and none of it is reachable via
+// Greenhouse/Lever/Ashby. Each tenant's careers page is backed by a public JSON
+// endpoint (the same one the page itself calls), so no scraping is involved.
+
+export interface WorkdaySource {
+  ats: "workday";
+  tenant: string;  // "adobe"
+  host: string;    // "wd5"
+  site: string;    // "external_experienced"
+  name: string;
+  domain: string;
+  url: string;
+  /** Extra per-tenant title exclusions, e.g. hardware-heavy employers. */
+  exclude?: RegExp[];
+}
+
+export const WORKDAY_SOURCES: WorkdaySource[] = [
+  { ats: "workday", tenant: "adobe",      host: "wd5",  site: "external_experienced",        name: "Adobe",       domain: "adobe.com",       url: "https://adobe.com" },
+  { ats: "workday", tenant: "capitalone", host: "wd12", site: "Capital_One",                 name: "Capital One", domain: "capitalone.com",  url: "https://capitalone.com" },
+  { ats: "workday", tenant: "mastercard", host: "wd1",  site: "CorporateCareers",            name: "Mastercard",  domain: "mastercard.com",  url: "https://mastercard.com" },
+  { ats: "workday", tenant: "salesforce", host: "wd12", site: "External_Career_Site",        name: "Salesforce",  domain: "salesforce.com",  url: "https://salesforce.com" },
+  { ats: "workday", tenant: "autodesk",   host: "wd1",  site: "Ext",                         name: "Autodesk",    domain: "autodesk.com",    url: "https://autodesk.com" },
+  { ats: "workday", tenant: "ebay",       host: "wd5",  site: "apply",                       name: "eBay",        domain: "ebay.com",        url: "https://ebay.com" },
+  { ats: "workday", tenant: "target",     host: "wd5",  site: "targetcareers",               name: "Target",      domain: "target.com",      url: "https://target.com" },
+  { ats: "workday", tenant: "disney",     host: "wd5",  site: "disneycareer",                name: "Disney",      domain: "disney.com",      url: "https://disney.com" },
+  { ats: "workday", tenant: "workday",    host: "wd5",  site: "Workday",                     name: "Workday",     domain: "workday.com",     url: "https://workday.com" },
+  { ats: "workday", tenant: "cvshealth",  host: "wd1",  site: "cvs_health_careers",          name: "CVS Health",  domain: "cvshealth.com",   url: "https://cvshealth.com" },
+  // ~2,000 postings, overwhelmingly chip design; "design engineer" there is hardware.
+  { ats: "workday", tenant: "nvidia",     host: "wd5",  site: "NVIDIAExternalCareerSite",    name: "NVIDIA",      domain: "nvidia.com",      url: "https://nvidia.com",
+    exclude: [/\bhardware\b/i, /\bdesign engineer\b/i, /\bsystem design\b/i] },
+];
+
+/**
+ * Workday's search is fuzzy and returns everything containing the token, so a
+ * handful of targeted queries plus our own title filter beats one broad one.
+ * Leadership titles rarely contain "designer", hence the extra terms.
+ */
+const WORKDAY_QUERIES = ["designer", "design", "ux", "user experience", "creative director", "art director"];
+/** Pages of 20 per query. Relevance-ranked, so real roles surface early. */
+const WORKDAY_MAX_PER_QUERY = 120;
+
+async function workdayPost(url: string, body: unknown): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": UA },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(20000),
+    });
+    return res.ok ? await res.json() as Record<string, unknown> : null;
+  } catch { return null; }
+}
+
+/**
+ * @param knownUrls  apply URLs already on the board. The daily ingest passes
+ *   these so detail requests are only made for genuinely new roles; the backfill
+ *   omits it to get full records for matching.
+ */
+export async function fetchWorkday(src: WorkdaySource, knownUrls?: Set<string>): Promise<CandidateJob[]> {
+  const base = `https://${src.tenant}.${src.host}.myworkdayjobs.com`;
+  const api = `${base}/wday/cxs/${src.tenant}/${src.site}`;
+
+  // Union the search results by externalPath.
+  const found = new Map<string, string>();
+  for (const q of WORKDAY_QUERIES) {
+    for (let offset = 0; offset < WORKDAY_MAX_PER_QUERY; offset += 20) {
+      const d = await workdayPost(`${api}/jobs`, { appliedFacets: {}, limit: 20, offset, searchText: q });
+      if (!d) break;
+      const postings = (d.jobPostings as Array<{ title?: string; externalPath?: string }> | undefined) ?? [];
+      for (const j of postings) {
+        if (j.externalPath && j.title && !found.has(j.externalPath)) found.set(j.externalPath, j.title);
+      }
+      if (postings.length < 20) break;
+    }
+  }
+
+  const matches = [...found].filter(([, title]) =>
+    isDesignRole(title) && !(src.exclude ?? []).some((re) => re.test(title)),
   );
-  const [remotive, remoteok, wwr] = await Promise.all([
+
+  const results = await mapLimit(matches, 4, async ([path, listTitle]): Promise<CandidateJob | null> => {
+    const canonical = `${base}/${src.site}${path}`;
+    if (knownUrls?.has(canonical)) return null;
+    try {
+      const res = await fetch(`${api}${path}`, {
+        headers: { Accept: "application/json", "User-Agent": UA },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) return null;
+      const d = await res.json() as {
+        jobPostingInfo?: {
+          title?: string; jobDescription?: string; location?: string; additionalLocations?: string[];
+          timeType?: string; remoteType?: string; externalUrl?: string;
+        };
+      };
+      const info = d.jobPostingInfo;
+      if (!info) return null;
+      const title = info.title ?? listTitle;
+      const locations = [info.location, ...(info.additionalLocations ?? [])].filter(Boolean) as string[];
+      const location = locations.slice(0, 3).join(" · ") + (locations.length > 3 ? ` +${locations.length - 3}` : "");
+      const description = htmlToText(info.jobDescription);
+      return {
+        title, company: src.name, companyUrl: src.url, companyDomain: src.domain,
+        jobUrl: info.externalUrl ?? canonical,
+        location: location || "Not specified",
+        remote: /remote/i.test(`${info.remoteType ?? ""} ${location} ${title}`),
+        description,
+        compensation: extractCompensation(description),
+        typeOfRole: mapTypeOfRole(info.timeType, title),
+        logoHint: null,
+        origin: `workday:${src.tenant}`,
+      };
+    } catch { return null; }
+  });
+
+  return results.filter((r): r is CandidateJob => r !== null);
+}
+
+/** Fetch every configured source concurrently and return all design roles. */
+export async function fetchAllCandidates(opts: { knownUrls?: Set<string> } = {}): Promise<CandidateJob[]> {
+  const [atsResults, workdayResults, remotive, remoteok, wwr] = await Promise.all([
+    mapLimit(SOURCES, 8, (src) =>
+      src.ats === "greenhouse" ? fetchGreenhouse(src)
+      : src.ats === "lever" ? fetchLever(src)
+      : fetchAshby(src),
+    ),
+    mapLimit(WORKDAY_SOURCES, 4, (src) => fetchWorkday(src, opts.knownUrls)),
     fetchRemotive(), fetchRemoteOK(), fetchWeWorkRemotely(),
   ]);
-  return [...atsResults.flat(), ...remotive, ...remoteok, ...wwr];
+  return [...atsResults.flat(), ...workdayResults.flat(), ...remotive, ...remoteok, ...wwr];
 }
 
 export function dedupKey(company: string, title: string): string {
@@ -1305,7 +1436,7 @@ export async function ingestNewJobs(): Promise<IngestResult> {
   const seenUrls = new Set(existing.map((j) => j.jobUrl).filter(Boolean) as string[]);
   const seenKeys = new Set(existing.map((j) => dedupKey(j.company ?? "", j.title ?? "")));
 
-  const all = await fetchAllCandidates();
+  const all = await fetchAllCandidates({ knownUrls: seenUrls });
   const fresh: CandidateJob[] = [];
   for (const j of all) {
     if (!j.jobUrl || !j.company) continue;

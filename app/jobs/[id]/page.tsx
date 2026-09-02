@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { MapPin, Building2, DollarSign, ArrowLeft, ExternalLink, Clock, Globe, Settings } from "lucide-react";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { formatDate } from "@/lib/utils";
+import { withTracking } from "@/lib/apply-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -201,7 +202,7 @@ export default async function JobDetailPage({
                 <p className="text-sm mb-4" style={{ color: "var(--text-2)" }}>
                   For full details and to apply, visit the official job listing:
                 </p>
-                <a href={job.jobUrl} target="_blank" rel="noreferrer">
+                <a href={withTracking(job.jobUrl) ?? job.jobUrl} target="_blank" rel="noreferrer">
                   <Button className="gap-2">
                     Apply Now <ExternalLink className="w-4 h-4" />
                   </Button>
@@ -216,7 +217,7 @@ export default async function JobDetailPage({
             {job.jobUrl && (
               <div className="p-5" style={{ background: "var(--surface-1)" }}>
                 <p className="font-bold mb-3" style={{ color: "var(--text-1)" }}>Ready to apply?</p>
-                <a href={job.jobUrl} target="_blank" rel="noreferrer">
+                <a href={withTracking(job.jobUrl) ?? job.jobUrl} target="_blank" rel="noreferrer">
                   <Button size="sm" className="w-full gap-2">
                     View Full Listing <ExternalLink className="w-3.5 h-3.5" />
                   </Button>
