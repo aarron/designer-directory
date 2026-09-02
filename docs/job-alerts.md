@@ -1,7 +1,7 @@
 # Designer job alerts
 
 Designers in the directory opt in to matched roles by email at a cadence they
-choose. Built 2026-09-02; the invitation campaign has **not** been sent yet.
+choose. Built 2026-09-02. Invitation campaign sent 2026-09-02 to 319 designers (13 batches of 25, 0 errors).
 
 ## The pieces
 
@@ -51,7 +51,7 @@ curl -s -X POST https://designbetter.careers/api/admin/job-alerts \
   -d '{"mode":"invite","dryRun":true,"limit":5}'
 ```
 
-Then drop `dryRun` and page with `offset` until `done: true`. `emails: [...]`
+Then drop `dryRun` and repeat with `offset: 0` until `done: true`. Sent rows leave the eligible set (`alertInviteSentAt`), so a growing offset would skip people. `emails: [...]`
 restricts to specific addresses for a test send. `cohort` is `all` (default),
 `visible` or `hidden`.
 
@@ -68,3 +68,16 @@ ten-role alert today. Invitation eligible: 319.
   tighten with open-rate data.
 - Employer de-dup is by normalised name, so "IxDF" and "Interaction Design
   Foundation" count as two. Fix belongs in ingest.
+
+## Funnel report
+
+```bash
+curl -s -X POST https://designbetter.careers/api/admin/job-alerts \
+  -H "x-admin-secret: …" -H "content-type: application/json" -d '{"mode":"report"}'
+```
+
+Returns `invited`, `optedIn` by cadence, `nowNotLooking`, `confirmedWithoutAlerts`
+(saved the form since the invite but chose no emails), and `byKind` counts for
+`invite_click`, `prefs_saved`, `stop`, `job_view`, `apply_click` (events, distinct
+designers, distinct jobs), plus `prefsBreakdown` by status/cadence. The owner
+preview row is excluded.

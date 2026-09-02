@@ -44,7 +44,9 @@ export async function POST(req: NextRequest) {
       db.designer.count({ where: { alertInviteSentAt: { not: null }, id: { notIn: exclude } } }),
       db.designer.groupBy({ by: ["alertFrequency"], where: { alertFrequency: { not: "NONE" }, id: { notIn: exclude } }, _count: { _all: true } }),
       db.designer.count({ where: { alertInviteSentAt: { not: null }, openToWork: "NOT_LOOKING", id: { notIn: exclude } } }),
-      db.designer.count({ where: { alertInviteSentAt: { not: null }, alertFrequency: "NONE", lastConfirmedAt: { not: null }, id: { notIn: exclude } } }),
+      // Saved the form since the invitation but chose no emails. Raw SQL because
+      // Prisma can't compare two columns of the same row.
+      db.$queryRaw<Array<{ n: bigint }>>`SELECT COUNT(*)::bigint AS n FROM designers WHERE "alertInviteSentAt" IS NOT NULL AND "alertFrequency" = 'NONE' AND "lastConfirmedAt" >= "alertInviteSentAt" AND NOT (id = ANY(${exclude}::text[]))`.then((r) => Number(r[0]?.n ?? 0)),
       alertFunnel({ excludeDesignerIds: exclude }),
     ]);
     return NextResponse.json({
