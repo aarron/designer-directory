@@ -258,7 +258,10 @@ export async function sendJobAlerts(opts: { dryRun?: boolean; limit?: number } =
   const from = getFrom();
 
   for (const d of due) {
-    const since = d.alertLastSentAt ?? d.alertOptInAt ?? new Date(now.getTime() - FIRST_LOOKBACK_DAYS * DAY);
+    // First alert looks back a fixed window; measuring from the opt-in moment
+    // meant a designer who signed up on Monday had zero candidates on Tuesday
+    // while the opt-in page had just told them ten roles matched.
+    const since = d.alertLastSentAt ?? new Date(now.getTime() - FIRST_LOOKBACK_DAYS * DAY);
     const sentBefore = new Set(
       (await db.jobAlertLog.findMany({ where: { designerId: d.id }, select: { jobId: true } })).map((l) => l.jobId),
     );
