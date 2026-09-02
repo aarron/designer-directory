@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Job } from "@prisma/client";
 import { CompanySquare } from "@/components/JobCard";
 import { formatShortDate } from "@/lib/utils";
@@ -13,8 +14,23 @@ export interface JobRow {
   companyHref: string;
 }
 
-/** Height of the site's sticky nav; the table header sticks directly beneath it. */
-const NAV_HEIGHT = 106;
+/**
+ * The sticky nav's height, measured live. It changes with viewport width and
+ * hard-coding it left a visible gap between nav and table header at some sizes.
+ */
+function useNavHeight(fallback = 69) {
+  const [h, setH] = useState(fallback);
+  useEffect(() => {
+    const nav = document.querySelector("header");
+    if (!nav) return;
+    const update = () => setH(Math.round(nav.getBoundingClientRect().height));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(nav);
+    return () => ro.disconnect();
+  }, []);
+  return h;
+}
 
 const TH = "font-mono text-[9px] font-normal uppercase tracking-[0.12em] text-left px-3 py-2.5 whitespace-nowrap";
 const TD = "px-3 py-3 align-middle";
@@ -31,11 +47,12 @@ export function JobTable({ rows, showCompanyCount = true }: {
   /** Hidden on an employer's own page, where every row would say the same number. */
   showCompanyCount?: boolean;
 }) {
+  const navHeight = useNavHeight();
   return (
     <table className="w-full border-collapse" style={{ background: "var(--surface-1)" }}>
       <thead
         className="sticky z-10"
-        style={{ top: NAV_HEIGHT, background: "var(--bg)", boxShadow: "inset 0 -1px 0 var(--divider)" }}
+        style={{ top: navHeight, background: "var(--bg)", boxShadow: "inset 0 -1px 0 var(--divider)" }}
       >
         <tr style={{ color: "var(--text-3)" }}>
           <th className={TH} colSpan={2}>Role</th>
