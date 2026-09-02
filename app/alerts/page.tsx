@@ -115,7 +115,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
         Hi {designer.firstName}<span style={{ color: "#FF4725" }}>.</span>
       </h1>
       <p className="text-[16px] leading-relaxed mt-5" style={{ color: "var(--text-2)" }}>
-        Three quick questions. They set how often you hear from us about roles, and they confirm your profile for the employers who search it.
+        Tell us what types of roles you're looking for and how often you want to be notified.
       </p>
       <AlertsForm
         token={token}

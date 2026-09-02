@@ -97,7 +97,7 @@ export function AlertsForm({ designer, token, initialStatus }: {
             </div>
           </Section>
 
-          <Section step={3} title="Confirm what we match on">
+          <Section step={3} title="Tell us about your ideal role">
             <p className="text-[14px] mb-5 -mt-2" style={{ color: "var(--text-2)" }}>
               Prefilled from your profile. Change anything that's out of date.
             </p>
