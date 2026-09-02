@@ -962,6 +962,13 @@ export const SOURCES: Source[] = [
   { ats: "greenhouse", slug: "iterable",       name: "Iterable",      domain: "iterable.com",     url: "https://iterable.com" },
   { ats: "greenhouse", slug: "sigmacomputing", name: "Sigma",         domain: "sigmacomputing.com", url: "https://sigmacomputing.com" },
   { ats: "greenhouse", slug: "mixpanel",       name: "Mixpanel",      domain: "mixpanel.com",     url: "https://mixpanel.com" },
+  // Employers surfaced by designleaderjobs.com's board that we didn't yet cover.
+  // Only those on Greenhouse/Lever/Ashby; their Workday-based employers
+  // (Amazon, Adobe, Capital One, Mastercard, NVIDIA) need a separate fetcher.
+  { ats: "greenhouse", slug: "babylist",       name: "Babylist",      domain: "babylist.com",     url: "https://babylist.com" },
+  { ats: "greenhouse", slug: "ethoslife",      name: "Ethos",         domain: "ethoslife.com",    url: "https://ethoslife.com" },
+  { ats: "greenhouse", slug: "newrelic",       name: "New Relic",     domain: "newrelic.com",     url: "https://newrelic.com" },
+  { ats: "greenhouse", slug: "monzo",          name: "Monzo",         domain: "monzo.com",        url: "https://monzo.com" },
   { ats: "lever", slug: "netflix",       name: "Netflix",      domain: "netflix.com",      url: "https://netflix.com" },
   { ats: "lever", slug: "squareup",      name: "Square",       domain: "squareup.com",     url: "https://squareup.com" },
   { ats: "lever", slug: "shopify",       name: "Shopify",      domain: "shopify.com",      url: "https://shopify.com" },
@@ -986,6 +993,9 @@ export const SOURCES: Source[] = [
   { ats: "lever", slug: "spotify",       name: "Spotify",      domain: "spotify.com",      url: "https://spotify.com" },
   { ats: "lever", slug: "palantir",      name: "Palantir",     domain: "palantir.com",     url: "https://palantir.com" },
   { ats: "lever", slug: "wealthfront",   name: "Wealthfront",  domain: "wealthfront.com",  url: "https://wealthfront.com" },
+  { ats: "lever", slug: "gohighlevel",   name: "HighLevel",    domain: "gohighlevel.com",  url: "https://gohighlevel.com" },
+  { ats: "lever", slug: "coins",         name: "Coins.ph",     domain: "coins.ph",         url: "https://coins.ph" },
+  { ats: "lever", slug: "luxurypresence", name: "Luxury Presence", domain: "luxurypresence.com", url: "https://luxurypresence.com" },
   { ats: "ashby", slug: "lumaai",        name: "Luma AI",      domain: "lumalabs.ai",      url: "https://lumalabs.ai" },
   { ats: "ashby", slug: "arc-browser",   name: "Arc Browser",  domain: "arc.net",          url: "https://arc.net" },
   { ats: "ashby", slug: "elevenlabs",    name: "ElevenLabs",   domain: "elevenlabs.io",    url: "https://elevenlabs.io" },
@@ -1017,6 +1027,9 @@ export const SOURCES: Source[] = [
   { ats: "ashby", slug: "alchemy",       name: "Alchemy",      domain: "alchemy.com",      url: "https://alchemy.com" },
   { ats: "ashby", slug: "hex",           name: "Hex",          domain: "hex.tech",         url: "https://hex.tech" },
   { ats: "ashby", slug: "uniswap",       name: "Uniswap",      domain: "uniswap.org",      url: "https://uniswap.org" },
+  { ats: "ashby", slug: "harvey",        name: "Harvey",       domain: "harvey.ai",        url: "https://harvey.ai" },
+  { ats: "ashby", slug: "abridge",       name: "Abridge",      domain: "abridge.com",      url: "https://abridge.com" },
+  { ats: "ashby", slug: "givebutter",    name: "Givebutter",   domain: "givebutter.com",   url: "https://givebutter.com" },
 ];
 
 // ── Candidate shape ──────────────────────────────────────────────────────
