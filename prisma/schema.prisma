@@ -84,6 +84,23 @@ enum AlertFrequency {
   MONTHLY
 }
 
+/// Funnel events for designer emails: invite_click, prefs_saved, stop,
+/// job_view, apply_click. Designer and job are plain ids (no FK) so a deleted
+/// profile or pruned job leaves the funnel numbers intact.
+model AlertEvent {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  kind       String
+  designerId String?
+  jobId      String?
+  source     String?
+  detail     String?
+
+  @@index([kind, createdAt])
+  @@index([designerId])
+  @@map("alert_events")
+}
+
 model JobAlertLog {
   id         String   @id @default(cuid())
   designerId String

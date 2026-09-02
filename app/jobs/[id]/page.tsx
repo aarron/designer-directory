@@ -8,6 +8,7 @@ import { MapPin, Building2, DollarSign, ArrowLeft, ExternalLink, Clock, Globe, S
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { formatDate } from "@/lib/utils";
 import { withTracking } from "@/lib/apply-url";
+import { logAlertEvent } from "@/lib/alert-events";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -50,13 +51,21 @@ export default async function JobDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; d?: string; utm_source?: string }>;
 }) {
   const { id } = await params;
-  const { token } = await searchParams;
+  const { token, d, utm_source } = await searchParams;
   const job = await db.job.findUnique({ where: { id } });
 
   if (!job) notFound();
+
+  // Visitors from a designer email carry ?d=<designerId>. Log the view and
+  // route Apply through the logging redirect; everyone else keeps the direct
+  // link, so the normal board is untouched.
+  if (d) logAlertEvent({ kind: "job_view", designerId: d, jobId: job.id, source: utm_source ?? null });
+  const applyHref = d
+    ? `/api/go/${job.id}?d=${encodeURIComponent(d)}&src=${encodeURIComponent(utm_source ?? "email")}`
+    : (withTracking(job.jobUrl) ?? job.jobUrl ?? undefined);
 
   const isOwner = !!token && token === job.manageToken;
 
@@ -202,7 +211,7 @@ export default async function JobDetailPage({
                 <p className="text-sm mb-4" style={{ color: "var(--text-2)" }}>
                   For full details and to apply, visit the official job listing:
                 </p>
-                <a href={withTracking(job.jobUrl) ?? job.jobUrl} target="_blank" rel="noreferrer">
+                <a href={applyHref} target="_blank" rel="noreferrer">
                   <Button className="gap-2">
                     Apply Now <ExternalLink className="w-4 h-4" />
                   </Button>
@@ -217,7 +226,7 @@ export default async function JobDetailPage({
             {job.jobUrl && (
               <div className="p-5" style={{ background: "var(--surface-1)" }}>
                 <p className="font-bold mb-3" style={{ color: "var(--text-1)" }}>Ready to apply?</p>
-                <a href={withTracking(job.jobUrl) ?? job.jobUrl} target="_blank" rel="noreferrer">
+                <a href={applyHref} target="_blank" rel="noreferrer">
                   <Button size="sm" className="w-full gap-2">
                     View Full Listing <ExternalLink className="w-3.5 h-3.5" />
                   </Button>

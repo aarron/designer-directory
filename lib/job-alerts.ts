@@ -148,14 +148,14 @@ function button(href: string, label: string, primary = true): string {
   return `<a href="${href}" style="display:inline-block;background:${bg};color:${fg};${border}padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">${esc(label)}</a>`;
 }
 
-function roleRow(m: AlertMatch, base: string): string {
+function roleRow(m: AlertMatch, base: string, designerId: string, src: string): string {
   const j = m.job;
   const where = j.remote ? (j.location ? `Remote · ${j.location}` : "Remote") : j.location;
   const pay = j.compensation ? ` · ${esc(j.compensation)}` : "";
   return `
     <tr>
       <td style="padding:14px 0;border-bottom:1px solid #E5E1D8;">
-        <a href="${base}/jobs/${j.id}?utm_source=job_alert&utm_medium=email" style="color:${INK};text-decoration:none;font-weight:700;font-size:16px;">${esc(j.title)}<span style="color:${ORANGE};">.</span></a>
+        <a href="${base}/jobs/${j.id}?utm_source=${src}&utm_medium=email&d=${designerId}" style="color:${INK};text-decoration:none;font-weight:700;font-size:16px;">${esc(j.title)}<span style="color:${ORANGE};">.</span></a>
         <div style="color:${MUTED};font-size:13px;margin-top:3px;">${esc(j.company)}${where ? ` · ${esc(where)}` : ""}${pay}</div>
       </td>
     </tr>`;
@@ -187,8 +187,8 @@ export function alertEmail(d: AlertDesigner, matches: AlertMatch[]): { subject: 
   const html = shell(`
     <h1 style="font-size:26px;line-height:1.15;margin:0 0 12px;">New roles for you<span style="color:${ORANGE};">.</span></h1>
     <p style="font-size:16px;line-height:1.5;margin:0 0 20px;">Hi ${esc(d.firstName)}, ${n} role${n === 1 ? "" : "s"} posted since your last email match what you told us: ${esc(d.primaryRole)}, ${esc(d.experienceLevel.replace(/\s*\(.*\)/, "").toLowerCase())}, ${esc(d.location)}${d.wantsLeadership ? ", leadership" : ""}.</p>
-    <table role="presentation" style="width:100%;border-collapse:collapse;">${matches.map((m) => roleRow(m, base)).join("")}</table>
-    <p style="margin:24px 0 0;">${button(`${base}/jobs?utm_source=job_alert&utm_medium=email`, "See every open role")}</p>
+    <table role="presentation" style="width:100%;border-collapse:collapse;">${matches.map((m) => roleRow(m, base, d.id, "job_alert")).join("")}</table>
+    <p style="margin:24px 0 0;">${button(`${base}/jobs?utm_source=job_alert&utm_medium=email&d=${d.id}`, "See every open role")}</p>
     ${footerLinks(d.editToken, base)}
   `);
   return { subject, html };
@@ -207,13 +207,13 @@ export function inviteEmail(d: AlertDesigner, samples: AlertMatch[], totalOnBoar
     : "Design roles matched to your profile, on your schedule";
   const alertsUrl = `${base}/alerts?token=${d.editToken}`;
   const rolesBlock = samples.length
-    ? `<table role="presentation" style="width:100%;border-collapse:collapse;">${samples.map((m) => roleRow(m, base)).join("")}</table>`
+    ? `<table role="presentation" style="width:100%;border-collapse:collapse;">${samples.map((m) => roleRow(m, base, d.id, "job_alert_invite")).join("")}</table>`
     : `<p style="font-size:16px;line-height:1.5;margin:0;">Nothing on the board matched your profile this week; the board carries ${totalOnBoard} open design roles and refreshes daily.</p>`;
   const html = shell(`
     <a href="${base}" style="display:inline-block;margin-bottom:24px;"><img src="${base}/DesignBetterCareers.png" width="160" alt="Design Better Careers" style="display:block;height:auto;border:0;"></a>
     <h1 style="font-size:26px;line-height:1.15;margin:0 0 20px;">We found a few job openings you might be interested in<span style="color:${ORANGE};">.</span></h1>
     ${rolesBlock}
-    <p style="margin:16px 0 0;"><a href="${base}/jobs?utm_source=job_alert_invite&utm_medium=email" style="color:${INK};font-weight:600;font-size:15px;text-decoration:none;">View all ${totalOnBoard} job openings &rarr;</a></p>
+    <p style="margin:16px 0 0;"><a href="${base}/jobs?utm_source=job_alert_invite&utm_medium=email&d=${d.id}" style="color:${INK};font-weight:600;font-size:15px;text-decoration:none;">View all ${totalOnBoard} job openings &rarr;</a></p>
     <p style="font-size:16px;line-height:1.5;margin:28px 0 16px;">Choose the kinds of roles you want to hear about, and how often: weekly, every two weeks, or monthly.</p>
     <p style="margin:0 0 20px;">${button(alertsUrl, "Set my job preferences")}</p>
     <p style="font-size:14px;line-height:1.5;margin:0;"><a href="${alertsUrl}&stop=1" style="color:${MUTED};">I no longer want job recommendations.</a></p>

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { logAlertEvent } from "@/lib/alert-events";
 import { PRIMARY_ROLES, EXPERIENCE_LEVELS, ROLE_TYPES, REMOTE_PREFERENCES } from "@/lib/utils";
 import type { AlertFrequency, WorkStatus } from "@prisma/client";
 
@@ -42,6 +43,7 @@ export async function saveAlertPreferences(formData: FormData) {
         confirmSentAt: null,
       },
     });
+    logAlertEvent({ kind: "prefs_saved", designerId: designer.id, detail: "NOT_LOOKING" });
     redirect(`/alerts?token=${encodeURIComponent(token)}&saved=1`);
   }
 
@@ -72,5 +74,6 @@ export async function saveAlertPreferences(formData: FormData) {
       ...(typeOfRole.length ? { typeOfRole } : {}),
     },
   });
+  logAlertEvent({ kind: "prefs_saved", designerId: designer.id, detail: `${status}/${frequency}` });
   redirect(`/alerts?token=${encodeURIComponent(token)}&saved=1`);
 }

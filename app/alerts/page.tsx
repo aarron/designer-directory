@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { AlertsForm } from "./AlertsForm";
 import { pickMatches, toDesignerForMatching, CADENCE_LABEL, MIN_MATCHES } from "@/lib/job-alerts";
+import { logAlertEvent } from "@/lib/alert-events";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
     if (designer.alertFrequency !== "NONE") {
       await db.designer.update({ where: { id: designer.id }, data: { alertFrequency: "NONE" } });
     }
+    logAlertEvent({ kind: "stop", designerId: designer.id });
     return (
       <Shell>
         <Notice title="Alerts stopped">
@@ -107,6 +109,9 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
       </Shell>
     );
   }
+
+  // Reaching this page with a valid token means an email link was clicked.
+  logAlertEvent({ kind: "invite_click", designerId: designer.id });
 
   return (
     <Shell>
