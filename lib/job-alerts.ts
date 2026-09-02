@@ -88,12 +88,26 @@ function companyKey(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-/** Best roles for one designer from a candidate pool: threshold, one per employer, capped. */
+/** Small deterministic hash so equal-scored roles order differently per designer. */
+function tieBreak(designerId: string, jobId: string): number {
+  let h = 0;
+  const s = designerId + jobId;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h;
+}
+
+/**
+ * Best roles for one designer from a candidate pool: threshold, one per
+ * employer, capped. Ties break on a per-designer hash rather than recency:
+ * with recency, everyone with a similar profile got the same three newest
+ * roles and the emails read as a broadcast. Deterministic, so the same
+ * designer sees the same list on re-render.
+ */
 export function pickMatches(designer: DesignerForMatching, jobs: Job[]): AlertMatch[] {
   const scored = jobs
     .map((job) => ({ job, score: scoreDesigner(designer, toJobForMatching(job)) }))
     .filter((m) => m.score >= MATCH_THRESHOLD)
-    .sort((a, b) => b.score - a.score || b.job.createdAt.getTime() - a.job.createdAt.getTime());
+    .sort((a, b) => b.score - a.score || tieBreak(designer.id, a.job.id) - tieBreak(designer.id, b.job.id));
   const seen = new Set<string>();
   const out: AlertMatch[] = [];
   for (const m of scored) {
