@@ -205,18 +205,19 @@ export function inviteEmail(d: AlertDesigner, samples: AlertMatch[], totalOnBoar
   const subject = samples.length
     ? `${samples.length} design roles matched to your profile`
     : "Design roles matched to your profile, on your schedule";
-  const sampleBlock = samples.length
-    ? `<p style="font-size:16px;line-height:1.5;margin:0 0 8px;">These match what's on your profile right now:</p>
-       <table role="presentation" style="width:100%;border-collapse:collapse;margin-bottom:8px;">${samples.map((m) => roleRow(m, base)).join("")}</table>`
-    : "";
+  const alertsUrl = `${base}/alerts?token=${d.editToken}`;
+  const rolesBlock = samples.length
+    ? `<table role="presentation" style="width:100%;border-collapse:collapse;">${samples.map((m) => roleRow(m, base)).join("")}</table>`
+    : `<p style="font-size:16px;line-height:1.5;margin:0;">Nothing on the board matched your profile this week; the board carries ${totalOnBoard} open design roles and refreshes daily.</p>`;
   const html = shell(`
-    <h1 style="font-size:26px;line-height:1.15;margin:0 0 12px;">Roles that fit, sent when you want them<span style="color:${ORANGE};">.</span></h1>
-    <p style="font-size:16px;line-height:1.5;margin:0 0 20px;">Hi ${esc(d.firstName)}, the Design Better careers board now carries ${totalOnBoard} open design roles, pulled daily from company career pages.</p>
-    ${sampleBlock}
-    <p style="font-size:16px;line-height:1.5;margin:20px 0 20px;">If you're still looking, tell us how often you want new matches: weekly, every two weeks, or monthly. We send only roles that fit your discipline, level and location. It takes a minute, and it confirms your profile is current for the employers who search it.</p>
-    <p style="margin:0 0 12px;">${button(`${base}/alerts?token=${d.editToken}`, "Choose how often")}</p>
-    <p style="font-size:14px;line-height:1.5;color:${MUTED};margin:20px 0 0;">Landed somewhere? <a href="${base}/alerts?token=${d.editToken}&status=NOT_LOOKING" style="color:${INK};">One click</a> pauses your profile. Congratulations, and go well.</p>
-    <p style="font-size:16px;line-height:1.5;margin:24px 0 0;">— Aarron &amp; Eli<br><span style="color:${MUTED};font-size:14px;">Design Better</span></p>
+    <a href="${base}" style="display:inline-block;margin-bottom:24px;"><img src="${base}/DesignBetterCareers.png" width="160" alt="Design Better Careers" style="display:block;height:auto;border:0;"></a>
+    <h1 style="font-size:26px;line-height:1.15;margin:0 0 20px;">We found a few job openings you might be interested in<span style="color:${ORANGE};">.</span></h1>
+    ${rolesBlock}
+    <p style="margin:16px 0 0;"><a href="${base}/jobs?utm_source=job_alert_invite&utm_medium=email" style="color:${INK};font-weight:600;font-size:15px;text-decoration:none;">View all ${totalOnBoard} job openings &rarr;</a></p>
+    <p style="font-size:16px;line-height:1.5;margin:28px 0 16px;">Choose the kinds of roles you want to hear about, and how often: weekly, every two weeks, or monthly.</p>
+    <p style="margin:0 0 20px;">${button(alertsUrl, "Set my job preferences")}</p>
+    <p style="font-size:14px;line-height:1.5;margin:0;"><a href="${alertsUrl}&stop=1" style="color:${MUTED};">I no longer want job recommendations.</a></p>
+    <p style="font-size:16px;line-height:1.5;margin:28px 0 0;">— Aarron &amp; Eli<br><a href="https://designbetterpodcast.com/" style="color:${MUTED};font-size:14px;text-decoration:none;">Design Better</a></p>
     ${footerLinks(d.editToken, base)}
   `);
   return { subject, html };

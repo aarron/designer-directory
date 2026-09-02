@@ -22,13 +22,14 @@ export async function POST(req: NextRequest) {
     cohort?: "all" | "visible" | "hidden"; emails?: string[];
   };
   const dryRun = Boolean(body.dryRun);
+  const build = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
 
   if (body.mode === "alerts") {
-    return NextResponse.json({ ok: true, mode: "alerts", dryRun, ...(await sendJobAlerts({ dryRun, limit: body.limit })) });
+    return NextResponse.json({ ok: true, mode: "alerts", dryRun, build, ...(await sendJobAlerts({ dryRun, limit: body.limit })) });
   }
   if (body.mode === "invite") {
     return NextResponse.json({
-      ok: true, mode: "invite", dryRun,
+      ok: true, mode: "invite", dryRun, build,
       ...(await sendAlertsInvite({ dryRun, offset: body.offset, limit: body.limit, cohort: body.cohort, emails: body.emails })),
     });
   }
