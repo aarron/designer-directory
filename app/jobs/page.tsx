@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import type { Job } from "@prisma/client";
 import { JobCard } from "@/components/JobCard";
+import { JobTable } from "@/components/JobTable";
 import { ResultsBar } from "@/components/ResultsBar";
 import { PRIMARY_ROLES, EXPERIENCE_LEVELS } from "@/lib/utils";
 import { JOB_POSTING_PRICE_DOLLARS } from "@/lib/stripe";
@@ -280,17 +281,14 @@ export default async function JobsPage({
             )}
           </div>
         ) : view === "list" ? (
-          <div className="flex flex-col gap-px" style={{ background: "var(--divider)" }}>
-            {jobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                variant="list"
-                companyCount={params.company ? undefined : companyCount.get(job.company)}
-                companyHref={href({ company: job.company, role: undefined, level: undefined, type: undefined, remote: undefined })}
-              />
-            ))}
-          </div>
+          <JobTable
+            showCompanyCount={!params.company}
+            rows={jobs.map((job) => ({
+              job,
+              companyCount: companyCount.get(job.company),
+              companyHref: href({ company: job.company, role: undefined, level: undefined, type: undefined, remote: undefined }),
+            }))}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {jobs.map((job) => (

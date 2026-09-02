@@ -13,6 +13,17 @@ export function formatDate(date: Date | string) {
   });
 }
 
+/** "Sep 2" — the year only when it isn't this one. For dense table rows. */
+export function formatShortDate(date: Date | string) {
+  const d = new Date(date);
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+}
+
 // Returns null if valid, or an error string if not.
 // Empty / whitespace-only values are considered valid (fields are optional).
 export function validateUrl(value: string | null | undefined): string | null {

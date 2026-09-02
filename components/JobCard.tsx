@@ -23,7 +23,7 @@ function companyBg(name: string): string {
 // intentional. So it's the vetted logo or the lettermark, nothing in between.
 type SquareStage = "explicit" | "initials";
 
-function CompanySquare({ companyLogoUrl, company, compact = false }: {
+export function CompanySquare({ companyLogoUrl, company, compact = false }: {
   companyLogoUrl?: string | null;
   company: string;
   /** Tighter padding + smaller lettermark for the 36px list-view square. */
@@ -57,88 +57,8 @@ function CompanySquare({ companyLogoUrl, company, compact = false }: {
   );
 }
 
-export function JobCard({ job, variant = "grid", companyCount, companyHref }: {
-  job: Job;
-  variant?: "grid" | "list";
-  /**
-   * How many open roles this employer has on the board. In list view a count
-   * above one renders a "N roles" chip so the browse can show a capped sample
-   * per employer while still signalling there's more — and where to get it.
-   */
-  companyCount?: number;
-  /** Where the employer name and the roles chip link (the ?company= view). */
-  companyHref?: string;
-}) {
-  if (variant === "list") {
-    const jobHref = `/jobs/${job.id}`;
-    const employerHref = companyHref ?? `/jobs?company=${encodeURIComponent(job.company)}`;
-    // Two destinations on one row — the role and the employer — so this can't
-    // be a single anchor. The title carries the primary link; the logo square
-    // goes to the role too so the row still feels clickable at its left edge.
-    return (
-      <div
-        className="flex items-center gap-3 px-4 py-3 animate-fade-in transition-colors duration-[120ms]"
-        style={{ background: "var(--surface-1)" }}
-      >
-        {/* Small logo square */}
-        <Link href={jobHref} className="w-9 h-9 flex-shrink-0 relative overflow-hidden rounded-sm container-type-inline">
-          <CompanySquare companyLogoUrl={job.companyLogoUrl} company={job.company} compact />
-        </Link>
-
-        {/* Title + company */}
-        <div className="flex-1 min-w-0">
-          <Link href={jobHref} className="block group">
-            <p className="font-display font-bold text-[15px] leading-tight truncate transition-colors duration-[120ms] group-hover:text-[#FF4725]" style={{ color: "var(--text-1)" }}>
-              {job.title}<span style={{ color: "#FF4725" }}>.</span>
-            </p>
-          </Link>
-          <p className="text-[12px] italic leading-snug truncate mt-0.5" style={{ color: "var(--text-3)" }}>
-            <Link href={employerHref} className="hover:underline hover:text-[var(--text-1)] transition-colors duration-[120ms]">
-              {job.company}
-            </Link>
-            {job.location && (
-              <span className="not-italic font-semibold" style={{ color: "var(--text-2)" }}> · {job.location}</span>
-            )}
-          </p>
-        </div>
-
-        {/* Employer roles chip — only when there's more than this one */}
-        {companyCount !== undefined && companyCount > 1 && (
-          <Link
-            href={employerHref}
-            className="hidden sm:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] px-2.5 py-1 rounded-full flex-shrink-0 transition-colors duration-[120ms] hover:text-[var(--text-1)]"
-            style={{ border: "1px solid var(--divider-strong)", color: "var(--text-3)" }}
-            title={`All ${companyCount} roles at ${job.company}`}
-          >
-            {companyCount} roles
-          </Link>
-        )}
-
-        {/* Role pill */}
-        <span className="hidden sm:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: "var(--surface-2)", color: "#FF4725" }}>
-          {job.role}
-        </span>
-
-        {/* Remote pill */}
-        {job.remote && (
-          <span className="hidden md:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] rounded-full px-2.5 py-1 flex-shrink-0" style={{ border: "1px solid var(--divider-strong)", color: "var(--text-2)" }}>
-            Remote
-          </span>
-        )}
-
-        {/* Featured */}
-        {job.featured && (
-          <span className="hidden sm:inline font-mono text-[10px] font-normal uppercase tracking-[0.1em] flex-shrink-0" style={{ color: "#FF4725" }}>★</span>
-        )}
-
-        {/* Date */}
-        <span className="font-mono text-[11px] font-normal flex-shrink-0" style={{ color: "var(--text-3)" }}>
-          {formatDate(job.createdAt)}
-        </span>
-      </div>
-    );
-  }
-
+/** Grid card. The dense list view lives in JobTable. */
+export function JobCard({ job }: { job: Job }) {
   return (
     <Link
       href={`/jobs/${job.id}`}
