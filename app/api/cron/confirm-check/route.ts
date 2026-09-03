@@ -16,6 +16,11 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const cutoff60 = new Date(now.getTime() - DAYS_60);
   const cutoff7 = new Date(now.getTime() - DAYS_7);
+  // Anyone invited to job alerts in the last three weeks is mid-conversation
+  // with us: the invitation is the check-in. Hiding them (or sending a second
+  // nag) a day later undid the invitation for 11 designers on 2026-09-03.
+  const inviteGrace = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
+  const notRecentlyInvited = { OR: [{ alertInviteSentAt: null }, { alertInviteSentAt: { lt: inviteGrace } }] };
 
   // Phase 1: Hide profiles where confirmation email was sent 7+ days ago and still unconfirmed
   const toHide = await db.designer.findMany({
@@ -23,6 +28,7 @@ export async function GET(req: NextRequest) {
       hidden: false,
       openToWork: { not: "NOT_LOOKING" },
       alertFrequency: "NONE", // alert subscribers are handled by the alerts flow
+      AND: [notRecentlyInvited],
       confirmSentAt: { lte: cutoff7 },
       OR: [
         { lastConfirmedAt: null },
@@ -68,6 +74,7 @@ export async function GET(req: NextRequest) {
       publicProfile: true,
       openToWork: { not: "NOT_LOOKING" },
       alertFrequency: "NONE",
+      AND: [notRecentlyInvited],
       confirmSentAt: null,
       OR: [
         { lastConfirmedAt: null },
